@@ -112,7 +112,7 @@ def tenant_list():
         return server_error_response(e)
 
 
-@manager.route("/agree/<tenant_id>", methods=["PUT"])  # noqa: F821
+@manager.route("/agree/<tenant_id>", methods=["POST"])  # noqa: F821
 @login_required
 def agree(tenant_id):
     try:
