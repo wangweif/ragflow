@@ -1,3 +1,4 @@
+import { Domain } from '@/constants/common';
 import { useLogin, useRegister } from '@/hooks/login-hooks';
 import { useSystemConfig } from '@/hooks/system-hooks';
 import { rsaPsw } from '@/utils';
@@ -5,9 +6,6 @@ import { Button, Checkbox, Form, Input } from 'antd';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, useNavigate } from 'umi';
-import RightPanel from './right-panel';
-
-import { Domain } from '@/constants/common';
 import styles from './index.less';
 
 const Login = () => {
@@ -60,10 +58,6 @@ const Login = () => {
       console.log('Failed:', errorInfo);
     }
   };
-  const formItemLayout = {
-    labelCol: { span: 6 },
-    // wrapperCol: { span: 8 },
-  };
 
   const toGoogle = () => {
     window.location.href =
@@ -74,23 +68,13 @@ const Login = () => {
     <div className={styles.loginPage}>
       <div className={styles.loginLeft}>
         <div className={styles.leftContainer}>
-          <div className={styles.loginTitle}>
-            <div>{title === 'login' ? t('login') : t('register')}</div>
-            <span>
-              {title === 'login'
-                ? t('loginDescription')
-                : t('registerDescription')}
-            </span>
-          </div>
-
           <Form
             form={form}
             layout="vertical"
             name="dynamic_rule"
-            style={{ maxWidth: 600 }}
+            style={{ maxWidth: 400, margin: '0 auto' }}
           >
             <Form.Item
-              {...formItemLayout}
               name="email"
               label={t('emailLabel')}
               rules={[{ required: true, message: t('emailPlaceholder') }]}
@@ -99,7 +83,6 @@ const Login = () => {
             </Form.Item>
             {title === 'register' && (
               <Form.Item
-                {...formItemLayout}
                 name="nickname"
                 label={t('nicknameLabel')}
                 rules={[{ required: true, message: t('nicknamePlaceholder') }]}
@@ -108,7 +91,6 @@ const Login = () => {
               </Form.Item>
             )}
             <Form.Item
-              {...formItemLayout}
               name="password"
               label={t('passwordLabel')}
               rules={[{ required: true, message: t('passwordPlaceholder') }]}
@@ -124,7 +106,7 @@ const Login = () => {
                 <Checkbox> {t('rememberMe')}</Checkbox>
               </Form.Item>
             )}
-            <div>
+            {/* <div>
               {title === 'login' && registerEnabled && (
                 <div>
                   {t('signInTip')}
@@ -141,7 +123,7 @@ const Login = () => {
                   </Button>
                 </div>
               )}
-            </div>
+            </div> */}
             <Button
               type="primary"
               block
@@ -153,20 +135,6 @@ const Login = () => {
             </Button>
             {title === 'login' && (
               <>
-                {/* <Button
-                  block
-                  size="large"
-                  onClick={toGoogle}
-                  style={{ marginTop: 15 }}
-                >
-                  <div>
-                    <Icon
-                      icon="local:google"
-                      style={{ verticalAlign: 'middle', marginRight: 5 }}
-                    />
-                    Sign in with Google
-                  </div>
-                </Button> */}
                 {location.host === Domain && (
                   <Button
                     block
@@ -187,9 +155,6 @@ const Login = () => {
             )}
           </Form>
         </div>
-      </div>
-      <div className={styles.loginRight}>
-        <RightPanel></RightPanel>
       </div>
     </div>
   );
