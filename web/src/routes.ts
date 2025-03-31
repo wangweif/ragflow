@@ -82,10 +82,10 @@ const routes = [
           },
         ],
       },
-      {
-        path: '/chat',
-        component: '@/pages/chat',
-      },
+      // {
+      //   path: '/chat',
+      //   component: '@/pages/chat',
+      // },
       {
         path: '/user-setting',
         component: '@/pages/user-setting',
@@ -121,18 +121,18 @@ const routes = [
           },
         ],
       },
-      {
-        path: '/file',
-        component: '@/pages/file-manager',
-      },
-      {
-        path: '/flow',
-        component: '@/pages/flow/list',
-      },
-      {
-        path: '/flow/:id',
-        component: '@/pages/flow',
-      },
+      // {
+      //   path: '/file',
+      //   component: '@/pages/file-manager',
+      // },
+      // {
+      //   path: '/flow',
+      //   component: '@/pages/flow/list',
+      // },
+      // {
+      //   path: '/flow/:id',
+      //   component: '@/pages/flow',
+      // },
       {
         path: '/search',
         component: '@/pages/search',
