@@ -82,10 +82,10 @@ const routes = [
           },
         ],
       },
-      // {
-      //   path: '/chat',
-      //   component: '@/pages/chat',
-      // },
+      {
+        path: '/chat',
+        component: '@/pages/chat',
+      },
       {
         path: '/user-setting',
         component: '@/pages/user-setting',
@@ -133,10 +133,10 @@ const routes = [
       //   path: '/flow/:id',
       //   component: '@/pages/flow',
       // },
-      {
-        path: '/search',
-        component: '@/pages/search',
-      },
+      // {
+      //   path: '/search',
+      //   component: '@/pages/search',
+      // },
     ],
   },
   {
