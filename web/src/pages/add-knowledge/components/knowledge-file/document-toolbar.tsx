@@ -11,7 +11,6 @@ import {
 } from '@/hooks/document-hooks';
 import {
   DownOutlined,
-  FileOutlined,
   FileTextOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -59,19 +58,19 @@ const DocumentToolbar = ({
           </div>
         ),
       },
-      { type: 'divider' },
-      {
-        key: '3',
-        onClick: showCreateModal,
-        label: (
-          <div>
-            <Button type="link">
-              <FileOutlined />
-              {t('emptyFiles')}
-            </Button>
-          </div>
-        ),
-      },
+      // { type: 'divider' },
+      // {
+      //   key: '3',
+      //   onClick: showCreateModal,
+      //   label: (
+      //     <div>
+      //       <Button type="link">
+      //         <FileOutlined />
+      //         {t('emptyFiles')}
+      //       </Button>
+      //     </div>
+      //   ),
+      // },
     ];
   }, [showDocumentUploadModal, showCreateModal, t]);
 
