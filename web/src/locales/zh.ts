@@ -344,7 +344,8 @@ export default {
       maxClusterMessage: '最大聚类数是必填项',
       randomSeed: '随机种子',
       randomSeedMessage: '随机种子是必填项',
-      promptTip: '系统提示为大模型提供任务描述、规定回复方式，以及设置其他各种要求。系统提示通常与 key （变量）合用，通过变量设置大模型的输入数据。你可以通过斜杠或者 (x) 按钮显示可用的 key。',
+      promptTip:
+        '系统提示为大模型提供任务描述、规定回复方式，以及设置其他各种要求。系统提示通常与 key （变量）合用，通过变量设置大模型的输入数据。你可以通过斜杠或者 (x) 按钮显示可用的 key。',
       maxTokenTip: '用于汇总的最大token数。',
       thresholdTip: '阈值越大，聚类越少。',
       maxClusterTip: '最大聚类数。',
@@ -746,7 +747,7 @@ General：实体和关系提取提示来自 GitHub - microsoft/graphrag：基于
       parseOnCreation: '创建时解析',
       uploadTitle: '点击或拖拽文件至此区域即可上传',
       uploadDescription:
-        '支持单次或批量上传。 本地部署的单次上传文件总大小上限为 1GB，单次批量上传文件数不超过 32，单个账户不限文件数量。对于 demo.ragflow.io：每次上传的总文件大小限制为 10MB，每个文件不得超过 10MB，每个账户最多可上传 128 个文件。严禁上传违禁文件。',
+        '支持单次或批量上传。 本地部署的单次上传文件总大小上限为 1GB，单次批量上传文件数不超过 32，单个账户不限文件数量。',
       file: '文件',
       directory: '文件夹',
       local: '本地上传',

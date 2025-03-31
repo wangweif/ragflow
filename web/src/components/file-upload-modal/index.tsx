@@ -163,7 +163,7 @@ const FileUploadModal = ({
           <Segmented
             options={[
               { label: t('local'), value: 'local' },
-              { label: t('s3'), value: 's3' },
+              // { label: t('s3'), value: 's3' },
             ]}
             block
             value={value}
