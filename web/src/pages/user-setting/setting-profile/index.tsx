@@ -1,4 +1,3 @@
-import { LanguageList, LanguageMap } from '@/constants/common';
 import { useTranslate } from '@/hooks/common-hooks';
 import { useChangeLanguage } from '@/hooks/logic-hooks';
 import { useFetchUserInfo, useSaveSetting } from '@/hooks/user-setting-hooks';
@@ -21,7 +20,6 @@ import {
 } from 'antd';
 import { useEffect } from 'react';
 import SettingTitle from '../components/setting-title';
-import { TimezoneList } from '../constants';
 import { useValidateSubmittable } from '../hooks';
 import parentStyles from '../index.less';
 import styles from './index.less';
@@ -126,7 +124,7 @@ const UserSettingProfile = () => {
             </Upload>
           </Form.Item>
           <Divider />
-          <Form.Item<FieldType>
+          {/* <Form.Item<FieldType>
             label={t('colorSchema')}
             name="color_schema"
             rules={[{ required: true, message: t('colorSchemaMessage') }]}
@@ -172,7 +170,7 @@ const UserSettingProfile = () => {
               ))}
             </Select>
           </Form.Item>
-          <Divider />
+          <Divider /> */}
           <Form.Item label={t('email')}>
             <Form.Item<FieldType> name="email" noStyle>
               <Input disabled />
