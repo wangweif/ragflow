@@ -105,6 +105,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.26.10",
     "@react-dev-inspector/umi4-plugin": "^2.0.1",
     "@redux-devtools/extension": "^3.3.0",
     "@testing-library/jest-dom": "^6.4.5",
