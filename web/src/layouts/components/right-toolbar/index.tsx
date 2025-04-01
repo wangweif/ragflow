@@ -7,7 +7,6 @@ import { useTheme } from '@/components/theme-provider';
 import { LanguageList, LanguageMap } from '@/constants/common';
 import { useChangeLanguage } from '@/hooks/logic-hooks';
 import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
-import { MoonIcon, SunIcon } from 'lucide-react';
 import styled from './index.less';
 
 const Circle = ({ children, ...restProps }: React.PropsWithChildren) => {
@@ -68,13 +67,13 @@ const RightToolBar = () => {
         <Circle>
           <CircleHelp className="size-4" onClick={handleDocHelpCLick} />
         </Circle> */}
-        <Circle>
+        {/* <Circle>
           {theme === 'dark' ? (
             <MoonIcon onClick={onMoonClick} size={20} />
           ) : (
             <SunIcon onClick={onSunClick} size={20} />
           )}
-        </Circle>
+        </Circle> */}
         <User></User>
       </Space>
     </div>
