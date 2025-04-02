@@ -1,25 +1,41 @@
 import {
   useFetchUserInfo,
+  useListTenant,
   useListTenantUser,
 } from '@/hooks/user-setting-hooks';
-import { Button, Card, Space } from 'antd';
-import { useTranslation } from 'react-i18next';
+import { Button, Card, Empty, Space, Typography } from 'antd';
 
-import { PlusOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftOutlined,
+  PlusOutlined,
+  TeamOutlined,
+} from '@ant-design/icons';
 import AddTeamModal from './add-team-modal';
 import AddingUserModal from './add-user-modal';
-import { useAddUser, useCreateTeam, useTeamSelection } from './hooks';
+import EditTeamModal from './edit-team-modal';
+import {
+  useAddUser,
+  useCreateTeam,
+  useEditTeam,
+  useTeamSelection,
+} from './hooks';
 import styles from './index.less';
 import TeamList from './team-list';
-import TenantTable from './tenant-table';
 import UserTable from './user-table';
-
+const { Text } = Typography;
 const iconStyle = { fontSize: 20, color: '#1677ff' };
 
 const UserSettingTeam = () => {
   const { data: userInfo } = useFetchUserInfo();
-  const { t } = useTranslation();
   const { selectedTeamId, selectTeam } = useTeamSelection();
+  const { data: teams } = useListTenant();
+
+  // 获取当前选中团队的名称
+  const getCurrentTeamName = () => {
+    if (!selectedTeamId || !teams) return '';
+    const currentTeam = teams.find((team) => team.tenant_id === selectedTeamId);
+    return currentTeam?.nickname || '';
+  };
 
   // 添加用户相关
   useListTenantUser();
@@ -39,65 +55,96 @@ const UserSettingTeam = () => {
     loading: createTeamLoading,
   } = useCreateTeam();
 
+  // 编辑团队相关
+  const {
+    editTeamModalVisible,
+    hideEditTeamModal,
+    handleEditTeamOk,
+    editingTeamId,
+    loading,
+    startEditTeam,
+  } = useEditTeam();
+
+  // 返回团队列表
+  const handleBackToTeamList = () => {
+    selectTeam('');
+  };
+
+  const currentTeamName = getCurrentTeamName();
+
   return (
     <div className={styles.teamWrapper}>
-      {/* 团队列表和创建团队按钮 */}
-      <Card
-        title={
-          <Space>
-            <TeamOutlined style={iconStyle} /> {'团队列表'}
-          </Space>
-        }
-        extra={
-          <Button
-            type="primary"
-            onClick={showCreateTeamModal}
-            icon={<PlusOutlined />}
+      {!selectedTeamId ? (
+        // 团队列表视图
+        <Card
+          title={
+            <Space>
+              <TeamOutlined style={iconStyle} /> {'团队列表'}
+            </Space>
+          }
+          extra={
+            <Button
+              type="primary"
+              onClick={showCreateTeamModal}
+              icon={<PlusOutlined />}
+            >
+              {'创建团队'}
+            </Button>
+          }
+          bordered={false}
+        >
+          <TeamList
+            selectedTeamId={selectedTeamId}
+            onSelectTeam={selectTeam}
+            startEditTeam={startEditTeam}
+          />
+        </Card>
+      ) : (
+        // 团队成员视图
+        <>
+          <Card className={styles.teamHeaderCard}>
+            <Space>
+              <Button
+                type="primary"
+                onClick={handleBackToTeamList}
+                icon={<ArrowLeftOutlined />}
+              >
+                {'返回团队列表'}
+              </Button>
+            </Space>
+          </Card>
+          <Card
+            title={
+              <Space>
+                <TeamOutlined style={iconStyle} />
+                <Text strong className={styles.teamTitle}>
+                  {currentTeamName && `${currentTeamName} - `}
+                  {'团队成员'}
+                </Text>
+              </Space>
+            }
+            extra={
+              <Button
+                type="primary"
+                onClick={showAddingTenantModal}
+                icon={<PlusOutlined />}
+              >
+                {'添加用户'}
+              </Button>
+            }
+            bordered={false}
           >
-            {'创建团队'}
-          </Button>
-        }
-        bordered={false}
-      >
-        <TeamList selectedTeamId={selectedTeamId} onSelectTeam={selectTeam} />
-      </Card>
+            {selectedTeamId ? (
+              <UserTable teamId={selectedTeamId} />
+            ) : (
+              <Empty description={'请选择一个团队查看成员'} />
+            )}
+          </Card>
+        </>
+      )}
 
-      {/* 工作区信息和添加用户按钮 */}
-      {/* <Card className={styles.teamCard}>
-        <Flex align="center" justify={'space-between'}>
-          <Typography.Title level={5}>
-            {userInfo.nickname} {t('setting.workspace')}
-          </Typography.Title>
-          <Button type="primary" onClick={showAddingTenantModal}>
-            <UserAddOutlined />
-            {"添加用户"}
-          </Button>
-        </Flex>
-      </Card> */}
-
-      {/* 团队成员表格 */}
-      <Card
-        title={
-          <Space>
-            <UserOutlined style={iconStyle} /> {'团队成员'}
-          </Space>
-        }
-        extra={
-          <Button
-            type="primary"
-            onClick={showAddingTenantModal}
-            icon={<PlusOutlined />}
-          >
-            {'添加用户'}
-          </Button>
-        }
-        bordered={false}
-      >
-        <UserTable />
-      </Card>
-
-      {/* 已加入的团队表格 */}
-      <Card
+      {/* 已加入的团队表格，不显示 */}
+      {/* <Card
         title={
           <Space>
             <TeamOutlined style={iconStyle} /> {'已加入的团队'}
@@ -124,6 +171,17 @@ const UserSettingTeam = () => {
           hideModal={hideCreateTeamModal}
           onOk={handleCreateTeamOk}
           loading={createTeamLoading}
+        />
+      )}
+
+      {/* 编辑团队模态框 */}
+      {editTeamModalVisible && (
+        <EditTeamModal
+          visible
+          hideModal={hideEditTeamModal}
+          onOk={handleEditTeamOk}
+          teamId={editingTeamId}
+          loading={loading}
         />
       )}
     </div>

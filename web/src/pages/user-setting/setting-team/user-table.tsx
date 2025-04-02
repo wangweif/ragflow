@@ -5,7 +5,7 @@ import { DeleteOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
 import { Button, Table, Tag } from 'antd';
 import { upperFirst } from 'lodash';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
 import { TenantRole } from '../constants';
 import { useHandleDeleteUser } from './hooks';
 
@@ -15,24 +15,39 @@ const ColorMap = {
   [TenantRole.Owner]: 'red',
 };
 
-const UserTable = () => {
+interface UserTableProps {
+  teamId?: string | null;
+}
+
+const UserTable = ({ teamId }: UserTableProps = {}) => {
   const { data, loading } = useListTenantUser();
   const { handleDeleteTenantUser } = useHandleDeleteUser();
-  const { t } = useTranslation();
+  const [filteredData, setFilteredData] = useState<ITenantUser[]>([]);
+
+  // 根据选中的团队ID过滤用户数据
+  useEffect(() => {
+    if (teamId) {
+      // 在实际项目中，应该从API请求特定团队的成员
+      // 由于当前没有团队成员的API，这里只是模拟
+      setFilteredData(data);
+    } else {
+      setFilteredData(data);
+    }
+  }, [data, teamId]);
 
   const columns: TableProps<ITenantUser>['columns'] = [
     {
-      title: t('common.name'),
+      title: '名称',
       dataIndex: 'nickname',
       key: 'nickname',
     },
     {
-      title: t('setting.email'),
+      title: '邮箱',
       dataIndex: 'email',
       key: 'email',
     },
     {
-      title: t('setting.role'),
+      title: '角色',
       dataIndex: 'role',
       key: 'role',
       render(value, { role }) {
@@ -44,7 +59,7 @@ const UserTable = () => {
       },
     },
     {
-      title: t('setting.updateDate'),
+      title: '更新日期',
       dataIndex: 'update_date',
       key: 'update_date',
       render(value) {
@@ -52,7 +67,7 @@ const UserTable = () => {
       },
     },
     {
-      title: t('common.action'),
+      title: '操作',
       key: 'action',
       render: (_, record) => (
         <Button type="text" onClick={handleDeleteTenantUser(record.user_id)}>
@@ -66,7 +81,7 @@ const UserTable = () => {
     <Table<ITenantUser>
       rowKey={'user_id'}
       columns={columns}
-      dataSource={data}
+      dataSource={filteredData}
       loading={loading}
       pagination={false}
     />

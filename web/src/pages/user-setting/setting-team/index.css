@@ -8,6 +8,10 @@
 .teamWrapper .teamCard {
   margin-bottom: 16px;
 }
+.teamHeaderCard {
+  margin-bottom: 16px;
+  background-color: #f5f5f5;
+}
 .teamListWrapper {
   margin-bottom: 16px;
 }
@@ -16,4 +20,7 @@
 }
 .loadingWrapper {
   margin-top: 16px;
+}
+.teamTitle {
+  font-size: 16px;
 }

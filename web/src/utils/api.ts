@@ -21,6 +21,7 @@ export default {
   listTenant: `${api_host}/tenant/list`,
   agreeTenant: (tenantId: string) => `${api_host}/tenant/agree/${tenantId}`,
   createTenant: `${api_host}/tenant/create`,
+  updateTenant: (tenantId: string) => `${api_host}/tenant/${tenantId}/update`,
 
   // llm model
   factories_list: `${api_host}/llm/factories`,

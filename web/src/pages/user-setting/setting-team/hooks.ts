@@ -6,8 +6,11 @@ import {
   useCreateTenant,
   useDeleteTenantUser,
   useFetchUserInfo,
+  useListTenant,
+  useUpdateTenant,
 } from '@/hooks/user-setting-hooks';
 import { rsaPsw } from '@/utils';
+import { Modal } from 'antd';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -143,5 +146,72 @@ export const useTeamSelection = () => {
   return {
     selectedTeamId,
     selectTeam,
+  };
+};
+
+export const useHandleDeleteTeam = () => {
+  const { deleteTenantUser, loading } = useDeleteTenantUser();
+  const showDeleteConfirm = useShowDeleteConfirm();
+  const { data: teamMembers } = useListTenant();
+
+  const handleDeleteTeam = (teamId: string) => () => {
+    showDeleteConfirm({
+      title: '您确定要删除该团队吗',
+      onOk: async () => {
+        // 在实际应用中，这里应该调用删除团队的API
+        // 暂时模拟，使用已有的删除团队成员API
+        // 实际中应该替换为删除团队的方法
+        await deleteTenantUser({ userId: teamId, tenantId: teamId });
+      },
+    });
+  };
+
+  return { handleDeleteTeam, loading };
+};
+
+export const useEditTeam = () => {
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
+  const { updateTenant, loading: updateLoading } = useUpdateTenant();
+  const {
+    visible: editTeamModalVisible,
+    hideModal: hideEditTeamModal,
+    showModal: showEditTeamModal,
+  } = useSetModalState();
+
+  const startEditTeam = useCallback(
+    (teamId: string) => {
+      console.log('teamId', teamId);
+      setEditingTeamId(teamId);
+      showEditTeamModal();
+    },
+    [showEditTeamModal],
+  );
+
+  const handleEditTeamOk = useCallback(
+    async (payload?: { name?: string }) => {
+      if (payload?.name && editingTeamId) {
+        try {
+          await updateTenant({ tenantId: editingTeamId, name: payload.name });
+          hideEditTeamModal();
+          setEditingTeamId(null);
+        } catch (error) {
+          console.error('更新团队名称失败', error);
+          Modal.error({
+            title: '更新失败',
+            content: '更新团队名称失败',
+          });
+        }
+      }
+    },
+    [editingTeamId, hideEditTeamModal, updateTenant],
+  );
+
+  return {
+    editTeamModalVisible,
+    hideEditTeamModal,
+    startEditTeam,
+    handleEditTeamOk,
+    editingTeamId,
+    loading: updateLoading,
   };
 };

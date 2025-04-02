@@ -17,6 +17,7 @@ import userService, {
   deleteTenantUser,
   listTenant,
   listTenantUser,
+  updateTenant,
 } from '@/services/user-service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Modal, message } from 'antd';
@@ -454,4 +455,33 @@ export const useCreateTenant = () => {
   });
 
   return { data, loading, createTenant: mutateAsync };
+};
+
+export const useUpdateTenant = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  const {
+    data,
+    isPending: loading,
+    mutateAsync,
+  } = useMutation({
+    mutationKey: ['updateTenant'],
+    mutationFn: async ({
+      tenantId,
+      name,
+    }: {
+      tenantId: string;
+      name: string;
+    }) => {
+      const { data } = await updateTenant(tenantId, name);
+      if (data.code === 0) {
+        message.success(t('message.updated'));
+        queryClient.invalidateQueries({ queryKey: ['listTenant'] });
+      }
+      return data?.code;
+    },
+  });
+
+  return { data, loading, updateTenant: mutateAsync };
 };

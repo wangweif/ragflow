@@ -1,17 +1,37 @@
+import { useListTenant } from '@/hooks/user-setting-hooks';
 import { IModalProps } from '@/interfaces/common';
 import { Form, Input, Modal } from 'antd';
+import { useEffect } from 'react';
 
 type FieldType = {
   name?: string;
 };
 
-const AddTeamModal = ({
+interface EditTeamModalProps extends IModalProps<FieldType> {
+  teamId: string | null;
+}
+
+const EditTeamModal = ({
   visible,
   hideModal,
   loading,
   onOk,
-}: IModalProps<FieldType>) => {
+  teamId,
+}: EditTeamModalProps) => {
   const [form] = Form.useForm();
+  const { data: teams } = useListTenant();
+
+  // 当模态框打开时，设置表单的初始值
+  useEffect(() => {
+    if (visible && teamId && teams) {
+      const currentTeam = teams.find((team) => team.tenant_id === teamId);
+      if (currentTeam) {
+        form.setFieldsValue({
+          name: currentTeam.nickname,
+        });
+      }
+    }
+  }, [visible, teamId, teams, form]);
 
   const handleOk = async () => {
     const ret = await form.validateFields();
@@ -20,7 +40,7 @@ const AddTeamModal = ({
 
   return (
     <Modal
-      title={'创建团队'}
+      title={'编辑团队'}
       open={visible}
       onOk={handleOk}
       onCancel={hideModal}
@@ -28,7 +48,7 @@ const AddTeamModal = ({
       confirmLoading={loading}
     >
       <Form
-        name="createTeam"
+        name="editTeam"
         labelCol={{ span: 6 }}
         wrapperCol={{ span: 18 }}
         autoComplete="off"
@@ -46,4 +66,4 @@ const AddTeamModal = ({
   );
 };
 
-export default AddTeamModal;
+export default EditTeamModal;
