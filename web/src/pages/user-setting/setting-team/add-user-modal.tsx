@@ -2,23 +2,25 @@ import { IModalProps } from '@/interfaces/common';
 import { Form, Input, Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 
+type FieldType = {
+  email?: string;
+  nickname?: string;
+  password?: string;
+};
+
 const AddingUserModal = ({
   visible,
   hideModal,
   loading,
   onOk,
-}: IModalProps<string>) => {
+}: IModalProps<FieldType>) => {
   const [form] = Form.useForm();
   const { t } = useTranslation();
-
-  type FieldType = {
-    email?: string;
-  };
 
   const handleOk = async () => {
     const ret = await form.validateFields();
 
-    return onOk?.(ret.email);
+    return onOk?.(ret);
   };
 
   return (
@@ -43,6 +45,22 @@ const AddingUserModal = ({
           rules={[{ required: true }]}
         >
           <Input />
+        </Form.Item>
+
+        <Form.Item<FieldType>
+          label={'用户名'}
+          name="nickname"
+          rules={[{ required: true }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item<FieldType>
+          label={t('setting.password')}
+          name="password"
+          rules={[{ required: true }]}
+        >
+          <Input.Password />
         </Form.Item>
       </Form>
     </Modal>

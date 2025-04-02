@@ -1,15 +1,18 @@
 import { useSetModalState, useShowDeleteConfirm } from '@/hooks/common-hooks';
+import { useRegister } from '@/hooks/login-hooks';
 import {
   useAddTenantUser,
   useAgreeTenant,
   useDeleteTenantUser,
   useFetchUserInfo,
 } from '@/hooks/user-setting-hooks';
+import { rsaPsw } from '@/utils';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export const useAddUser = () => {
   const { addTenantUser } = useAddTenantUser();
+  const { register } = useRegister();
   const {
     visible: addingTenantModalVisible,
     hideModal: hideAddingTenantModal,
@@ -17,10 +20,25 @@ export const useAddUser = () => {
   } = useSetModalState();
 
   const handleAddUserOk = useCallback(
-    async (email: string) => {
-      const code = await addTenantUser(email);
-      if (code === 0) {
-        hideAddingTenantModal();
+    async (payload?: {
+      email?: string;
+      nickname?: string;
+      password?: string;
+    }) => {
+      // 注册用户
+      if (payload?.nickname && payload?.password && payload?.email) {
+        const rsaPassWord = rsaPsw(payload.password) as string;
+        const { data: res = {}, response } = await register({
+          email: payload.email,
+          password: rsaPassWord,
+          nickname: payload.nickname,
+        });
+
+        const code = await addTenantUser(payload.email);
+        console.log('code', code);
+        if (code === 0) {
+          hideAddingTenantModal();
+        }
       }
     },
     [addTenantUser, hideAddingTenantModal],

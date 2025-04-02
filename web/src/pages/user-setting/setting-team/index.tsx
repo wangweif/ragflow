@@ -34,7 +34,7 @@ const UserSettingTeam = () => {
           </span>
           <Button type="primary" onClick={showAddingTenantModal}>
             <UserAddOutlined />
-            {t('setting.invite')}
+            {'添加用户'}
           </Button>
         </Flex>
       </Card>
