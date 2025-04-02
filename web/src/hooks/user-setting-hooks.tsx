@@ -13,6 +13,7 @@ import { ISetLangfuseConfigRequestBody } from '@/interfaces/request/system';
 import userService, {
   addTenantUser,
   agreeTenant,
+  createTenant,
   deleteTenantUser,
   listTenant,
   listTenantUser,
@@ -430,4 +431,27 @@ export const useFetchLangfuseConfig = () => {
   });
 
   return { data, loading };
+};
+
+export const useCreateTenant = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  const {
+    data,
+    isPending: loading,
+    mutateAsync,
+  } = useMutation({
+    mutationKey: ['createTenant'],
+    mutationFn: async (name: string) => {
+      const { data } = await createTenant(name);
+      if (data.code === 0) {
+        message.success(t('message.created'));
+        queryClient.invalidateQueries({ queryKey: ['listTenant'] });
+      }
+      return data?.data ?? {};
+    },
+  });
+
+  return { data, loading, createTenant: mutateAsync };
 };

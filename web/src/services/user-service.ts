@@ -142,4 +142,7 @@ export const listTenant = () => request.get(api.listTenant);
 export const agreeTenant = (tenantId: string) =>
   request.post(api.agreeTenant(tenantId));
 
+export const createTenant = (name: string) =>
+  request.post(api.createTenant, { name });
+
 export default userService;

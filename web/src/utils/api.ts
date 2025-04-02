@@ -20,6 +20,7 @@ export default {
     `${api_host}/tenant/${tenantId}/user/${userId}`,
   listTenant: `${api_host}/tenant/list`,
   agreeTenant: (tenantId: string) => `${api_host}/tenant/agree/${tenantId}`,
+  createTenant: `${api_host}/tenant/create`,
 
   // llm model
   factories_list: `${api_host}/llm/factories`,

@@ -3,11 +3,12 @@ import { useRegister } from '@/hooks/login-hooks';
 import {
   useAddTenantUser,
   useAgreeTenant,
+  useCreateTenant,
   useDeleteTenantUser,
   useFetchUserInfo,
 } from '@/hooks/user-setting-hooks';
 import { rsaPsw } from '@/utils';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export const useAddUser = () => {
@@ -103,4 +104,44 @@ export const useHandleQuitUser = () => {
   };
 
   return { handleQuitTenantUser, loading };
+};
+
+export const useCreateTeam = () => {
+  const { createTenant, loading } = useCreateTenant();
+  const {
+    visible: createTeamModalVisible,
+    hideModal: hideCreateTeamModal,
+    showModal: showCreateTeamModal,
+  } = useSetModalState();
+
+  const handleCreateTeamOk = useCallback(
+    async (payload?: { name?: string }) => {
+      if (payload?.name) {
+        await createTenant(payload.name);
+        hideCreateTeamModal();
+      }
+    },
+    [createTenant, hideCreateTeamModal],
+  );
+
+  return {
+    createTeamModalVisible,
+    hideCreateTeamModal,
+    showCreateTeamModal,
+    handleCreateTeamOk,
+    loading,
+  };
+};
+
+export const useTeamSelection = () => {
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  const selectTeam = useCallback((teamId: string) => {
+    setSelectedTeamId(teamId);
+  }, []);
+
+  return {
+    selectedTeamId,
+    selectTeam,
+  };
 };

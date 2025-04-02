@@ -4,20 +4,16 @@
   flex-direction: column;
   gap: 20px;
   padding: 16px;
-  .teamCard {
-    // width: 100%;
-    margin-bottom: 16px;
-  }
 }
-
+.teamWrapper .teamCard {
+  margin-bottom: 16px;
+}
 .teamListWrapper {
   margin-bottom: 16px;
 }
-
 .selectedTeam {
   border: 2px solid #1677ff;
 }
-
 .loadingWrapper {
   margin-top: 16px;
 }
