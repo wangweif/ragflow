@@ -1,5 +1,4 @@
 import { DocumentParserType } from '@/constants/knowledge';
-import { useTranslate } from '@/hooks/common-hooks';
 import { listTenant, listTenantUser } from '@/services/user-service';
 import { normFile } from '@/utils/file-util';
 import {
@@ -110,7 +109,6 @@ const useTeamMembers = () => {
 export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   const { submitKnowledgeConfiguration, submitLoading, navigateToDataset } =
     useSubmitKnowledgeConfiguration(form);
-  const { t } = useTranslate('knowledgeConfiguration');
   const { teams, loading: teamsLoading } = useTeamMembers();
 
   const [finalParserId, setFinalParserId] = useState<DocumentParserType>();
@@ -227,12 +225,12 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
 
   return (
     <Form form={form} name="validateOnly" layout="vertical" autoComplete="off">
-      <Form.Item name="name" label={t('name')} rules={[{ required: true }]}>
+      <Form.Item name="name" label={'知识库名称'} rules={[{ required: true }]}>
         <Input />
       </Form.Item>
       <Form.Item
         name="avatar"
-        label={t('photo')}
+        label={'知识库图片'}
         valuePropName="fileList"
         getValueFromEvent={normFile}
       >
@@ -244,22 +242,22 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
         >
           <button style={{ border: 0, background: 'none' }} type="button">
             <PlusOutlined />
-            <div style={{ marginTop: 8 }}>{t('upload')}</div>
+            <div style={{ marginTop: 8 }}>{'上传图片'}</div>
           </button>
         </Upload>
       </Form.Item>
-      <Form.Item name="description" label={t('description')}>
+      <Form.Item name="description" label={'知识库描述'}>
         <Input />
       </Form.Item>
       <Form.Item
         name="permission"
-        label={t('permissions')}
-        tooltip={t('permissionsTip')}
+        label={'权限'}
+        tooltip={'设置知识库的权限'}
         rules={[{ required: true }]}
       >
         <Radio.Group onChange={handlePermissionChange}>
-          <Radio value="me">{t('me')}</Radio>
-          <Radio value="team">{t('team')}</Radio>
+          <Radio value="me">{'只有我'}</Radio>
+          <Radio value="team">{'团队'}</Radio>
         </Radio.Group>
       </Form.Item>
 
@@ -303,7 +301,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
         <div className={styles.buttonWrapper}>
           <Space>
             <Button size={'middle'} onClick={navigateToDataset}>
-              {t('cancel')}
+              {'取消'}
             </Button>
             <Button
               type="primary"
@@ -311,7 +309,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
               loading={submitLoading}
               onClick={submitKnowledgeConfiguration}
             >
-              {t('save')}
+              {'保存'}
             </Button>
           </Space>
         </div>
