@@ -24,11 +24,32 @@
 
 .configurationWrapper {
   padding: 0 52px;
+  height: 100%;
+  overflow-y: auto;
+
   .buttonWrapper {
     text-align: right;
   }
+
   .variableSlider {
     width: 100%;
+  }
+
+  .memberTree {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    padding: 8px;
+    background-color: #fafafa;
+  }
+
+  .searchWrapper {
+    margin-bottom: 8px;
+
+    .ant-input-affix-wrapper {
+      width: 100%;
+    }
   }
 }
 

@@ -1,8 +1,24 @@
 import { DocumentParserType } from '@/constants/knowledge';
 import { useTranslate } from '@/hooks/common-hooks';
+import { listTenant, listTenantUser } from '@/services/user-service';
 import { normFile } from '@/utils/file-util';
-import { PlusOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Radio, Space, Upload } from 'antd';
+import {
+  PlusOutlined,
+  SearchOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
+import {
+  Button,
+  Form,
+  Input,
+  Radio,
+  Space,
+  Spin,
+  Tree,
+  Typography,
+  Upload,
+} from 'antd';
 import { FormInstance } from 'antd/lib';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -27,6 +43,8 @@ import { TagConfiguration } from './tag';
 
 import styles from '../index.less';
 
+const { Text } = Typography;
+
 const ConfigurationComponentMap = {
   [DocumentParserType.Naive]: NaiveConfiguration,
   [DocumentParserType.Qa]: QAConfiguration,
@@ -49,14 +67,59 @@ function EmptyComponent() {
   return <div></div>;
 }
 
+// 自定义Hook用于获取团队成员数据
+const useTeamMembers = () => {
+  const [loading, setLoading] = useState(false);
+  const [teams, setTeams] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTeamData = async () => {
+      setLoading(true);
+      try {
+        // 获取团队列表
+        const teamsResponse = await listTenant();
+        const teamsData = teamsResponse.data?.data || [];
+
+        // 为每个团队获取成员
+        const teamsWithMembers = await Promise.all(
+          teamsData.map(async (team: any) => {
+            const membersResponse = await listTenantUser(team.tenant_id);
+            const members = membersResponse.data?.data || [];
+
+            return {
+              ...team,
+              members,
+            };
+          }),
+        );
+
+        setTeams(teamsWithMembers);
+      } catch (error) {
+        console.error('获取团队数据失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeamData();
+  }, []);
+
+  return { teams, loading };
+};
+
 export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   const { submitKnowledgeConfiguration, submitLoading, navigateToDataset } =
     useSubmitKnowledgeConfiguration(form);
   const { t } = useTranslate('knowledgeConfiguration');
+  const { teams, loading: teamsLoading } = useTeamMembers();
 
   const [finalParserId, setFinalParserId] = useState<DocumentParserType>();
   const knowledgeDetails = useFetchKnowledgeConfigurationOnMount(form);
   const parserId: DocumentParserType = Form.useWatch('parser_id', form);
+  const permission = Form.useWatch('permission', form);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState('');
+
   const ConfigurationComponent = useMemo(() => {
     return finalParserId
       ? ConfigurationComponentMap[finalParserId]
@@ -70,6 +133,97 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   useEffect(() => {
     setFinalParserId(knowledgeDetails.parser_id as DocumentParserType);
   }, [knowledgeDetails.parser_id]);
+
+  // 根据团队数据生成树形结构数据
+  const treeData = useMemo(() => {
+    if (!teams.length) return [];
+
+    return teams.map((team) => ({
+      title: (
+        <Space>
+          <TeamOutlined />
+          <span>
+            {team.name || team.nickname || `团队 ${team.tenant_id.slice(0, 6)}`}
+          </span>
+          <Text type="secondary" style={{ fontSize: '12px' }}>
+            ({team.members?.length || 0}人)
+          </Text>
+        </Space>
+      ),
+      key: `team-${team.tenant_id}`,
+      value: 'team',
+      children: team.members.map((member: any) => ({
+        title: (
+          <Space>
+            <UserOutlined />
+            <span>{member.nickname || member.email}</span>
+            {member.role === 'owner' && (
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                (团队拥有者)
+              </Text>
+            )}
+          </Space>
+        ),
+        key: `member-${member.user_id}`,
+        value: member.user_id,
+        isLeaf: true,
+      })),
+    }));
+  }, [teams]);
+
+  // 初始化选中的成员
+  useEffect(() => {
+    const formSelectedMembers = form.getFieldValue('selectedMembers');
+    if (formSelectedMembers && formSelectedMembers.length > 0) {
+      setSelectedMembers(formSelectedMembers);
+    }
+  }, [form]);
+
+  // 处理权限选择变化
+  const handlePermissionChange = (e: any) => {
+    const value = e.target.value;
+    form.setFieldsValue({ permission: value });
+
+    // 如果选择"me"，清空已选成员
+    if (value === 'me') {
+      setSelectedMembers([]);
+      form.setFieldsValue({ selectedMembers: [] });
+    }
+  };
+
+  // 处理树选择变化
+  const handleTreeSelect = (selectedKeys: any) => {
+    setSelectedMembers(selectedKeys);
+    form.setFieldsValue({ selectedMembers: selectedKeys });
+  };
+
+  // 处理搜索变化
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
+
+  // 处理树搜索过滤
+  const treeSearchFilter = (node: any) => {
+    if (!searchValue) return true;
+
+    const searchLower = searchValue.toLowerCase();
+    const titleContent =
+      node.title?.props?.children?.[1]?.props?.children?.toLowerCase() || '';
+
+    if (titleContent.includes(searchLower)) return true;
+
+    // 如果是团队节点，检查它的成员是否匹配
+    if (node.children) {
+      return node.children.some((child: any) => {
+        const childTitleContent =
+          child.title?.props?.children?.[1]?.props?.children?.toLowerCase() ||
+          '';
+        return childTitleContent.includes(searchLower);
+      });
+    }
+
+    return false;
+  };
 
   return (
     <Form form={form} name="validateOnly" layout="vertical" autoComplete="off">
@@ -103,11 +257,45 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
         tooltip={t('permissionsTip')}
         rules={[{ required: true }]}
       >
-        <Radio.Group>
+        <Radio.Group onChange={handlePermissionChange}>
           <Radio value="me">{t('me')}</Radio>
           <Radio value="team">{t('team')}</Radio>
         </Radio.Group>
       </Form.Item>
+
+      {/* 团队成员选择树 */}
+      {permission === 'team' && (
+        <Form.Item name="selectedMembers" label={'选择团队成员'}>
+          <Spin spinning={teamsLoading}>
+            {treeData.length > 0 ? (
+              <div>
+                <div className={styles.searchWrapper}>
+                  <Input
+                    placeholder="搜索团队或成员"
+                    value={searchValue}
+                    onChange={handleSearchChange}
+                    prefix={<SearchOutlined />}
+                    allowClear
+                    style={{ marginBottom: '8px' }}
+                  />
+                </div>
+                <Tree
+                  checkable
+                  selectable={false}
+                  treeData={treeData}
+                  onCheck={handleTreeSelect}
+                  checkedKeys={selectedMembers}
+                  defaultExpandAll
+                  className={styles.memberTree}
+                  filterTreeNode={treeSearchFilter}
+                />
+              </div>
+            ) : (
+              <Text type="secondary">{'没有可用的团队'}</Text>
+            )}
+          </Spin>
+        </Form.Item>
+      )}
 
       <ConfigurationComponent></ConfigurationComponent>
 
