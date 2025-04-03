@@ -1,9 +1,12 @@
 import { useListTenant } from '@/hooks/user-setting-hooks';
 import { ITenant } from '@/interfaces/database/user-setting';
+import { listTenantUser } from '@/services/user-service';
 import { formatDate } from '@/utils/date';
+
 import { DeleteOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
 import { Button, Space, Table, Tooltip } from 'antd';
+import { useEffect, useState } from 'react';
 import { useHandleDeleteTeam } from './hooks';
 
 interface TeamListProps {
@@ -19,11 +22,27 @@ const TeamList = ({
 }: TeamListProps) => {
   const { data, loading } = useListTenant();
   const { handleDeleteTeam } = useHandleDeleteTeam();
+  const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
 
-  // 模拟团队成员数量数据，实际项目中应该从API获取
-  const getMemberCount = (teamId: string) => {
-    return Math.floor(Math.random() * 10) + 1; // 模拟1-10人的团队成员数量
+  // 获取团队成员数量
+  const getMemberCount = async (teamId: string) => {
+    const { data } = await listTenantUser(teamId);
+    return data?.data?.length || 0;
   };
+
+  useEffect(() => {
+    const fetchMemberCounts = async () => {
+      if (data) {
+        const counts: Record<string, number> = {};
+        for (const team of data) {
+          counts[team.tenant_id] = await getMemberCount(team.tenant_id);
+        }
+        setMemberCounts(counts);
+      }
+    };
+
+    fetchMemberCounts();
+  }, [data]);
 
   const columns: TableProps<ITenant>['columns'] = [
     {
@@ -37,15 +56,12 @@ const TeamList = ({
     {
       title: '团队成员',
       key: 'memberCount',
-      render: (_, record) => {
-        const count = getMemberCount(record.tenant_id);
-        return (
-          <Space>
-            <TeamOutlined />
-            {count}
-          </Space>
-        );
-      },
+      render: (_, record) => (
+        <Space>
+          <TeamOutlined />
+          {memberCounts[record.tenant_id] || 0}
+        </Space>
+      ),
     },
     {
       title: '更新日期',
