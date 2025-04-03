@@ -95,6 +95,94 @@ def init_superuser():
                 tenant["embd_id"]))
 
 
+def init_custom_admin():
+    """
+    初始化自定义管理员账号，邮箱admin@bjzntd.com，密码admin
+    使用与系统已有的注册逻辑相同的方式处理密码
+    """
+    user_info = {
+        "id": uuid.uuid1().hex,
+        "password": encode_to_base64("admin"),  # 使用与原系统相同的密码编码方式
+        "nickname": "管理员",
+        "is_superuser": True,
+        "email": "admin@bjzntd.com",  # 自定义邮箱
+        "creator": "system",
+        "status": "1",
+        "access_token": uuid.uuid1().hex  # 确保有访问令牌
+    }
+    
+    # 检查用户是否已存在
+    existing_user = UserService.query(email=user_info["email"])
+    if existing_user:
+        logging.info(f"自定义管理员账号 {user_info['email']} 已存在，跳过初始化。")
+        return
+    
+    tenant = {
+        "id": user_info["id"],
+        "name": "北京智农天地",  # 自定义租户名称
+        "llm_id": settings.CHAT_MDL,
+        "embd_id": settings.EMBEDDING_MDL,
+        "asr_id": settings.ASR_MDL,
+        "parser_ids": settings.PARSERS,
+        "img2txt_id": settings.IMAGE2TEXT_MDL,
+        "rerank_id": settings.RERANK_MDL if hasattr(settings, 'RERANK_MDL') else None
+    }
+    
+    usr_tenant = {
+        "tenant_id": user_info["id"],
+        "user_id": user_info["id"],
+        "invited_by": user_info["id"],
+        "role": UserTenantRole.OWNER
+    }
+    
+    tenant_llm = []
+    for llm in LLMService.query(fid=settings.LLM_FACTORY):
+        tenant_llm.append({
+            "tenant_id": user_info["id"], 
+            "llm_factory": settings.LLM_FACTORY, 
+            "llm_name": llm.llm_name,
+            "model_type": llm.model_type,
+            "api_key": settings.API_KEY, 
+            "api_base": settings.LLM_BASE_URL
+        })
+    
+    try:
+        # 创建用户
+        if not UserService.save(**user_info):
+            logging.error("无法初始化自定义管理员账号")
+            return
+        
+        # 创建租户和关联记录
+        TenantService.insert(**tenant)
+        UserTenantService.insert(**usr_tenant)
+        
+        if tenant_llm:
+            TenantLLMService.insert_many(tenant_llm)
+        
+        # 创建用户文件根目录
+        from api.db.db_models import File, DB
+        from api.db import FileType
+        
+        file_id = uuid.uuid1().hex
+        file_info = {
+            "id": file_id,
+            "parent_id": file_id,
+            "tenant_id": user_info["id"],
+            "created_by": user_info["id"],
+            "name": "/",
+            "type": FileType.FOLDER.value,
+            "size": 0,
+            "location": "",
+        }
+        
+        with DB.connection_context():
+            File.insert(**file_info).execute()
+        
+        logging.info(f"自定义管理员账号初始化成功: 邮箱={user_info['email']}, 密码=admin")
+    except Exception as e:
+        logging.error(f"初始化自定义管理员账号出错: {str(e)}")
+
+
 def init_llm_factory():
     try:
         LLMService.filter_delete([(LLM.fid == "MiniMax" or LLM.fid == "Minimax")])
@@ -169,8 +257,10 @@ def init_web_data():
     start_time = time.time()
 
     init_llm_factory()
-    # if not UserService.get_all().count():
-    #    init_superuser()
+    
+    # 初始化管理员账户
+    if not UserService.get_all().count():
+       init_custom_admin()
 
     add_graph_templates()
     logging.info("init web data success:{}".format(time.time() - start_time))

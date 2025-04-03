@@ -32,6 +32,8 @@ from playhouse.pool import PooledMySQLDatabase, PooledPostgresqlDatabase
 
 from api import settings, utils
 from api.db import ParserType, SerializedType
+# 将register_models的导入移到函数中，避免循环导入
+# from api.db.db_models_extension import register_models
 
 
 def singleton(cls, *args, **kw):
@@ -439,6 +441,11 @@ def init_database_tables(alter_fields=[]):
     if create_failed_list:
         logging.error(f"create tables failed: {create_failed_list}")
         raise Exception(f"create tables failed: {create_failed_list}")
+    
+    # 注册扩展模型的表，修改为内部导入以避免循环依赖
+    from api.db.db_models_extension import register_models
+    register_models()
+    
     migrate_db()
 
 

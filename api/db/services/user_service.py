@@ -58,6 +58,26 @@ class UserService(CommonService):
 
     @classmethod
     @DB.connection_context()
+    def get_by_email(cls, email):
+        """根据邮箱获取用户
+        
+        Args:
+            email: 用户邮箱
+            
+        Returns:
+            User对象，如果未找到则返回None
+        """
+        try:
+            user = cls.model.select().where(
+                (cls.model.email == email) & 
+                (cls.model.status == StatusEnum.VALID.value)
+            ).get()
+            return user
+        except peewee.DoesNotExist:
+            return None
+
+    @classmethod
+    @DB.connection_context()
     def query_user(cls, email, password):
         """Authenticate a user with email and password.
         
@@ -90,6 +110,44 @@ class UserService(CommonService):
         kwargs["update_date"] = datetime_format(datetime.now())
         obj = cls.model(**kwargs).save(force_insert=True)
         return obj
+
+    @classmethod
+    @DB.connection_context()
+    def create_user(cls, email, nickname, password=None):
+        """创建新用户
+        
+        Args:
+            email: 用户邮箱
+            nickname: 用户昵称
+            password: 用户密码，如果不提供则生成随机密码
+            
+        Returns:
+            新创建的用户对象
+        """
+        # 检查邮箱是否已存在
+        existing_user = cls.get_by_email(email)
+        if existing_user:
+            return existing_user
+            
+        # 如果未提供密码，生成随机密码
+        if not password:
+            password = get_uuid()[:8]
+            
+        # 创建用户
+        user_data = {
+            "email": email,
+            "nickname": nickname,
+            "password": password,
+            "is_authenticated": "1",
+            "is_active": "1",
+            "is_anonymous": "0",
+            "status": StatusEnum.VALID.value
+        }
+        
+        cls.save(**user_data)
+        
+        # 返回创建的用户
+        return cls.get_by_email(email)
 
     @classmethod
     @DB.connection_context()
