@@ -79,7 +79,7 @@ const UserSettingTeam = () => {
         <Card
           title={
             <Space>
-              <TeamOutlined style={iconStyle} /> {'团队列表'}
+              <TeamOutlined style={iconStyle} /> {'部门列表'}
             </Space>
           }
           extra={
@@ -88,7 +88,7 @@ const UserSettingTeam = () => {
               onClick={showCreateTeamModal}
               icon={<PlusOutlined />}
             >
-              {'创建团队'}
+              {'创建部门'}
             </Button>
           }
           bordered={false}
@@ -100,7 +100,7 @@ const UserSettingTeam = () => {
           />
         </Card>
       ) : (
-        // 团队成员视图
+        // 部门成员视图
         <>
           <Card className={styles.teamHeaderCard}>
             <Space>
@@ -109,7 +109,7 @@ const UserSettingTeam = () => {
                 onClick={handleBackToTeamList}
                 icon={<ArrowLeftOutlined />}
               >
-                {'返回团队列表'}
+                {'返回部门列表'}
               </Button>
             </Space>
           </Card>
@@ -119,7 +119,7 @@ const UserSettingTeam = () => {
                 <TeamOutlined style={iconStyle} />
                 <Text strong className={styles.teamTitle}>
                   {currentTeamName && `${currentTeamName} - `}
-                  {'团队成员'}
+                  {'部门成员'}
                 </Text>
               </Space>
             }
@@ -137,7 +137,7 @@ const UserSettingTeam = () => {
             {selectedTeamId ? (
               <UserTable teamId={selectedTeamId} />
             ) : (
-              <Empty description={'请选择一个团队查看成员'} />
+              <Empty description={'请选择一个部门查看成员'} />
             )}
           </Card>
         </>

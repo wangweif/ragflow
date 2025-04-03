@@ -66,7 +66,7 @@ function EmptyComponent() {
   return <div></div>;
 }
 
-// 自定义Hook用于获取团队成员数据
+// 自定义Hook用于获取部门成员数据
 const useTeamMembers = () => {
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
@@ -75,11 +75,11 @@ const useTeamMembers = () => {
     const fetchTeamData = async () => {
       setLoading(true);
       try {
-        // 获取团队列表
+        // 获取部门列表
         const teamsResponse = await listTenant();
         const teamsData = teamsResponse.data?.data || [];
 
-        // 为每个团队获取成员
+        // 为每个部门获取成员
         const teamsWithMembers = await Promise.all(
           teamsData.map(async (team: any) => {
             const membersResponse = await listTenantUser(team.tenant_id);
@@ -94,7 +94,7 @@ const useTeamMembers = () => {
 
         setTeams(teamsWithMembers);
       } catch (error) {
-        console.error('获取团队数据失败:', error);
+        console.error('获取部门成员数据失败:', error);
       } finally {
         setLoading(false);
       }
@@ -141,7 +141,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
         <Space>
           <TeamOutlined />
           <span>
-            {team.name || team.nickname || `团队 ${team.tenant_id.slice(0, 6)}`}
+            {team.name || team.nickname || `部门 ${team.tenant_id.slice(0, 6)}`}
           </span>
           <Text type="secondary" style={{ fontSize: '12px' }}>
             ({team.members?.length || 0}人)
@@ -157,7 +157,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
             <span>{member.nickname || member.email}</span>
             {member.role === 'owner' && (
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                (团队拥有者)
+                (部门拥有者)
               </Text>
             )}
           </Space>
@@ -257,19 +257,19 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
       >
         <Radio.Group onChange={handlePermissionChange}>
           <Radio value="me">{'只有我'}</Radio>
-          <Radio value="team">{'团队'}</Radio>
+          <Radio value="team">{'部门'}</Radio>
         </Radio.Group>
       </Form.Item>
 
       {/* 团队成员选择树 */}
       {permission === 'team' && (
-        <Form.Item name="selectedMembers" label={'选择团队成员'}>
+        <Form.Item name="selectedMembers" label={'选择部门成员'}>
           <Spin spinning={teamsLoading}>
             {treeData.length > 0 ? (
               <div>
                 <div className={styles.searchWrapper}>
                   <Input
-                    placeholder="搜索团队或成员"
+                    placeholder="搜索部门或成员"
                     value={searchValue}
                     onChange={handleSearchChange}
                     prefix={<SearchOutlined />}
@@ -289,7 +289,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
                 />
               </div>
             ) : (
-              <Text type="secondary">{'没有可用的团队'}</Text>
+              <Text type="secondary">{'没有可用的部门'}</Text>
             )}
           </Spin>
         </Form.Item>

@@ -444,8 +444,8 @@ export const useCreateTenant = () => {
     mutateAsync,
   } = useMutation({
     mutationKey: ['createTenant'],
-    mutationFn: async (name: string) => {
-      const { data } = await createTenant(name);
+    mutationFn: async (params: { name: string; tenantId?: string }) => {
+      const { data } = await createTenant(params.name, params.tenantId);
       if (data.code === 0) {
         message.success(t('message.created'));
         queryClient.invalidateQueries({ queryKey: ['listTenant'] });

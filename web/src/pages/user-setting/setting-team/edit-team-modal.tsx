@@ -40,7 +40,7 @@ const EditTeamModal = ({
 
   return (
     <Modal
-      title={'编辑团队'}
+      title={'编辑部门'}
       open={visible}
       onOk={handleOk}
       onCancel={hideModal}
@@ -55,9 +55,9 @@ const EditTeamModal = ({
         form={form}
       >
         <Form.Item<FieldType>
-          label={'团队名称'}
+          label={'部门名称'}
           name="name"
-          rules={[{ required: true, message: '团队名称不能为空' }]}
+          rules={[{ required: true, message: '部门名称不能为空' }]}
         >
           <Input />
         </Form.Item>

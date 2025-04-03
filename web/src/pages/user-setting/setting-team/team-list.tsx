@@ -24,7 +24,7 @@ const TeamList = ({
   const { handleDeleteTeam } = useHandleDeleteTeam();
   const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
 
-  // 获取团队成员数量
+  // 获取部门成员数量
   const getMemberCount = async (teamId: string) => {
     const { data } = await listTenantUser(teamId);
     return data?.data?.length || 0;
@@ -54,7 +54,7 @@ const TeamList = ({
       ),
     },
     {
-      title: '团队成员',
+      title: '部门成员',
       key: 'memberCount',
       render: (_, record) => (
         <Space>

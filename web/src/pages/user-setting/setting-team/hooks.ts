@@ -5,6 +5,7 @@ import {
   useAgreeTenant,
   useCreateTenant,
   useDeleteTenantUser,
+  useFetchTenantInfo,
   useFetchUserInfo,
   useListTenant,
   useUpdateTenant,
@@ -111,6 +112,7 @@ export const useHandleQuitUser = () => {
 
 export const useCreateTeam = () => {
   const { createTenant, loading } = useCreateTenant();
+  const { data: tenantInfo } = useFetchTenantInfo();
   const {
     visible: createTeamModalVisible,
     hideModal: hideCreateTeamModal,
@@ -120,11 +122,14 @@ export const useCreateTeam = () => {
   const handleCreateTeamOk = useCallback(
     async (payload?: { name?: string }) => {
       if (payload?.name) {
-        await createTenant(payload.name);
+        await createTenant({
+          name: payload.name,
+          tenantId: tenantInfo.tenant_id,
+        });
         hideCreateTeamModal();
       }
     },
-    [createTenant, hideCreateTeamModal],
+    [createTenant, hideCreateTeamModal, tenantInfo.tenant_id],
   );
 
   return {

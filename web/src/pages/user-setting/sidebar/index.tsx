@@ -42,7 +42,7 @@ const SideBar = () => {
       children,
       label: (
         <Flex justify={'space-between'}>
-          {t(label)}
+          {label === 'team' ? '部门' : t(label)}
           <span className={styles.version}>
             {label === 'system' && version}
           </span>
