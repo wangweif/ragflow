@@ -162,6 +162,19 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
             )}
           </Space>
         ),
+        // 成员权限：可读、可写
+        children: [
+          {
+            title: '可读',
+            key: `member-${member.user_id}-read`,
+            value: 'read',
+          },
+          {
+            title: '可写',
+            key: `member-${member.user_id}-write`,
+            value: 'write',
+          },
+        ],
         key: `member-${member.user_id}`,
         value: member.user_id,
         isLeaf: true,

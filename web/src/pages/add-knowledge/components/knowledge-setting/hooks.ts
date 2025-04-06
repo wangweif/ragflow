@@ -18,37 +18,43 @@ import { Form, UploadFile, message } from 'antd';
 import { FormInstance } from 'antd/lib';
 import pick from 'lodash/pick';
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'umi';
+
+// 获取知识库ID
+export const useKnowledgeBaseId = (): string => {
+  const [searchParams] = useSearchParams();
+  const knowledgeBaseId = searchParams.get('id');
+
+  return knowledgeBaseId || '';
+};
 
 export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
   const { saveKnowledgeConfiguration, loading } = useUpdateKnowledge();
   const navigateToDataset = useNavigateToDataset();
   const [assignLoading, setAssignLoading] = useState(false);
+  const knowledgeBaseId = useKnowledgeBaseId();
 
   // 分配知识库权限给用户
   const assignPermission = async (
-    knowledgeId: string,
-    selectedMemberIds: string[],
+    selectedMembers: Record<string, Set<string>>,
   ) => {
-    if (!selectedMemberIds.length) return;
-
     try {
       setAssignLoading(true);
-
-      // 多个用户并行处理
       await Promise.all(
-        selectedMemberIds.map(async (userId) => {
+        Object.entries(selectedMembers).map(async ([userId, permissions]) => {
           try {
             // 创建知识库用户关系记录
             await post(api.assignKnowledgePermission, {
-              kb_id: knowledgeId,
+              kb_id: knowledgeBaseId,
               user_id: userId,
+              read: permissions.has('read'),
+              write: permissions.has('write'),
             });
           } catch (error) {
             console.error(`为用户 ${userId} 分配知识库权限失败:`, error);
           }
         }),
       );
-
       message.success('知识库权限分配成功');
     } catch (error) {
       console.error('分配知识库权限过程中出错:', error);
@@ -62,45 +68,43 @@ export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
     const values = await form.validateFields();
     const avatar = await getBase64FromUploadFileList(values.avatar);
 
+    // 移出values中的selectedMembers,以便直接调用原始的更新api
+    const { selectedMembers, ...rest } = values;
+
     // 处理权限和团队成员信息
-    const permissionData = {
-      ...values,
+    await saveKnowledgeConfiguration({
+      ...rest,
       avatar,
-    };
+    });
 
-    // 提取选中的用户ID
-    let selectedUserIds: string[] = [];
+    //为选中的用户分配权限
+    if (values.permission === 'team' && selectedMembers?.length > 0) {
+      // 数据预处理
+      const result: Record<string, Set<string>> = {};
+      selectedMembers.forEach((key: string) => {
+        const matches = key.match(/^member-(.+?)(?:-(read|write))?$/);
+        if (!matches) return;
 
-    // 如果设置了团队权限并选择了特定成员，添加到提交数据中
-    if (values.permission === 'team' && values.selectedMembers?.length > 0) {
-      selectedUserIds = values.selectedMembers
-        .filter((key: string) => key.startsWith('member-'))
-        .map((key: string) => key.replace('member-', ''));
+        const [, userId, permission] = matches;
 
-      // 将操作权限信息传给后端
-      permissionData.operator_permission = selectedUserIds;
-    }
+        // 初始化用户的权限集合（如果尚未存在）
+        if (!result[userId]) {
+          result[userId] = new Set();
+        }
+        if (permission) {
+          result[userId].add(permission);
+        }
+      });
 
-    // 保存知识库配置
-    const result = await saveKnowledgeConfiguration(permissionData);
-
-    // 如果保存成功且有选中的用户，为他们分配权限
-    if (
-      result?.code === 0 &&
-      values.permission === 'team' &&
-      selectedUserIds.length > 0
-    ) {
-      // 使用知识库ID分配权限
-      await assignPermission(
-        result.data.id || permissionData.kb_id,
-        selectedUserIds,
-      );
+      // 分配权限
+      await assignPermission(result);
     }
 
     navigateToDataset();
   }, [saveKnowledgeConfiguration, form, navigateToDataset]);
 
   return {
+    assignPermission,
     submitKnowledgeConfiguration,
     submitLoading: loading || assignLoading,
     navigateToDataset,
