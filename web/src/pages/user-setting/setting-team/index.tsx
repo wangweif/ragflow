@@ -30,11 +30,11 @@ const UserSettingTeam = () => {
   const { selectedTeamId, selectTeam } = useTeamSelection();
   const { data: teams } = useListTenant();
 
-  // 获取当前选中团队的名称
-  const getCurrentTeamName = () => {
+  // 获取当前选中团队
+  const getCurrentTeam = () => {
     if (!selectedTeamId || !teams) return '';
-    const currentTeam = teams.find((team) => team.tenant_id === selectedTeamId);
-    return currentTeam?.nickname || '';
+    const currentTeam = teams.find((team) => team.id === selectedTeamId);
+    return currentTeam;
   };
 
   // 添加用户相关
@@ -70,7 +70,9 @@ const UserSettingTeam = () => {
     selectTeam('');
   };
 
-  const currentTeamName = getCurrentTeamName();
+  const currentTeam = getCurrentTeam();
+  const currentTeamName =
+    typeof currentTeam === 'object' ? currentTeam?.name || '' : '';
 
   return (
     <div className={styles.teamWrapper}>
@@ -135,7 +137,7 @@ const UserSettingTeam = () => {
             bordered={false}
           >
             {selectedTeamId ? (
-              <UserTable teamId={selectedTeamId} />
+              <UserTable team={currentTeam} />
             ) : (
               <Empty description={'请选择一个部门查看成员'} />
             )}
@@ -161,6 +163,7 @@ const UserSettingTeam = () => {
           visible
           hideModal={hideAddingTenantModal}
           onOk={handleAddUserOk}
+          teamId={selectedTeamId ?? ''}
         />
       )}
 

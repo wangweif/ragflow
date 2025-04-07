@@ -1,4 +1,5 @@
 import { DocumentParserType } from '@/constants/knowledge';
+import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { listTenant, listTenantUser } from '@/services/user-service';
 import { normFile } from '@/utils/file-util';
 import {
@@ -68,6 +69,7 @@ function EmptyComponent() {
 
 // 自定义Hook用于获取部门成员数据
 const useTeamMembers = () => {
+  const { data: userInfo } = useFetchUserInfo();
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
 
@@ -76,7 +78,7 @@ const useTeamMembers = () => {
       setLoading(true);
       try {
         // 获取部门列表
-        const teamsResponse = await listTenant();
+        const teamsResponse = await listTenant(userInfo.id);
         const teamsData = teamsResponse.data?.data || [];
 
         // 为每个部门获取成员

@@ -38,7 +38,7 @@ export default defineConfig({
   proxy: [
     {
       context: ['/api', '/v1'],
-      target: 'http://know.bjzntd.com/',
+      target: 'http://192.168.8.250:9380/',
       changeOrigin: true,
       ws: true,
       logger: console,

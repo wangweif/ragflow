@@ -1,5 +1,5 @@
 import { useSetModalState, useShowDeleteConfirm } from '@/hooks/common-hooks';
-import { useRegister } from '@/hooks/login-hooks';
+
 import {
   useAddTenantUser,
   useAgreeTenant,
@@ -9,14 +9,14 @@ import {
   useListTenant,
   useUpdateTenant,
 } from '@/hooks/user-setting-hooks';
-import { rsaPsw } from '@/utils';
+import { addUser } from '@/services/user-service';
 import { Modal } from 'antd';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export const useAddUser = () => {
   const { addTenantUser } = useAddTenantUser();
-  const { register } = useRegister();
+
   const {
     visible: addingTenantModalVisible,
     hideModal: hideAddingTenantModal,
@@ -27,22 +27,24 @@ export const useAddUser = () => {
     async (payload?: {
       email?: string;
       nickname?: string;
-      password?: string;
+      role?: string;
+      teamId?: string;
     }) => {
-      // 注册用户
-      if (payload?.nickname && payload?.password && payload?.email) {
-        const rsaPassWord = rsaPsw(payload.password) as string;
-        const { data: res = {}, response } = await register({
-          email: payload.email,
-          password: rsaPassWord,
-          nickname: payload.nickname,
-        });
-
-        const code = await addTenantUser(payload.email);
-        console.log('code', code);
-        if (code === 0) {
-          hideAddingTenantModal();
-        }
+      // 添加用户
+      console.log(payload);
+      if (
+        payload?.nickname &&
+        payload?.email &&
+        payload?.role &&
+        payload?.teamId
+      ) {
+        const { data: res = {}, response } = await addUser(
+          payload.teamId,
+          payload.email,
+          payload.nickname,
+          payload.role,
+        );
+        hideAddingTenantModal();
       }
     },
     [addTenantUser, hideAddingTenantModal],

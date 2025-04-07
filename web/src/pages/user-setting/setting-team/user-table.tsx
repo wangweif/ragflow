@@ -19,21 +19,22 @@ interface UserTableProps {
   teamId?: string | null;
 }
 
-const UserTable = ({ teamId }: UserTableProps = {}) => {
+const UserTable = (team: any) => {
   const { data, loading } = useListTenantUser();
+  console.log(data);
   const { handleDeleteTenantUser } = useHandleDeleteUser();
   const [filteredData, setFilteredData] = useState<ITenantUser[]>([]);
 
   // 根据选中的团队ID过滤用户数据
   useEffect(() => {
-    if (teamId) {
-      // 在实际项目中，应该从API请求特定团队的成员
-      // 由于当前没有团队成员的API，这里只是模拟
+    if (team.team) {
+      const users = team.team.members;
+      // 根据用户ids 批量从api获取用户信息 TODO
       setFilteredData(data);
     } else {
       setFilteredData(data);
     }
-  }, [data, teamId]);
+  }, [data, team.id]);
 
   const columns: TableProps<ITenantUser>['columns'] = [
     {

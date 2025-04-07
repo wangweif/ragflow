@@ -148,4 +148,11 @@ export const createTeam = (tenant_id: string, name: string) =>
 export const updateTenant = (tenantId: string, name: string) =>
   request.post(api.updateTenant(tenantId), { name });
 
+export const addUser = (
+  teamId: string,
+  email: string,
+  nickname: string,
+  role: string,
+) => request.post(api.addUser(teamId), { data: { email, nickname, role } });
+
 export default userService;

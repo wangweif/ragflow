@@ -1,11 +1,10 @@
 import { IModalProps } from '@/interfaces/common';
 import { Form, Input, Modal } from 'antd';
-import { useTranslation } from 'react-i18next';
 
 type FieldType = {
   email?: string;
   nickname?: string;
-  password?: string;
+  role?: string;
 };
 
 const AddingUserModal = ({
@@ -13,19 +12,19 @@ const AddingUserModal = ({
   hideModal,
   loading,
   onOk,
-}: IModalProps<FieldType>) => {
+  teamId,
+}: IModalProps<FieldType> & { teamId: string }) => {
   const [form] = Form.useForm();
-  const { t } = useTranslation();
 
   const handleOk = async () => {
     const ret = await form.validateFields();
-
+    ret.teamId = teamId;
     return onOk?.(ret);
   };
 
   return (
     <Modal
-      title={t('setting.add')}
+      title={'添加用户'}
       open={visible}
       onOk={handleOk}
       onCancel={hideModal}
@@ -40,7 +39,7 @@ const AddingUserModal = ({
         form={form}
       >
         <Form.Item<FieldType>
-          label={t('setting.email')}
+          label={'邮箱'}
           name="email"
           rules={[{ required: true }]}
         >
@@ -54,13 +53,12 @@ const AddingUserModal = ({
         >
           <Input />
         </Form.Item>
-
         <Form.Item<FieldType>
-          label={t('setting.password')}
-          name="password"
+          label={'角色'}
+          name="role"
           rules={[{ required: true }]}
         >
-          <Input.Password />
+          <Input />
         </Form.Item>
       </Form>
     </Modal>

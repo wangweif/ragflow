@@ -24,6 +24,7 @@ export default {
   updateTenant: (tenantId: string) => `${api_host}/tenant/${tenantId}/update`,
   listTeam: (tenantId: string) => `${api_host}/team/list?tenant_id=${tenantId}`,
   createTeam: `${api_host}/team`,
+  addUser: (teamId: string) => `${api_host}/team/${teamId}/member`,
 
   // llm model
   factories_list: `${api_host}/llm/factories`,
