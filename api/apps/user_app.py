@@ -658,7 +658,7 @@ def tenant_info():
         tenants = TenantService.get_info_by(current_user.id)
         if not tenants:
             return get_data_error_result(message="Tenant not found!")
-        return get_json_result(data=tenants)
+        return get_json_result(data=tenants[0])
     except Exception as e:
         return server_error_response(e)
 
