@@ -13,7 +13,7 @@ import { ISetLangfuseConfigRequestBody } from '@/interfaces/request/system';
 import userService, {
   addTenantUser,
   agreeTenant,
-  createTenant,
+  createTeam,
   deleteTenantUser,
   listTenant,
   listTenantUser,
@@ -336,19 +336,19 @@ export const useDeleteTenantUser = () => {
 };
 
 export const useListTenant = () => {
-  const { data: tenantInfo } = useFetchTenantInfo();
-  const tenantId = tenantInfo.tenant_id;
+  const { data: userInfo } = useFetchUserInfo();
+  const userId = userInfo.id;
   const {
     data,
     isFetching: loading,
     refetch,
   } = useQuery<ITenant[]>({
-    queryKey: ['listTenant', tenantId],
+    queryKey: ['listTenant', userId],
     initialData: [],
     gcTime: 0,
-    enabled: !!tenantId,
+    enabled: !!userId,
     queryFn: async () => {
-      const { data } = await listTenant();
+      const { data } = await listTenant(userId);
 
       return data?.data ?? [];
     },
@@ -445,7 +445,8 @@ export const useCreateTenant = () => {
   } = useMutation({
     mutationKey: ['createTenant'],
     mutationFn: async (params: { name: string; tenantId?: string }) => {
-      const { data } = await createTenant(params.name, params.tenantId);
+      console.log(params);
+      const { data } = await createTeam(params.tenantId ?? '', params.name);
       if (data.code === 0) {
         message.success(t('message.created'));
         queryClient.invalidateQueries({ queryKey: ['listTenant'] });

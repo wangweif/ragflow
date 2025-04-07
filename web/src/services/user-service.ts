@@ -137,13 +137,13 @@ export const deleteTenantUser = ({
   userId: string;
 }) => request.delete(api.deleteTenantUser(tenantId, userId));
 
-export const listTenant = () => request.get(api.listTenant);
+export const listTenant = (userId: string) => request.get(api.listTeam(userId));
 
 export const agreeTenant = (tenantId: string) =>
   request.post(api.agreeTenant(tenantId));
 
-export const createTenant = (name: string, tenantId?: string) =>
-  request.post(api.createTenant, { name, tenantId });
+export const createTeam = (tenant_id: string, name: string) =>
+  request.post(api.createTeam, { data: { tenant_id, name } });
 
 export const updateTenant = (tenantId: string, name: string) =>
   request.post(api.updateTenant(tenantId), { name });

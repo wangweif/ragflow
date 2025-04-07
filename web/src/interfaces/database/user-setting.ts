@@ -85,10 +85,13 @@ export interface ITenantUser {
 }
 
 export interface ITenant {
+  id: string;
   avatar: string;
   delta_seconds: number;
   email: string;
   nickname: string;
+  name: string;
+  members: [];
   role: string;
   tenant_id: string;
   update_date: string;

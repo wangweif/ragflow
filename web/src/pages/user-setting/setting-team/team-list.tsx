@@ -1,7 +1,5 @@
 import { useListTenant } from '@/hooks/user-setting-hooks';
 import { ITenant } from '@/interfaces/database/user-setting';
-import { listTenantUser } from '@/services/user-service';
-import { formatDate } from '@/utils/date';
 
 import { DeleteOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
@@ -21,21 +19,18 @@ const TeamList = ({
   startEditTeam,
 }: TeamListProps) => {
   const { data, loading } = useListTenant();
+  console.log(data);
   const { handleDeleteTeam } = useHandleDeleteTeam();
   const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
-
-  // 获取部门成员数量
-  const getMemberCount = async (teamId: string) => {
-    const { data } = await listTenantUser(teamId);
-    return data?.data?.length || 0;
-  };
 
   useEffect(() => {
     const fetchMemberCounts = async () => {
       if (data) {
         const counts: Record<string, number> = {};
         for (const team of data) {
-          counts[team.tenant_id] = await getMemberCount(team.tenant_id);
+          console.log(Object.keys(team.members).length);
+          counts[team.id] = Object.keys(team.members).length;
+          console.log(counts[team.id]);
         }
         setMemberCounts(counts);
       }
@@ -47,10 +42,10 @@ const TeamList = ({
   const columns: TableProps<ITenant>['columns'] = [
     {
       title: '名称',
-      dataIndex: 'nickname',
-      key: 'nickname',
+      dataIndex: 'name',
+      key: 'name',
       render: (value, record) => (
-        <a onClick={() => onSelectTeam(record.tenant_id)}>{value}</a>
+        <a onClick={() => onSelectTeam(record.id)}>{value}</a>
       ),
     },
     {
@@ -59,16 +54,16 @@ const TeamList = ({
       render: (_, record) => (
         <Space>
           <TeamOutlined />
-          {memberCounts[record.tenant_id] || 0}
+          {memberCounts[record.id] || 0}
         </Space>
       ),
     },
-    {
-      title: '更新日期',
-      dataIndex: 'update_date',
-      key: 'update_date',
-      render: (value) => formatDate(value),
-    },
+    // {
+    //   title: '更新日期',
+    //   dataIndex: 'update_date',
+    //   key: 'update_date',
+    //   render: (value) => formatDate(value),
+    // },
     {
       title: '操作',
       key: 'action',
@@ -100,13 +95,13 @@ const TeamList = ({
 
   return (
     <Table<ITenant>
-      rowKey={'tenant_id'}
+      rowKey={'id'}
       columns={columns}
       dataSource={data}
       loading={loading}
       pagination={false}
       rowClassName={(record) =>
-        record.tenant_id === selectedTeamId ? 'ant-table-row-selected' : ''
+        record.id === selectedTeamId ? 'ant-table-row-selected' : ''
       }
     />
   );

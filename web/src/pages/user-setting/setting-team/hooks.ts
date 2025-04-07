@@ -5,7 +5,6 @@ import {
   useAgreeTenant,
   useCreateTenant,
   useDeleteTenantUser,
-  useFetchTenantInfo,
   useFetchUserInfo,
   useListTenant,
   useUpdateTenant,
@@ -112,7 +111,9 @@ export const useHandleQuitUser = () => {
 
 export const useCreateTeam = () => {
   const { createTenant, loading } = useCreateTenant();
-  const { data: tenantInfo } = useFetchTenantInfo();
+  // 获取当前用户信息
+  const { data: userInfo } = useFetchUserInfo();
+  console.log(userInfo);
   const {
     visible: createTeamModalVisible,
     hideModal: hideCreateTeamModal,
@@ -124,12 +125,12 @@ export const useCreateTeam = () => {
       if (payload?.name) {
         await createTenant({
           name: payload.name,
-          tenantId: tenantInfo.tenant_id,
+          tenantId: userInfo.id,
         });
         hideCreateTeamModal();
       }
     },
-    [createTenant, hideCreateTeamModal, tenantInfo.tenant_id],
+    [createTenant, hideCreateTeamModal, userInfo.id],
   );
 
   return {
