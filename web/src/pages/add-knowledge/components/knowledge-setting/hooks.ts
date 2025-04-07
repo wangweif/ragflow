@@ -33,6 +33,8 @@ export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
   const navigateToDataset = useNavigateToDataset();
   const [assignLoading, setAssignLoading] = useState(false);
   const knowledgeBaseId = useKnowledgeBaseId();
+  const teamId = Form.useWatch('team_id', form);
+  console.log(knowledgeBaseId);
 
   // 分配知识库权限给用户
   const assignPermission = async (
@@ -40,21 +42,20 @@ export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
   ) => {
     try {
       setAssignLoading(true);
-      await Promise.all(
-        Object.entries(selectedMembers).map(async ([userId, permissions]) => {
-          try {
-            // 创建知识库用户关系记录
-            await post(api.assignKnowledgePermission, {
-              kb_id: knowledgeBaseId,
-              user_id: userId,
-              read: permissions.has('read'),
-              write: permissions.has('write'),
-            });
-          } catch (error) {
-            console.error(`为用户 ${userId} 分配知识库权限失败:`, error);
-          }
-        }),
-      );
+      // 将所有用户信息和权限添加到数组中
+      const permissions = [];
+      for (const [userId, permission_types] of Object.entries(
+        selectedMembers,
+      )) {
+        permissions.push({
+          user_id: userId,
+          team_id: teamId,
+          permission_types: Array.from(permission_types),
+        });
+      }
+      await post(api.assignKnowledgePermission(knowledgeBaseId), {
+        permissions,
+      });
       message.success('知识库权限分配成功');
     } catch (error) {
       console.error('分配知识库权限过程中出错:', error);

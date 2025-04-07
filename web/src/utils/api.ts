@@ -43,7 +43,8 @@ export default {
   get_kb_detail: `${api_host}/kb/detail`,
   getKnowledgeGraph: (knowledgeId: string) =>
     `${api_host}/kb/${knowledgeId}/knowledge_graph`,
-  assignKnowledgePermission: `${api_host}/kb/assign_permission`,
+  assignKnowledgePermission: (kbId: string) =>
+    `${api_host}/permission/kb/${kbId}/permissions`,
 
   // tags
   listTag: (knowledgeId: string) => `${api_host}/kb/${knowledgeId}/tags`,
