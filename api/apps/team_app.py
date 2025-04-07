@@ -85,7 +85,7 @@ def create_team():
         return server_error_response(e)
 
 
-@manager.route('/<team_id>', methods=['PUT'])
+@manager.route('/<team_id>', methods=['POST'])
 @login_required
 def update_team(team_id):
     """更新团队信息"""
@@ -125,7 +125,7 @@ def update_team(team_id):
         return server_error_response(e)
 
 
-@manager.route('/<team_id>', methods=['DELETE'])
+@manager.route('/<team_id>', methods=['POST'])
 @login_required
 def delete_team(team_id):
     """删除团队"""
@@ -230,7 +230,7 @@ def add_team_member(team_id):
         return server_error_response(e)
 
 
-@manager.route('/<team_id>/member/<user_id>', methods=['DELETE'])
+@manager.route('/<team_id>/member/<user_id>', methods=['POST'])
 @login_required
 def remove_team_member(team_id, user_id):
     """移除团队成员"""
@@ -273,7 +273,7 @@ def remove_team_member(team_id, user_id):
         return server_error_response(e)
 
 
-@manager.route('/<team_id>/member/<user_id>/role', methods=['PUT'])
+@manager.route('/<team_id>/member/<user_id>/role', methods=['POST'])
 @login_required
 @validate_request("role")
 def update_member_role(team_id, user_id):

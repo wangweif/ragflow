@@ -190,7 +190,7 @@ def grant_kb_team_permission(kb_id):
         return server_error_response(e)
 
 
-@manager.route('/kb/<kb_id>/user/<user_id>', methods=['DELETE'])
+@manager.route('/kb/<kb_id>/user/<user_id>', methods=['POST'])
 @login_required
 def revoke_kb_user_permission(kb_id, user_id):
     """撤销用户的知识库权限"""
@@ -217,7 +217,7 @@ def revoke_kb_user_permission(kb_id, user_id):
         return server_error_response(e)
 
 
-@manager.route('/kb/<kb_id>/team/<team_id>', methods=['DELETE'])
+@manager.route('/kb/<kb_id>/team/<team_id>', methods=['POST'])
 @login_required
 def revoke_kb_team_permission(kb_id, team_id):
     """撤销团队的知识库权限"""
@@ -262,7 +262,7 @@ def user_accessible_kb():
         return server_error_response(e)
 
 
-@manager.route('/kb/<kb_id>/permissions', methods=['PUT'])
+@manager.route('/kb/<kb_id>/permissions', methods=['POST'])
 @login_required
 @validate_request("permissions")
 def update_kb_permissions(kb_id):
