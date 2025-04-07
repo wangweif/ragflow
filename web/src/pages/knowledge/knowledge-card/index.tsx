@@ -6,8 +6,7 @@ import {
   FileTextOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Avatar, Badge, Card, Space } from 'antd';
-import classNames from 'classnames';
+import { Avatar, Card, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'umi';
 
@@ -39,13 +38,13 @@ const KnowledgeCard = ({ item }: IProps) => {
   };
 
   return (
-    <Badge.Ribbon
-      text={item?.nickname}
-      color={userInfo?.nickname === item?.nickname ? '#1677ff' : 'pink'}
-      className={classNames(styles.ribbon, {
-        [styles.hideRibbon]: item.permission !== 'team',
-      })}
-    >
+    // <Badge.Ribbon
+    //   text={item?.nickname}
+    //   color={userInfo?.nickname === item?.nickname ? '#1677ff' : 'pink'}
+    //   className={classNames(styles.ribbon, {
+    //     [styles.hideRibbon]: item.permission !== 'team',
+    //   })}
+    <>
       <Card className={styles.card} onClick={handleCardClick}>
         <div className={styles.container}>
           <div className={styles.content}>
@@ -105,7 +104,7 @@ const KnowledgeCard = ({ item }: IProps) => {
           </div>
         </div>
       </Card>
-    </Badge.Ribbon>
+    </>
   );
 };
 
