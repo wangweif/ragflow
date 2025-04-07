@@ -20,6 +20,7 @@ from flask_login import login_required, current_user
 
 from api import settings
 from api.db.services.team_service import TeamService
+from api.db.services.user_service import UserService
 from api.utils.api_utils import get_json_result, validate_request, server_error_response, get_data_error_result
 
 logger = logging.getLogger(__name__)
@@ -154,7 +155,15 @@ def delete_team(team_id):
 @manager.route('/<team_id>/member/list', methods=['GET'])
 @login_required
 def list_team_members(team_id):
-    """获取团队成员列表"""
+    """
+    根据team_id查询用户表中的相关用户信息
+    
+    Args:
+        team_id: 团队ID
+        
+    Returns:
+        用户信息列表（不包含密码）
+    """
     try:
         # 获取团队信息
         team_info = TeamService.get_team(team_id)
@@ -169,9 +178,34 @@ def list_team_members(team_id):
                 code=settings.RetCode.AUTHENTICATION_ERROR
             )
         
-        members = TeamService.list_members(team_id)
+        # 直接从用户表查询与team_id相关的用户
+        users = UserService.get_users_by_team_id(team_id)
         
-        return get_json_result(data=members)
+        # 处理返回数据，排除敏感信息
+        result = []
+        for user in users:
+            user_info = {
+                'id': user.id,
+                'email': user.email,
+                'nickname': user.nickname,
+                'avatar': user.avatar,
+                'language': user.language,
+                'color_schema': user.color_schema,
+                'timezone': user.timezone,
+                'last_login_time': user.last_login_time,
+                'is_authenticated': user.is_authenticated,
+                'is_active': user.is_active,
+                'is_anonymous': user.is_anonymous,
+                'login_channel': user.login_channel,
+                'status': user.status,
+                'is_superuser': user.is_superuser,
+                'team_id': user.team_id,
+                'role': user.role,
+                'tenant_id': user.tenant_id
+            }
+            result.append(user_info)
+        
+        return get_json_result(data=result)
     except Exception as e:
         logger.exception(f"获取团队成员列表失败: {str(e)}")
         return server_error_response(e)
@@ -309,4 +343,71 @@ def update_member_role(team_id, user_id):
         return get_data_error_result(message=str(e))
     except Exception as e:
         logger.exception(f"更新团队成员角色失败: {str(e)}")
+        return server_error_response(e)
+
+
+@manager.route('/tenant/<tenant_id>/tree', methods=['GET'])
+@login_required
+def get_tenant_team_tree(tenant_id):
+    """
+    获取租户下的团队及用户树形结构
+    
+    Args:
+        tenant_id: 租户ID
+        
+    Returns:
+        树形结构数据，包含团队和用户信息
+    """
+    try:
+        # 验证权限，只有租户管理员才能查看租户下的所有团队
+        if tenant_id != current_user.id:
+            return get_json_result(
+                data=False,
+                message='没有查看租户团队的权限',
+                code=settings.RetCode.AUTHENTICATION_ERROR
+            )
+        
+        # 获取租户下的所有团队
+        teams = TeamService.list_teams_by_tenant(tenant_id)
+        
+        # 构建树形结构
+        tree = []
+        for team in teams:
+            team_node = {
+                'id': team['id'],
+                'name': team['name'],
+                'description': team['description'],
+                'tenant_id': team['tenant_id'],
+                'children': []  # 用户列表
+            }
+            
+            # 获取团队下的用户
+            users = UserService.get_users_by_team_id(str(team['id']))
+            for user in users:
+                user_node = {
+                    'id': user.id,
+                    'email': user.email,
+                    'nickname': user.nickname,
+                    'avatar': user.avatar,
+                    'language': user.language,
+                    'color_schema': user.color_schema,
+                    'timezone': user.timezone,
+                    'last_login_time': user.last_login_time,
+                    'is_authenticated': user.is_authenticated,
+                    'is_active': user.is_active,
+                    'is_anonymous': user.is_anonymous,
+                    'login_channel': user.login_channel,
+                    'status': user.status,
+                    'is_superuser': user.is_superuser,
+                    'team_id': user.team_id,
+                    'role': user.role,
+                    'tenant_id': user.tenant_id
+                }
+                team_node['children'].append(user_node)
+            
+            tree.append(team_node)
+        
+        return get_json_result(data=tree)
+    except Exception as e:
+        logger.exception(f"获取租户团队树失败: {str(e)}")
         return server_error_response(e) 

@@ -394,3 +394,35 @@ class KnowledgebasePermissionService:
             logger.error(f"批量更新知识库权限失败: {str(e)}")
             # 由于使用了@DB.atomic()，发生异常时会自动回滚事务
             raise 
+    
+    @classmethod
+    @DB.connection_context()
+    def get_kb_authorized_users(cls, kb_id: str) -> List[Dict[str, Any]]:
+        """
+        获取知识库授权给的用户列表
+        
+        Args:
+            kb_id: 知识库ID
+            
+        Returns:
+            授权用户列表，包含用户ID和权限信息
+        """
+        try:
+            # 查询知识库权限表
+            authorized_users = KnowledgebasePermission.select().where(
+                KnowledgebasePermission.kb_id == kb_id,
+                KnowledgebasePermission.status == StatusEnum.VALID.value
+            )
+            
+            # 转换为字典列表
+            result = []
+            for auth in authorized_users:
+                result.append({
+                    'user_id': auth.user_id,
+                    'permission_type': auth.permission_type
+                })
+            
+            return result
+        except Exception as e:
+            logger.error(f"获取知识库授权用户失败: {str(e)}")
+            raise 

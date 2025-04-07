@@ -298,3 +298,38 @@ def update_kb_permissions(kb_id):
     except Exception as e:
         logger.exception(f"更新知识库权限失败: {str(e)}")
         return server_error_response(e)
+
+
+@manager.route('/kb/<kb_id>/authorized_users', methods=['GET'])
+@login_required
+def get_kb_authorized_users(kb_id):
+    """
+    获取知识库授权给的用户ID列表
+    
+    Args:
+        kb_id: 知识库ID
+        
+    Returns:
+        授权用户ID列表
+    """
+    try:
+        # 获取知识库信息
+        kb = Knowledgebase.get_or_none(Knowledgebase.id == kb_id, Knowledgebase.status == StatusEnum.VALID.value)
+        if not kb:
+            return get_data_error_result(message="知识库不存在")
+        
+        # 验证权限，只有知识库所有者或租户管理员才能查看授权用户
+        if kb.tenant_id != current_user.id and kb.created_by != current_user.id:
+            return get_json_result(
+                data=False,
+                message='没有查看知识库授权用户的权限',
+                code=settings.RetCode.AUTHENTICATION_ERROR
+            )
+        
+        # 获取知识库授权用户列表
+        authorized_users = KnowledgebasePermissionService.get_kb_authorized_users(kb_id)
+        
+        return get_json_result(data=authorized_users)
+    except Exception as e:
+        logger.exception(f"获取知识库授权用户失败: {str(e)}")
+        return server_error_response(e)

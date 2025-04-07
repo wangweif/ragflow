@@ -14,7 +14,9 @@
 #  limitations under the License.
 #
 import hashlib
+import logging
 from datetime import datetime
+from typing import List, Union
 
 import peewee
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -27,7 +29,7 @@ from api.utils import get_uuid, current_timestamp, datetime_format
 from api.db import StatusEnum
 from rag.settings import MINIO
 
-
+logger = logging.getLogger(__name__)
 class UserService(CommonService):
     """Service class for managing user-related database operations.
     
@@ -113,13 +115,16 @@ class UserService(CommonService):
 
     @classmethod
     @DB.connection_context()
-    def create_user(cls, email, nickname, password=None):
+    def create_user(cls, email, nickname, password=None, team_id=None, role=None, tenant_id=None):
         """创建新用户
         
         Args:
             email: 用户邮箱
             nickname: 用户昵称
             password: 用户密码，如果不提供则生成随机密码
+            team_id: 团队ID
+            role: 用户角色
+            tenant_id: 租户ID
             
         Returns:
             新创建的用户对象
@@ -133,6 +138,7 @@ class UserService(CommonService):
         if not password:
             password = get_uuid()[:8]
             
+        # logger.info(f"创建用户: email={email}, nickname={nickname}, team_id={team_id}, role={role}, tenant_id={tenant_id}")
         # 创建用户
         user_data = {
             "email": email,
@@ -141,10 +147,14 @@ class UserService(CommonService):
             "is_authenticated": "1",
             "is_active": "1",
             "is_anonymous": "0",
-            "status": StatusEnum.VALID.value
+            "status": StatusEnum.VALID.value,
+            "team_id": team_id,
+            "role": role,
+            "tenant_id": tenant_id
         }
         
-        cls.save(**user_data)
+        user = cls.save(**user_data)
+        # logger.info(f"用户创建成功: id={user.id}, team_id={user.team_id}, role={user.role}, tenant_id={user.tenant_id}")
         
         # 返回创建的用户
         return cls.get_by_email(email)
@@ -165,6 +175,30 @@ class UserService(CommonService):
                 user_dict["update_date"] = datetime_format(datetime.now())
                 cls.model.update(user_dict).where(
                     cls.model.id == user_id).execute()
+
+    @classmethod
+    @DB.connection_context()
+    def get_users_by_team_id(cls, team_id: Union[str, int]) -> List[User]:
+        """
+        根据team_id查询用户表中的相关用户
+        
+        Args:
+            team_id: 团队ID（字符串或整数类型）
+            
+        Returns:
+            用户列表
+        """
+        try:
+            # 确保team_id是字符串类型
+            team_id_str = str(team_id)
+            users = User.select().where(
+                User.team_id == team_id_str,
+                User.status == StatusEnum.VALID.value
+            )
+            return list(users)
+        except Exception as e:
+            logger.error(f"查询用户失败: {str(e)}")
+            raise
 
 
 class TenantService(CommonService):
