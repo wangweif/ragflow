@@ -22,7 +22,7 @@ import uuid
 from copy import deepcopy
 
 from api.db import LLMType, UserTenantRole
-from api.db.db_models import init_database_tables as init_web_db, LLMFactories, LLM, TenantLLM
+from api.db.db_models import init_database_tables as init_web_db, LLMFactories, LLM, TenantLLM, File, DB
 from api.db.services import UserService
 from api.db.services.canvas_service import CanvasTemplateService
 from api.db.services.document_service import DocumentService
@@ -31,6 +31,7 @@ from api.db.services.llm_service import LLMFactoriesService, LLMService, TenantL
 from api.db.services.user_service import TenantService, UserTenantService
 from api import settings
 from api.utils.file_utils import get_project_base_directory
+from api.db import FileType
 
 
 def encode_to_base64(input_string):
@@ -95,32 +96,51 @@ def init_superuser():
                 tenant["embd_id"]))
 
 
-def init_custom_admin():
+def init_custom_admin(email="admin@bjzntd.com", nickname="管理员", tenant_name=None, role="owner"):
     """
-    初始化自定义管理员账号，邮箱admin@bjzntd.com，密码admin
-    使用与系统已有的注册逻辑相同的方式处理密码
+    初始化自定义管理员账号
+    
+    Args:
+        email: 管理员邮箱，默认为admin@bjzntd.com
+        nickname: 管理员昵称，默认为"管理员"
+        tenant_name: 租户名称，默认为None（使用nickname + "'s Kingdom"）
+        role: 用户角色，默认为"owner"
+        
+    Returns:
+        创建的用户对象
     """
+
+    user_id = uuid.uuid1().hex
+
     user_info = {
-        "id": uuid.uuid1().hex,
+        "id": user_id,
         "password": encode_to_base64("admin"),  # 使用与原系统相同的密码编码方式
-        "nickname": "管理员",
+        "nickname": nickname,
         "is_superuser": True,
-        "email": "admin@bjzntd.com",  # 自定义邮箱
+        "email": email,
         "creator": "system",
         "status": "1",
         "access_token": uuid.uuid1().hex,  # 确保有访问令牌
-        "language": "Chinese"
+        "language": "Chinese",
+        "role": role,
+        "tenant_id": user_id,
     }
     
     # 检查用户是否已存在
     existing_user = UserService.query(email=user_info["email"])
     if existing_user:
         logging.info(f"自定义管理员账号 {user_info['email']} 已存在，跳过初始化。")
-        return
+        return existing_user[0]
+    
+    # 租户ID等于用户ID
+    tenant_id = user_info["id"]
+    
+    # 如果没有提供tenant_name，则使用nickname + "'s Kingdom"
+    tenant_name = tenant_name or f"{nickname}'s Kingdom"
     
     tenant = {
-        "id": user_info["id"],
-        "name": "北京智农天地",  # 自定义租户名称
+        "id": tenant_id,
+        "name": tenant_name,
         "llm_id": settings.CHAT_MDL,
         "embd_id": settings.EMBEDDING_MDL,
         "asr_id": settings.ASR_MDL,
@@ -130,7 +150,7 @@ def init_custom_admin():
     }
     
     usr_tenant = {
-        "tenant_id": user_info["id"],
+        "tenant_id": tenant_id,
         "user_id": user_info["id"],
         "invited_by": user_info["id"],
         "role": UserTenantRole.OWNER
@@ -139,7 +159,7 @@ def init_custom_admin():
     tenant_llm = []
     for llm in LLMService.query(fid=settings.LLM_FACTORY):
         tenant_llm.append({
-            "tenant_id": user_info["id"], 
+            "tenant_id": tenant_id, 
             "llm_factory": settings.LLM_FACTORY, 
             "llm_name": llm.llm_name,
             "model_type": llm.model_type,
@@ -148,22 +168,21 @@ def init_custom_admin():
         })
     
     try:
-        # 创建用户
+        # 保存用户信息
         if not UserService.save(**user_info):
-            logging.error("无法初始化自定义管理员账号")
-            return
+            logging.error(f"无法初始化管理员账号 {email}")
+            return None
         
-        # 创建租户和关联记录
+        # 保存租户信息
         TenantService.insert(**tenant)
+        
+        # 保存用户-租户关系
         UserTenantService.insert(**usr_tenant)
         
-        if tenant_llm:
-            TenantLLMService.insert_many(tenant_llm)
+        # 保存租户-LLM关系
+        TenantLLMService.insert_many(tenant_llm)
         
         # 创建用户文件根目录
-        from api.db.db_models import File, DB
-        from api.db import FileType
-        
         file_id = uuid.uuid1().hex
         file_info = {
             "id": file_id,
@@ -179,9 +198,13 @@ def init_custom_admin():
         with DB.connection_context():
             File.insert(**file_info).execute()
         
-        logging.info(f"自定义管理员账号初始化成功: 邮箱={user_info['email']}, 密码=admin")
+        logging.info(f"自定义管理员账号初始化成功。邮箱: {email}, 密码: admin。强烈建议登录后修改密码。")
+        
+        # 返回创建的用户对象
+        return UserService.get_by_id(user_info["id"])
     except Exception as e:
-        logging.error(f"初始化自定义管理员账号出错: {str(e)}")
+        logging.error(f"初始化自定义管理员账号失败: {str(e)}")
+        return None
 
 
 def init_llm_factory():
