@@ -1,11 +1,11 @@
-import { Domain } from '@/constants/common';
 import { useTranslate } from '@/hooks/common-hooks';
 import { useLogout } from '@/hooks/login-hooks';
 import { useSecondPathName } from '@/hooks/route-hook';
-import { useFetchSystemVersion } from '@/hooks/user-setting-hooks';
+// import { useFetchSystemVersion } from '@/hooks/user-setting-hooks';
+import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import type { MenuProps } from 'antd';
 import { Flex, Menu } from 'antd';
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'umi';
 import {
   UserSettingBaseKey,
@@ -21,13 +21,14 @@ const SideBar = () => {
   const pathName = useSecondPathName();
   const { logout } = useLogout();
   const { t } = useTranslate('setting');
-  const { version, fetchSystemVersion } = useFetchSystemVersion();
+  const { data: userInfo } = useFetchUserInfo();
+  // const { version, fetchSystemVersion } = useFetchSystemVersion();
 
-  useEffect(() => {
-    if (location.host !== Domain) {
-      fetchSystemVersion();
-    }
-  }, [fetchSystemVersion]);
+  // useEffect(() => {
+  //   if (location.host !== Domain) {
+  //     fetchSystemVersion();
+  //   }
+  // }, [fetchSystemVersion]);
 
   function getItem(
     label: string,
@@ -52,9 +53,15 @@ const SideBar = () => {
     } as MenuItem;
   }
 
-  const items: MenuItem[] = Object.values(UserSettingRouteKey).map((value) =>
-    getItem(value, value, UserSettingIconMap[value]),
-  );
+  const items: MenuItem[] = Object.values(UserSettingRouteKey)
+    .filter((value) => {
+      // 如果是部门菜单，并且用户不是超级管理员，就过滤掉
+      if (value === UserSettingRouteKey.Team && userInfo.role != 'admin') {
+        return false;
+      }
+      return true;
+    })
+    .map((value) => getItem(value, value, UserSettingIconMap[value]));
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key === UserSettingRouteKey.Logout) {

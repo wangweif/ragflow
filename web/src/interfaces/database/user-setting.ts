@@ -18,6 +18,7 @@ export interface IUserInfo {
   status: string;
   update_date: string;
   update_time: number;
+  role: string;
 }
 
 export type TaskExecutorElapsed = Record<string, number[]>;
