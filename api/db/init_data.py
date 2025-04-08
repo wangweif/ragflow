@@ -130,7 +130,10 @@ def init_custom_admin(email="admin@bjzntd.com", nickname="管理员", tenant_nam
     existing_user = UserService.query(email=user_info["email"])
     if existing_user:
         logging.info(f"自定义管理员账号 {user_info['email']} 已存在，跳过初始化。")
-        return existing_user[0]
+        # 确保返回单个用户对象而不是元组
+        if isinstance(existing_user, list) and len(existing_user) > 0:
+            return existing_user[0]
+        return existing_user
     
     # 租户ID等于用户ID
     tenant_id = user_info["id"]
@@ -201,7 +204,10 @@ def init_custom_admin(email="admin@bjzntd.com", nickname="管理员", tenant_nam
         logging.info(f"自定义管理员账号初始化成功。邮箱: {email}, 密码: admin。强烈建议登录后修改密码。")
         
         # 返回创建的用户对象
-        return UserService.get_by_id(user_info["id"])
+        success, user = UserService.get_by_id(user_info["id"])
+        if success:
+            return user
+        return None
     except Exception as e:
         logging.error(f"初始化自定义管理员账号失败: {str(e)}")
         return None
