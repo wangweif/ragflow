@@ -42,9 +42,6 @@ def list_teams():
         # 如果是租户管理员，则获取所有团队
         if tenant_id == current_user.id:
             teams = TeamService.list_teams_by_tenant(tenant_id)
-        else:
-            # 普通用户只能获取自己所在的团队
-            teams = TeamService.list_teams_by_user(current_user.id, tenant_id)
         
         return get_json_result(data=teams)
     except Exception as e:

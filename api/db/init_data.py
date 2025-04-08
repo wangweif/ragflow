@@ -108,7 +108,8 @@ def init_custom_admin():
         "email": "admin@bjzntd.com",  # 自定义邮箱
         "creator": "system",
         "status": "1",
-        "access_token": uuid.uuid1().hex  # 确保有访问令牌
+        "access_token": uuid.uuid1().hex,  # 确保有访问令牌
+        "language": "Chinese"
     }
     
     # 检查用户是否已存在
