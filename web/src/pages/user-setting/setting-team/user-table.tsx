@@ -1,6 +1,5 @@
 import { useListTeamUser } from '@/hooks/user-setting-hooks';
 import { ITenantUser } from '@/interfaces/database/user-setting';
-import { formatDate } from '@/utils/date';
 import { DeleteOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
 import { Button, Table, Tag } from 'antd';
@@ -70,14 +69,14 @@ const UserTable = ({ team, onRefresh }: UserTableProps) => {
         );
       },
     },
-    {
-      title: '更新日期',
-      dataIndex: 'update_date',
-      key: 'update_date',
-      render(value) {
-        return formatDate(value);
-      },
-    },
+    // {
+    //   title: '更新日期',
+    //   dataIndex: 'update_date',
+    //   key: 'update_date',
+    //   render(value) {
+    //     return formatDate(value);
+    //   },
+    // },
     {
       title: '操作',
       key: 'action',
