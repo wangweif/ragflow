@@ -27,7 +27,7 @@ export const useAddUser = () => {
     async (payload?: {
       email?: string;
       nickname?: string;
-      role?: string;
+      // role?: string;
       teamId?: string;
     }) => {
       // 添加用户
@@ -35,14 +35,14 @@ export const useAddUser = () => {
       if (
         payload?.nickname &&
         payload?.email &&
-        payload?.role &&
+        // payload?.role &&
         payload?.teamId
       ) {
         const { data: res = {}, response } = await addUser(
           payload.teamId,
           payload.email,
           payload.nickname,
-          payload.role,
+          'member',
         );
         hideAddingTenantModal();
       }

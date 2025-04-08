@@ -53,13 +53,13 @@ const AddingUserModal = ({
         >
           <Input />
         </Form.Item>
-        <Form.Item<FieldType>
+        {/* <Form.Item<FieldType>
           label={'角色'}
           name="role"
           rules={[{ required: true }]}
         >
           <Input />
-        </Form.Item>
+        </Form.Item> */}
       </Form>
     </Modal>
   );

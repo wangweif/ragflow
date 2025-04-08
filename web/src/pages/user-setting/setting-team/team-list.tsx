@@ -1,10 +1,9 @@
 import { useListTenant } from '@/hooks/user-setting-hooks';
 import { ITenant } from '@/interfaces/database/user-setting';
 
-import { DeleteOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
 import { Button, Space, Table, Tooltip } from 'antd';
-import { useEffect, useState } from 'react';
 import { useHandleDeleteTeam } from './hooks';
 
 interface TeamListProps {
@@ -21,23 +20,23 @@ const TeamList = ({
   const { data, loading } = useListTenant();
   console.log(data);
   const { handleDeleteTeam } = useHandleDeleteTeam();
-  const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
+  // const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    const fetchMemberCounts = async () => {
-      if (data) {
-        const counts: Record<string, number> = {};
-        for (const team of data) {
-          console.log(Object.keys(team.members).length);
-          counts[team.id] = Object.keys(team.members).length;
-          console.log(counts[team.id]);
-        }
-        setMemberCounts(counts);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchMemberCounts = async () => {
+  //     if (data) {
+  //       const counts: Record<string, number> = {};
+  //       for (const team of data) {
+  //         console.log(Object.keys(team.members).length);
+  //         counts[team.id] = Object.keys(team.members).length;
+  //         console.log(counts[team.id]);
+  //       }
+  //       setMemberCounts(counts);
+  //     }
+  //   };
 
-    fetchMemberCounts();
-  }, [data]);
+  //   fetchMemberCounts();
+  // }, [data]);
 
   const columns: TableProps<ITenant>['columns'] = [
     {
@@ -48,16 +47,16 @@ const TeamList = ({
         <a onClick={() => onSelectTeam(record.id)}>{value}</a>
       ),
     },
-    {
-      title: '部门成员',
-      key: 'memberCount',
-      render: (_, record) => (
-        <Space>
-          <TeamOutlined />
-          {memberCounts[record.id] || 0}
-        </Space>
-      ),
-    },
+    // {
+    //   title: '部门成员',
+    //   key: 'memberCount',
+    //   render: (_, record) => (
+    //     <Space>
+    //       <TeamOutlined />
+    //       {memberCounts[record.id] || 0}
+    //     </Space>
+    //   ),
+    // },
     // {
     //   title: '更新日期',
     //   dataIndex: 'update_date',
