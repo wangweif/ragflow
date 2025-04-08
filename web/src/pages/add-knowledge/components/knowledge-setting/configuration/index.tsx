@@ -1,6 +1,6 @@
 import { DocumentParserType } from '@/constants/knowledge';
 import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
-import { listTenant, listTenantUser } from '@/services/user-service';
+import { listTeamUser, listTenant } from '@/services/user-service';
 import { normFile } from '@/utils/file-util';
 import {
   PlusOutlined,
@@ -23,6 +23,8 @@ import { FormInstance } from 'antd/lib';
 import { useEffect, useMemo, useState } from 'react';
 import {
   useFetchKnowledgeConfigurationOnMount,
+  useKnowledgeBaseId,
+  useKnowledgePermissions,
   useSubmitKnowledgeConfiguration,
 } from '../hooks';
 import { AudioConfiguration } from './audio';
@@ -84,8 +86,8 @@ const useTeamMembers = () => {
         // 为每个部门获取成员
         const teamsWithMembers = await Promise.all(
           teamsData.map(async (team: any) => {
-            // TODO 根据部门id获取成员
-            const membersResponse = await listTenantUser(team.tenant_id);
+            // 根据部门id获取成员
+            const membersResponse = await listTeamUser(team.id);
             const members = membersResponse.data?.data || [];
 
             return {
@@ -113,6 +115,12 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   const { submitKnowledgeConfiguration, submitLoading, navigateToDataset } =
     useSubmitKnowledgeConfiguration(form);
   const { teams, loading: teamsLoading } = useTeamMembers();
+  const knowledgeBaseId = useKnowledgeBaseId();
+  const {
+    permissions,
+    loading: permissionsLoading,
+    checkedKeys,
+  } = useKnowledgePermissions(knowledgeBaseId);
 
   const [finalParserId, setFinalParserId] = useState<DocumentParserType>();
   const knowledgeDetails = useFetchKnowledgeConfigurationOnMount(form);
@@ -135,63 +143,82 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
     setFinalParserId(knowledgeDetails.parser_id as DocumentParserType);
   }, [knowledgeDetails.parser_id]);
 
-  // 根据团队数据生成树形结构数据
+  // 根据后端返回的权限数据设置初始选中状态
+  useEffect(() => {
+    if (checkedKeys && checkedKeys.length > 0) {
+      setSelectedMembers(checkedKeys);
+      form.setFieldsValue({ selectedMembers: checkedKeys });
+    }
+  }, [checkedKeys, form]);
+
+  // 根据团队数据和权限信息生成树形结构数据
   const treeData = useMemo(() => {
     if (!teams.length) return [];
 
-    return teams.map((team) => ({
-      title: (
-        <Space>
-          <TeamOutlined />
-          <span>
-            {team.name || team.nickname || `部门 ${team.tenant_id.slice(0, 6)}`}
-          </span>
-          <Text type="secondary" style={{ fontSize: '12px' }}>
-            ({team.members?.length || 0}人)
-          </Text>
-        </Space>
-      ),
-      key: `team-${team.tenant_id}`,
-      value: 'team',
-      children: team.members.map((member: any) => ({
+    return teams.map((team) => {
+      return {
         title: (
           <Space>
-            <UserOutlined />
-            <span>{member.nickname || member.email}</span>
-            {member.role === 'owner' && (
-              <Text type="secondary" style={{ fontSize: '12px' }}>
-                (部门拥有者)
-              </Text>
-            )}
+            <TeamOutlined />
+            <span>
+              {team.name ||
+                team.nickname ||
+                `部门 ${team.tenant_id.slice(0, 6)}`}
+            </span>
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              ({team.members?.length || 0}人)
+            </Text>
           </Space>
         ),
-        // 成员权限：可读、可写
-        children: [
-          {
-            title: '可读',
-            key: `member-${member.user_id}-read`,
-            value: 'read',
-          },
-          {
-            title: '可写',
-            key: `member-${member.user_id}-write`,
-            value: 'write',
-          },
-        ],
-        key: `member-${member.user_id}`,
-        value: member.user_id,
-        isLeaf: true,
-      })),
-    }));
-  }, [teams]);
+        key: `team-${team.id}`,
+        value: 'team',
+        children: team.members.map((member: any) => {
+          // 获取该成员的权限信息
+          const memberPermissions = permissions.filter(
+            (p: any) => p.user_id === member.id,
+          );
+          const hasReadPermission = memberPermissions.some(
+            (p: any) => p.permission_type === 'read',
+          );
+          const hasWritePermission = memberPermissions.some(
+            (p: any) => p.permission_type === 'write',
+          );
 
-  // 初始化选中的成员
-  useEffect(() => {
-    const formSelectedMembers = form.getFieldValue('selectedMembers');
-    if (formSelectedMembers && formSelectedMembers.length > 0) {
-      setSelectedMembers(formSelectedMembers);
-    }
-  }, [form]);
+          return {
+            title: (
+              <Space>
+                <UserOutlined />
+                <span>{member.nickname || member.email}</span>
+                {member.role === 'owner' && (
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    (部门拥有者)
+                  </Text>
+                )}
+              </Space>
+            ),
+            // 成员权限：可读、可写
+            children: [
+              {
+                title: '可读',
+                key: `member-${member.id}-read`,
+                value: 'read',
+                checked: hasReadPermission, // 如果已有读权限则禁用
+              },
+              {
+                title: '可写',
+                key: `member-${member.id}-write`,
+                value: 'write',
+                checked: hasWritePermission, // 如果已有写权限则禁用
+              },
+            ],
+            key: `member-${member.id}`,
+            value: member.id,
+            isLeaf: true,
+          };
+        }),
+      };
+    });
+  }, [teams, permissions]);
 
   // 处理权限选择变化
   const handlePermissionChange = (e: any) => {
@@ -280,7 +307,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
       {/* 团队成员选择树 */}
       {permission === 'team' && (
         <Form.Item name="selectedMembers" label={'选择部门成员'}>
-          <Spin spinning={teamsLoading}>
+          <Spin spinning={teamsLoading || permissionsLoading}>
             {treeData.length > 0 ? (
               <div>
                 <div className={styles.searchWrapper}>

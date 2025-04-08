@@ -12,7 +12,7 @@ import {
   getBase64FromUploadFileList,
   getUploadFileListFromBase64,
 } from '@/utils/file-util';
-import { post } from '@/utils/request';
+import { get, post } from '@/utils/request';
 import { useIsFetching } from '@tanstack/react-query';
 import { Form, UploadFile, message } from 'antd';
 import { FormInstance } from 'antd/lib';
@@ -34,7 +34,6 @@ export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
   const [assignLoading, setAssignLoading] = useState(false);
   const knowledgeBaseId = useKnowledgeBaseId();
   const teamId = Form.useWatch('team_id', form);
-  console.log(knowledgeBaseId);
 
   // 分配知识库权限给用户
   const assignPermission = async (
@@ -216,4 +215,48 @@ export const useRenameKnowledgeTag = () => {
     hideTagRenameModal,
     showTagRenameModal: handleShowTagRenameModal,
   };
+};
+
+export const useKnowledgePermissions = (knowledgeBaseId: string) => {
+  const [permissions, setPermissions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      if (!knowledgeBaseId) return;
+
+      try {
+        setLoading(true);
+        const response = await get(
+          api.getKnowledgePermissions(knowledgeBaseId),
+        );
+        if (response.data.code === 0) {
+          const permData = response.data.data || [];
+          setPermissions(permData);
+
+          // 根据权限数据生成需要选中的节点
+          const selectedKeys: string[] = [];
+          permData.forEach((perm: any) => {
+            if (perm.user_id) {
+              selectedKeys.push(
+                `member-${perm.user_id}-${perm.permission_type}`,
+              );
+            }
+          });
+          setCheckedKeys(selectedKeys);
+        } else {
+          console.error('获取知识库权限失败:', response.message);
+        }
+      } catch (error) {
+        console.error('获取知识库权限失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, [knowledgeBaseId]);
+
+  return { permissions, loading, checkedKeys };
 };
