@@ -77,9 +77,7 @@ class KnowledgebasePermissionService:
                 return existing_perm.to_dict()
             else:
                 # 如果不存在，创建新的权限记录
-                perm_id = str(uuid.uuid4())
                 perm = KnowledgebasePermission.create(
-                    id=perm_id,
                     kb_id=kb_id,
                     tenant_id=tenant_id,
                     user_id=user_id,
@@ -365,30 +363,30 @@ class KnowledgebasePermissionService:
                                 
                             processed_permissions.add(perm_key)
                             
-                            # 添加新权限记录
+                            # 添加新权限记录，不设置 ID，让数据库自动生成
                             new_permissions.append({
-                                'id': str(uuid.uuid4()),
                                 'kb_id': kb_id,
                                 'tenant_id': tenant_id,
                                 'user_id': user_id,
-                                'team_id': team_id,  # 使用团队字段
+                                'team_id': team_id,
                                 'permission_type': perm_type,
                                 'granted_by': granted_by,
                                 'granted_at': current_time,
                                 'status': StatusEnum.VALID.value
                             })
             
-
-            logger.info(f"new_permissions: {new_permissions}")
+            logger.info(f"准备插入的权限记录数: {len(new_permissions)}")
+            
             # 批量创建新的权限记录
             if new_permissions:
                 try:
-                    # 先尝试批量插入
+                    # 批量插入，如果失败直接抛出异常
                     KnowledgebasePermission.insert_many(new_permissions).execute()
                 except Exception as e:
-                    # 如果批量插入失败（可能是由于唯一约束冲突），则逐条插入
-                    logger.warning(f"批量插入权限记录失败，尝试逐条插入: {str(e)}")
-                
+                    logger.error(f"批量插入权限记录失败: {str(e)}")
+                    # 不进行单条插入的尝试，直接抛出异常
+                    raise
+            
             return True
         except Exception as e:
             logger.error(f"批量更新知识库权限失败: {str(e)}")
