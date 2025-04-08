@@ -14,6 +14,7 @@ import userService, {
   agreeTenant,
   createTeam,
   deleteTenantUser,
+  listTeamUser,
   listTenant,
   listTenantUser,
   updateTenant,
@@ -267,6 +268,26 @@ export const useListTenantUser = () => {
     enabled: !!tenantId,
     queryFn: async () => {
       const { data } = await listTenantUser(tenantId);
+
+      return data?.data ?? [];
+    },
+  });
+
+  return { data, loading, refetch };
+};
+
+export const useListTeamUser = (teamId: string) => {
+  const {
+    data,
+    isFetching: loading,
+    refetch,
+  } = useQuery<ITenantUser[]>({
+    queryKey: ['listTeamUser', teamId],
+    initialData: [],
+    gcTime: 0,
+    enabled: !!teamId,
+    queryFn: async () => {
+      const { data } = await listTeamUser(teamId);
 
       return data?.data ?? [];
     },

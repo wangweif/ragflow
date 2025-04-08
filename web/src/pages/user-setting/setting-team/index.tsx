@@ -1,8 +1,4 @@
-import {
-  useFetchUserInfo,
-  useListTenant,
-  useListTenantUser,
-} from '@/hooks/user-setting-hooks';
+import { useFetchUserInfo, useListTenant } from '@/hooks/user-setting-hooks';
 import { Button, Card, Empty, Space, Typography } from 'antd';
 
 import {
@@ -38,7 +34,6 @@ const UserSettingTeam = () => {
   };
 
   // 添加用户相关
-  useListTenantUser();
   const {
     addingTenantModalVisible,
     hideAddingTenantModal,

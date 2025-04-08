@@ -126,6 +126,9 @@ const userService = registerServer<keyof typeof methods>(methods, request);
 export const listTenantUser = (tenantId: string) =>
   request.get(api.listTenantUser(tenantId));
 
+export const listTeamUser = (teamId: string) =>
+  request.get(api.listTeamUser(teamId));
+
 export const addTenantUser = (tenantId: string, email: string) =>
   post(api.addTenantUser(tenantId), { email });
 

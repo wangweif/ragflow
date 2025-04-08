@@ -6,7 +6,6 @@ import {
   useCreateTenant,
   useDeleteTenantUser,
   useFetchUserInfo,
-  useListTenant,
   useUpdateTenant,
 } from '@/hooks/user-setting-hooks';
 import { addUser } from '@/services/user-service';
@@ -160,7 +159,6 @@ export const useTeamSelection = () => {
 export const useHandleDeleteTeam = () => {
   const { deleteTenantUser, loading } = useDeleteTenantUser();
   const showDeleteConfirm = useShowDeleteConfirm();
-  const { data: teamMembers } = useListTenant();
 
   const handleDeleteTeam = (teamId: string) => () => {
     showDeleteConfirm({

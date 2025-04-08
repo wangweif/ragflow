@@ -1,11 +1,10 @@
-import { useListTenantUser } from '@/hooks/user-setting-hooks';
+import { useListTeamUser } from '@/hooks/user-setting-hooks';
 import { ITenantUser } from '@/interfaces/database/user-setting';
 import { formatDate } from '@/utils/date';
 import { DeleteOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
 import { Button, Table, Tag } from 'antd';
 import { upperFirst } from 'lodash';
-import { useEffect, useState } from 'react';
 import { TenantRole } from '../constants';
 import { useHandleDeleteUser } from './hooks';
 
@@ -20,21 +19,22 @@ interface UserTableProps {
 }
 
 const UserTable = (team: any) => {
-  const { data, loading } = useListTenantUser();
+  const teamId = team.team.id;
+  const { data, loading } = useListTeamUser(teamId);
   console.log(data);
   const { handleDeleteTenantUser } = useHandleDeleteUser();
-  const [filteredData, setFilteredData] = useState<ITenantUser[]>([]);
+  // const [filteredData, setFilteredData] = useState<ITenantUser[]>([]);
 
-  // 根据选中的团队ID过滤用户数据
-  useEffect(() => {
-    if (team.team) {
-      const users = team.team.members;
-      // 根据用户ids 批量从api获取用户信息 TODO
-      setFilteredData(data);
-    } else {
-      setFilteredData(data);
-    }
-  }, [data, team.id]);
+  // // 根据选中的团队ID过滤用户数据
+  // useEffect(() => {
+  //   if (team.team) {
+  //     const users = team.team.members;
+  //     // 根据用户ids 批量从api获取用户信息 TODO
+  //     setFilteredData(data);
+  //   } else {
+  //     setFilteredData(data);
+  //   }
+  // }, [data, team.id]);
 
   const columns: TableProps<ITenantUser>['columns'] = [
     {
@@ -82,7 +82,7 @@ const UserTable = (team: any) => {
     <Table<ITenantUser>
       rowKey={'user_id'}
       columns={columns}
-      dataSource={filteredData}
+      dataSource={data}
       loading={loading}
       pagination={false}
     />
