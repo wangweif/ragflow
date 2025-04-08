@@ -32,67 +32,6 @@ class KnowledgebasePermissionService:
     """知识库权限服务类，提供知识库权限管理相关功能"""
     
     @classmethod
-    def grant_permission(cls, kb_id: str, tenant_id: str, granted_by: str, permission_type: str,
-                      user_id: str) -> Dict[str, Any]:
-        """
-        授予知识库权限
-        
-        Args:
-            kb_id: 知识库ID
-            tenant_id: 租户ID
-            granted_by: 授权人ID
-            permission_type: 权限类型，可选值: read, write
-            user_id: 用户ID
-            
-        Returns:
-            权限信息字典
-        """
-        try:
-            # 检查参数有效性
-            if not user_id:
-                raise ValueError("用户ID不能为空")
-            
-            if permission_type not in ['read', 'write']:
-                raise ValueError(f"无效的权限类型: {permission_type}，有效类型: read, write")
-            
-            # 检查知识库是否存在
-            kb = Knowledgebase.get_or_none(Knowledgebase.id == kb_id, Knowledgebase.status == StatusEnum.VALID.value)
-            if not kb:
-                raise ValueError(f"知识库 {kb_id} 不存在")
-            
-            # 查找是否已存在权限记录
-            existing_perm = KnowledgebasePermission.get_or_none(
-                KnowledgebasePermission.kb_id == kb_id,
-                KnowledgebasePermission.user_id == user_id,
-                KnowledgebasePermission.status == StatusEnum.VALID.value
-            )
-            
-            # 更新或创建权限记录
-            if existing_perm:
-                # 如果已存在权限记录，直接更新权限类型
-                existing_perm.permission_type = permission_type
-                existing_perm.granted_by = granted_by
-                existing_perm.granted_at = datetime.now()
-                existing_perm.save()
-                return existing_perm.to_dict()
-            else:
-                # 如果不存在，创建新的权限记录
-                perm = KnowledgebasePermission.create(
-                    kb_id=kb_id,
-                    tenant_id=tenant_id,
-                    user_id=user_id,
-                    team_id=None,  # 不使用团队授权
-                    permission_type=permission_type,
-                    granted_by=granted_by,
-                    granted_at=datetime.now(),
-                    status=StatusEnum.VALID.value
-                )
-                return perm.to_dict()
-        except Exception as e:
-            logger.error(f"授予知识库权限失败: {str(e)}")
-            raise
-    
-    @classmethod
     def revoke_permission(cls, kb_id: str, user_id: str) -> bool:
         """
         撤销知识库权限
@@ -363,8 +302,9 @@ class KnowledgebasePermissionService:
                                 
                             processed_permissions.add(perm_key)
                             
-                            # 添加新权限记录，不设置 ID，让数据库自动生成
+                            # 添加新权限记录，使用 UUID 生成 ID
                             new_permissions.append({
+                                'id': str(uuid.uuid4()),
                                 'kb_id': kb_id,
                                 'tenant_id': tenant_id,
                                 'user_id': user_id,

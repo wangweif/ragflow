@@ -18,10 +18,6 @@ from datetime import datetime
 from peewee import *
 from playhouse.shortcuts import model_to_dict
 
-# 移除这一行避免循环导入
-# from api.db.db_models import DB, BaseModel, DataBaseModel
-from api.db import StatusEnum
-
 # ================== 团队相关模型 ==================
 
 # 基础模型定义，避免循环导入
@@ -61,6 +57,7 @@ class Team(DataBaseModelExtension):
 
 class KnowledgebasePermission(DataBaseModelExtension):
     """知识库权限模型"""
+    id = CharField(max_length=64, primary_key=True)  # 使用 UUID 字符串作为主键
     kb_id = CharField(max_length=64, null=False, help_text="知识库ID", index=True)
     tenant_id = CharField(max_length=64, null=False, help_text="租户ID", index=True)
     user_id = CharField(max_length=64, null=True, help_text="用户ID", index=True)

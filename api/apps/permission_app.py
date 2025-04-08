@@ -88,63 +88,6 @@ def kb_permission_list(kb_id):
         return server_error_response(e)
 
 
-@manager.route('/kb/<kb_id>/user', methods=['POST'])
-@login_required
-@validate_request("user_id", "permission_type")
-def grant_kb_user_permission(kb_id):
-    """为用户授予知识库权限"""
-    try:
-        data = request.json
-        user_id = data.get('user_id')
-        permission_type = data.get('permission_type')
-        
-        # 验证权限类型是否有效
-        if permission_type not in ['read', 'write']:
-            return get_data_error_result(message="无效的权限类型，应为 'read' 或 'write'")
-        
-        # 获取知识库信息
-        kb = Knowledgebase.get_or_none(Knowledgebase.id == kb_id, Knowledgebase.status == StatusEnum.VALID.value)
-        if not kb:
-            return get_data_error_result(message="知识库不存在")
-        
-        # 验证用户权限
-        if kb.tenant_id != current_user.id and kb.created_by != current_user.id:
-            return get_json_result(
-                data=False,
-                message='没有授予知识库权限的权限',
-                code=settings.RetCode.AUTHENTICATION_ERROR
-            )
-        
-        # 验证被授权用户是否存在
-        user = UserService.get_by_id(user_id)
-        if not user:
-            return get_data_error_result(message="用户不存在")
-        
-        # 授予权限
-        permission = KnowledgebasePermissionService.grant_permission(
-            kb_id=kb_id,
-            tenant_id=kb.tenant_id,
-            granted_by=current_user.id,
-            permission_type=permission_type,
-            user_id=user_id
-        )
-        
-        # 添加用户信息
-        result = permission.copy()
-        result['user_info'] = {
-            'id': user.id,
-            'email': user.email,
-            'nickname': user.nickname,
-            'avatar': user.avatar
-        }
-        
-        return get_json_result(data=result)
-    except ValueError as e:
-        return get_data_error_result(message=str(e))
-    except Exception as e:
-        logger.exception(f"授予用户知识库权限失败: {str(e)}")
-        return server_error_response(e)
-
 
 @manager.route('/kb/<kb_id>/team', methods=['POST'])
 @login_required
