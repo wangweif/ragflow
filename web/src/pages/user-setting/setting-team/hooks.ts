@@ -23,12 +23,15 @@ export const useAddUser = () => {
   } = useSetModalState();
 
   const handleAddUserOk = useCallback(
-    async (payload?: {
-      email?: string;
-      nickname?: string;
-      // role?: string;
-      teamId?: string;
-    }) => {
+    async (
+      payload?: {
+        email?: string;
+        nickname?: string;
+        // role?: string;
+        teamId?: string;
+      },
+      refreshUsers?: () => void,
+    ) => {
       // 添加用户
       console.log(payload);
       if (
@@ -44,6 +47,10 @@ export const useAddUser = () => {
           'member',
         );
         hideAddingTenantModal();
+        // 添加用户成功后刷新列表
+        if (refreshUsers) {
+          refreshUsers();
+        }
       }
     },
     [addTenantUser, hideAddingTenantModal],

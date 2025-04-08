@@ -6,6 +6,7 @@ import {
   PlusOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
+import { useRef } from 'react';
 import AddTeamModal from './add-team-modal';
 import AddingUserModal from './add-user-modal';
 import EditTeamModal from './edit-team-modal';
@@ -18,6 +19,7 @@ import {
 import styles from './index.less';
 import TeamList from './team-list';
 import UserTable from './user-table';
+
 const { Text } = Typography;
 const iconStyle = { fontSize: 20, color: '#1677ff' };
 
@@ -25,6 +27,7 @@ const UserSettingTeam = () => {
   const { data: userInfo } = useFetchUserInfo();
   const { selectedTeamId, selectTeam } = useTeamSelection();
   const { data: teams } = useListTenant();
+  const userTableRefreshRef = useRef<() => void | undefined>();
 
   // 获取当前选中团队
   const getCurrentTeam = () => {
@@ -40,6 +43,11 @@ const UserSettingTeam = () => {
     showAddingTenantModal,
     handleAddUserOk,
   } = useAddUser();
+
+  // 处理添加用户确认
+  const handleAddUser = (payload: any) => {
+    return handleAddUserOk(payload, userTableRefreshRef.current);
+  };
 
   // 创建团队相关
   const {
@@ -132,7 +140,12 @@ const UserSettingTeam = () => {
             bordered={false}
           >
             {selectedTeamId ? (
-              <UserTable team={currentTeam} />
+              <UserTable
+                team={currentTeam}
+                onRefresh={(refreshFunc: () => void) => {
+                  userTableRefreshRef.current = refreshFunc;
+                }}
+              />
             ) : (
               <Empty description={'请选择一个部门查看成员'} />
             )}
@@ -157,7 +170,7 @@ const UserSettingTeam = () => {
         <AddingUserModal
           visible
           hideModal={hideAddingTenantModal}
-          onOk={handleAddUserOk}
+          onOk={handleAddUser}
           teamId={selectedTeamId ?? ''}
         />
       )}

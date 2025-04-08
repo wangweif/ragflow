@@ -5,6 +5,7 @@ import { DeleteOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
 import { Button, Table, Tag } from 'antd';
 import { upperFirst } from 'lodash';
+import { useEffect } from 'react';
 import { TenantRole } from '../constants';
 import { useHandleDeleteUser } from './hooks';
 
@@ -16,13 +17,23 @@ const ColorMap = {
 
 interface UserTableProps {
   teamId?: string | null;
+  onRefresh?: (refreshFunc: () => void) => void;
+  team: any;
 }
 
-const UserTable = (team: any) => {
-  const teamId = team.team.id;
-  const { data, loading } = useListTeamUser(teamId);
+const UserTable = ({ team, onRefresh }: UserTableProps) => {
+  const teamId = team.id;
+  const { data, loading, refetch } = useListTeamUser(teamId);
   console.log(data);
   const { handleDeleteTenantUser } = useHandleDeleteUser();
+
+  // 将refetch函数传递给父组件
+  useEffect(() => {
+    if (onRefresh && refetch) {
+      onRefresh(refetch);
+    }
+  }, [onRefresh, refetch]);
+
   // const [filteredData, setFilteredData] = useState<ITenantUser[]>([]);
 
   // // 根据选中的团队ID过滤用户数据
