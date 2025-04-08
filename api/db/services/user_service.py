@@ -150,7 +150,8 @@ class UserService(CommonService):
             "status": StatusEnum.VALID.value,
             "team_id": team_id,
             "role": role,
-            "tenant_id": tenant_id
+            "tenant_id": tenant_id,
+            "language": "Chinese"
         }
         
         user = cls.save(**user_data)
