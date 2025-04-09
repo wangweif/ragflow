@@ -499,7 +499,7 @@ export default {
       baseUrlTip:
         'Se sua chave da API for do OpenAI, ignore isso. Outros provedores intermediários fornecerão essa URL base com a chave da API.',
       modify: 'Modificar',
-      systemModelSettings: 'Configurações do Modelo do Sistema',
+      systemModelSettings: 'Definir modelos padrão',
       chatModel: 'Modelo de chat',
       chatModelTip:
         'O modelo LLM padrão que todos os novos bancos de conhecimento usarão.',
@@ -595,6 +595,8 @@ export default {
       sureDelete: 'Tem certeza de que deseja remover este membro?',
       quit: 'Sair',
       sureQuit: 'Tem certeza de que deseja sair da equipe que você ingressou?',
+      modelsToBeAddedTooltip:
+        'Se o seu provedor de modelo não estiver listado, mas afirmar ser compatível com a OpenAI, selecione o card OpenAI-API-compatible para adicionar o(s) modelo(s) relevante(s). ',
     },
     message: {
       registered: 'Registrado!',

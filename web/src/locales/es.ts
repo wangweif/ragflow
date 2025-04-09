@@ -339,7 +339,7 @@ export default {
       baseUrlTip:
         'Si tu clave API es de OpenAI, ignora esto. Cualquier otro proveedor intermedio proporcionará esta URL base junto con la clave API.',
       modify: 'Modificar',
-      systemModelSettings: 'Configuración del modelo del sistema',
+      systemModelSettings: 'Establecer modelos predeterminados',
       chatModel: 'Modelo de chat',
       chatModelTip:
         'El modelo LLM de chat predeterminado que todas las nuevas bases de conocimiento utilizarán.',
@@ -434,6 +434,8 @@ export default {
         'Por favor agrega tanto el modelo de embeddings como el LLM en <b>Configuración > Proveedores de Modelos</b> primero.',
       apiVersion: 'Versión de la API',
       apiVersionMessage: '¡Por favor ingresa la versión de la API!',
+      modelsToBeAddedTooltip:
+        'Si tu proveedor de modelos no aparece en la lista pero afirma ser compatible con OpenAI, selecciona la tarjeta OpenAI-API-compatible para añadir el/los modelo(s) correspondiente(s).',
     },
     message: {
       registered: '¡Registrado!',

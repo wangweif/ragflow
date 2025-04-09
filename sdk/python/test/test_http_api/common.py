@@ -32,6 +32,7 @@ CHAT_ASSISTANT_API_URL = "/api/v1/chats"
 INVALID_API_TOKEN = "invalid_key_123"
 DATASET_NAME_LIMIT = 128
 DOCUMENT_NAME_LIMIT = 128
+CHAT_ASSISTANT_LIMIT = 255
 
 
 # DATASET MANAGEMENT
@@ -215,6 +216,6 @@ def delete_chat_assistants(auth, payload=None):
 def batch_create_chat_assistants(auth, num):
     chat_assistant_ids = []
     for i in range(num):
-        res = create_chat_assistant(auth, {"name": f"test_chat_assistant_{i}"})
+        res = create_chat_assistant(auth, {"name": f"test_chat_assistant_{i}", "dataset_ids": []})
         chat_assistant_ids.append(res["data"]["id"])
     return chat_assistant_ids

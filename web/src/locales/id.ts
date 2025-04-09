@@ -510,7 +510,7 @@ export default {
       baseUrlTip:
         'Jika kunci API Anda berasal dari OpenAI, abaikan saja. Penyedia perantara lainnya akan memberikan base url ini dengan kunci API.',
       modify: 'Ubah',
-      systemModelSettings: 'Pengaturan Model Sistem',
+      systemModelSettings: 'Tetapkan model default',
       chatModel: 'Model Obrolan',
       chatModelTip:
         'Model LLM obrolan default yang akan digunakan semua basis pengetahuan baru yang dibuat.',
@@ -603,6 +603,8 @@ export default {
         'Silakan tambahkan model embedding dan LLM di <b>Pengaturan > Penyedia Model</b> terlebih dahulu.',
       apiVersion: 'Versi API',
       apiVersionMessage: 'Silakan masukkan versi API',
+      modelsToBeAddedTooltip:
+        'Jika penyedia model Anda tidak tercantum tetapi mengklaim kompatibel dengan OpenAI, pilih kartu OpenAI-API-compatible untuk menambahkan model yang relevan.',
     },
     message: {
       registered: 'Terdaftar!',

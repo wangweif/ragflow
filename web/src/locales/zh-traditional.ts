@@ -37,6 +37,7 @@ export default {
       embedIntoSite: '嵌入網站',
       previousPage: '上一頁',
       nextPage: '下一頁',
+      add: '添加',
     },
     login: {
       login: '登入',
@@ -358,7 +359,7 @@ export default {
       addTag: '增加標籤',
       useGraphRag: '提取知識圖譜',
       useGraphRagTip:
-        '文件分塊後，所有區塊將用於知識圖譜生成，這對多跳和複雜問題的推理有很大幫助。',
+        '基於知識庫內所有切好的文本塊構建知識圖譜，用以提升多跳和複雜問題回答的正確率。請注意：構建知識圖譜將消耗大量 token 和時間。詳見 https://ragflow.io/docs/dev/construct_knowledge_graph。',
       graphRagMethod: '方法',
       graphRagMethodTip: `Light：實體和關係提取提示來自 GitHub - HKUDS/LightRAG：“LightRAG：簡單快速的檢索增強生成”<br>
  一般：實體和關係擷取提示來自 GitHub - microsoft/graphrag：基於模組化圖形的檢索增強生成 (RAG) 系統，`,
@@ -573,7 +574,7 @@ export default {
       baseUrlTip:
         '如果您的 API 密鑰來自 OpenAI，請忽略它。任何其他中間提供商都會提供帶有 API 密鑰的基本 URL。',
       modify: '修改',
-      systemModelSettings: '系統模型設置',
+      systemModelSettings: '設定預設模型',
       chatModel: '聊天模型',
       chatModelTip: '所有新創建的知識庫都會使用默認的聊天模型。',
       ttsModel: '語音合成模型',
@@ -682,6 +683,8 @@ export default {
         '追蹤、評估、提示管理和指標以調試和改進您的 LLM 應用程式。',
       viewLangfuseSDocumentation: '查看 Langfuse 的文檔',
       view: '查看',
+      modelsToBeAddedTooltip:
+        '若您的模型供應商未列於此處，但宣稱與 OpenAI 相容，可透過選擇「OpenAI-API-compatible」卡片來設定相關模型。',
     },
     message: {
       registered: '註冊成功',

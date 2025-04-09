@@ -37,6 +37,7 @@ export default {
       embedIntoSite: 'Embed into webpage',
       previousPage: 'Previous',
       nextPage: 'Next',
+      add: 'Add',
     },
     login: {
       login: 'Sign in',
@@ -369,7 +370,7 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       addTag: 'Add tag',
       useGraphRag: 'Extract knowledge graph',
       useGraphRagTip:
-        'Construct a knowledge graph over extracted file chunks to enhance multi-hop question answering.',
+        'Construct a knowledge graph over file chunks of the current knowledge base to enhance multi-hop question-answering involving nested logic. See https://ragflow.io/docs/dev/construct_knowledge_graph for details.',
       graphRagMethod: 'Method',
       graphRagMethodTip: `Light: (Default) Use prompts provided by github.com/HKUDS/LightRAG to extract entities and relationships. This option consumes fewer tokens, less memory, and fewer computational resources.</br>
         General: Use prompts provided by github.com/microsoft/graphrag to extract entities and relationships`,
@@ -593,7 +594,7 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       baseUrlTip:
         'If your API key is from OpenAI, just ignore it. Any other intermediate providers will give this base url with the API key.',
       modify: 'Modify',
-      systemModelSettings: 'System Model Settings',
+      systemModelSettings: 'Set default models',
       chatModel: 'Chat model',
       chatModelTip:
         'The default chat model for each newly created knowledge base.',
@@ -707,6 +708,8 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
         'Traces, evals, prompt management and metrics to debug and improve your LLM application.',
       viewLangfuseSDocumentation: "View Langfuse's documentation",
       view: 'View',
+      modelsToBeAddedTooltip:
+        'If your model provider is not listed but claims to be "OpenAI-compatible", select the OpenAI-API-compatible card to add the relevant model(s). ',
     },
     message: {
       registered: 'Registered!',
