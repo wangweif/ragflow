@@ -48,6 +48,8 @@ export default {
     `${api_host}/permission/kb/${kbId}/permissions`,
   getKnowledgePermissions: (kbId: string) =>
     `${api_host}/permission/kb/${kbId}/authorized_users`,
+  getKnowledgeList: (tenant_id: string) =>
+    `${api_host}/permission/kb/accessible?tenant_id=${tenant_id}`,
 
   // tags
   listTag: (knowledgeId: string) => `${api_host}/kb/${knowledgeId}/tags`,

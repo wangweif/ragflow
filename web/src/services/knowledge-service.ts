@@ -173,4 +173,8 @@ export function deleteKnowledgeGraph(knowledgeId: string) {
   return request.delete(api.getKnowledgeGraph(knowledgeId));
 }
 
+export function getKnowledgeList(tenant_id: string) {
+  return request.get(api.getKnowledgeList(tenant_id));
+}
+
 export default kbService;

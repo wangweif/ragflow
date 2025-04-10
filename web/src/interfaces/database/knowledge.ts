@@ -24,6 +24,9 @@ export interface IKnowledge {
   vector_similarity_weight: number;
   embd_id: string;
   nickname?: string;
+  kb_name?: string;
+  kb_id?: string;
+  permission_type?: string;
   operator_permission: number;
 }
 

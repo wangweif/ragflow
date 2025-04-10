@@ -18,6 +18,7 @@ export interface IUserInfo {
   status: string;
   update_date: string;
   update_time: number;
+  tenant_id: string;
   role: string;
 }
 

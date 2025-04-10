@@ -9,6 +9,7 @@ import i18n from '@/locales/config';
 import kbService, {
   deleteKnowledgeGraph,
   getKnowledgeGraph,
+  getKnowledgeList,
   listTag,
   removeTag,
   renameTag,
@@ -54,7 +55,7 @@ export const useFetchKnowledgeBaseConfiguration = () => {
 };
 
 export const useFetchKnowledgeList = (
-  shouldFilterListWithoutDocument: boolean = false,
+  tenant_id: string,
 ): {
   list: IKnowledge[];
   loading: boolean;
@@ -64,11 +65,11 @@ export const useFetchKnowledgeList = (
     initialData: [],
     gcTime: 0, // https://tanstack.com/query/latest/docs/framework/react/guides/caching?from=reactQueryV3
     queryFn: async () => {
-      const { data } = await kbService.getList();
-      const list = data?.data?.kbs ?? [];
-      return shouldFilterListWithoutDocument
-        ? list.filter((x: IKnowledge) => x.chunk_num > 0)
-        : list;
+      const { data } = await getKnowledgeList(tenant_id);
+      let list = data?.data ?? [];
+      // 只保留read权限
+      list = list.filter((x: IKnowledge) => x.permission_type === 'read');
+      return list;
     },
   });
 
