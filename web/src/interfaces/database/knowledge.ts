@@ -28,6 +28,14 @@ export interface IKnowledge {
   kb_id?: string;
   permission_type?: string;
   operator_permission: number;
+  kb_info?: {
+    description: string;
+    tags: string[];
+    created_by: string;
+    doc_num: number;
+    id: string;
+    name: string;
+  };
 }
 
 export interface Raptor {

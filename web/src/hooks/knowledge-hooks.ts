@@ -28,7 +28,6 @@ import { useState } from 'react';
 import { useSearchParams } from 'umi';
 import { useHandleSearchChange } from './logic-hooks';
 import { useSetPaginationParams } from './route-hook';
-
 export const useKnowledgeBaseId = (): string => {
   const [searchParams] = useSearchParams();
   const knowledgeBaseId = searchParams.get('id');
@@ -87,7 +86,7 @@ export const useSelectKnowledgeOptions = () => {
   return options;
 };
 
-export const useInfiniteFetchKnowledgeList = () => {
+export const useInfiniteFetchKnowledgeList = (tenant_id: string) => {
   const { searchString, handleInputChange } = useHandleSearchChange();
   const debouncedSearchString = useDebounce(searchString, { wait: 500 });
 
@@ -103,12 +102,10 @@ export const useInfiniteFetchKnowledgeList = () => {
   } = useInfiniteQuery({
     queryKey: ['infiniteFetchKnowledgeList', debouncedSearchString],
     queryFn: async ({ pageParam }) => {
-      const { data } = await kbService.getList({
-        page: pageParam,
-        page_size: PageSize,
-        keywords: debouncedSearchString,
-      });
-      const list = data?.data ?? [];
+      const { data } = await getKnowledgeList(tenant_id);
+      let list = data?.data ?? [];
+      // 只保留write权限
+      list = list.filter((x: IKnowledge) => x.permission_type === 'write');
       return list;
     },
     initialPageParam: 1,

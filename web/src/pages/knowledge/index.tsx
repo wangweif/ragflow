@@ -22,6 +22,7 @@ import styles from './index.less';
 
 const KnowledgeList = () => {
   const { data: userInfo } = useFetchUserInfo();
+  console.log(userInfo);
   const { t } = useTranslation('translation', { keyPrefix: 'knowledgeList' });
   const {
     visible,
@@ -37,14 +38,12 @@ const KnowledgeList = () => {
     searchString,
     handleInputChange,
     loading,
-  } = useInfiniteFetchKnowledgeList();
+  } = useInfiniteFetchKnowledgeList(userInfo.tenant_id);
 
   const nextList = useMemo(() => {
-    const list =
-      data?.pages?.flatMap((x) => (Array.isArray(x.kbs) ? x.kbs : [])) ?? [];
+    const list = data?.pages?.flatMap((x) => (Array.isArray(x) ? x : [])) ?? [];
     return list;
   }, [data?.pages]);
-
   const total = useMemo(() => {
     return data?.pages.at(-1).total ?? 0;
   }, [data?.pages]);
@@ -97,7 +96,7 @@ const KnowledgeList = () => {
                 return (
                   <KnowledgeCard
                     item={item}
-                    key={`${item?.name}-${index}`}
+                    key={`${item?.kb_name}-${index}`}
                   ></KnowledgeCard>
                 );
               })

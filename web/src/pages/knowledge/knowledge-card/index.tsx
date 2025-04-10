@@ -1,11 +1,6 @@
 import { KnowledgeRouteKey } from '@/constants/knowledge';
 import { IKnowledge } from '@/interfaces/database/knowledge';
-import { formatDate } from '@/utils/date';
-import {
-  CalendarOutlined,
-  FileTextOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { FileTextOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar, Card, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'umi';
@@ -32,7 +27,7 @@ const KnowledgeCard = ({ item }: IProps) => {
   };
 
   const handleCardClick = () => {
-    navigate(`/knowledge/${KnowledgeRouteKey.Dataset}?id=${item.id}`, {
+    navigate(`/knowledge/${KnowledgeRouteKey.Dataset}?id=${item.kb_id}`, {
       state: { from: 'list' },
     });
   };
@@ -55,14 +50,14 @@ const KnowledgeCard = ({ item }: IProps) => {
             <span
               className={theme === 'dark' ? styles.titledark : styles.title}
             >
-              {item.name}
+              {item.kb_name}
             </span>
             <p
               className={
                 theme === 'dark' ? styles.descriptiondark : styles.description
               }
             >
-              {item.description}
+              {item.kb_info?.description}
             </p>
           </div>
           <div className={styles.footer}>
@@ -71,19 +66,19 @@ const KnowledgeCard = ({ item }: IProps) => {
                 <FileTextOutlined className={styles.leftIcon} />
                 <span className={styles.rightText}>
                   <Space>
-                    {item.doc_num}
+                    {item.kb_info?.doc_num}
                     {t('knowledgeList.doc')}
                   </Space>
                 </span>
               </div>
             </div>
             <div className={styles.bottom}>
-              <div className={styles.bottomLeft}>
+              {/* <div className={styles.bottomLeft}>
                 <CalendarOutlined className={styles.leftIcon} />
                 <span className={styles.rightText}>
-                  {formatDate(item.update_time)}
+                  {formatDate(item.kb_info?.update_time)}
                 </span>
-              </div>
+              </div> */}
               {/* <Avatar.Group size={25}>
                 <Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=1" />
                 <a href="https://ant.design">
