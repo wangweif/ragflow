@@ -20,12 +20,16 @@ from api.db.services.dialog_service import DialogService
 from api.db import StatusEnum
 from api.db.services.llm_service import TenantLLMService
 from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.db.services.user_service import TenantService, UserTenantService
+from api.db.services.user_service import TenantService, UserTenantService, UserService
 from api import settings
 from api.utils.api_utils import server_error_response, get_data_error_result, validate_request
 from api.utils import get_uuid
 from api.utils.api_utils import get_json_result
+import logging
 
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 @manager.route('/set', methods=['POST'])  # noqa: F821
 @login_required
@@ -67,7 +71,7 @@ def set_dialog():
                 message="Parameter '{}' is not used".format(p["key"]))
 
     try:
-        e, tenant = TenantService.get_by_id(current_user.id)
+        e, tenant = TenantService.get_by_id(current_user.tenant_id)
         if not e:
             return get_data_error_result(message="Tenant not found!")
         kbs = KnowledgebaseService.get_by_ids(req.get("kb_ids", []))
@@ -80,7 +84,7 @@ def set_dialog():
         if not dialog_id:
             dia = {
                 "id": get_uuid(),
-                "tenant_id": current_user.id,
+                "tenant_id": current_user.tenant_id,
                 "name": name,
                 "kb_ids": req.get("kb_ids", []),
                 "description": description,
@@ -144,8 +148,9 @@ def get_kb_names(kb_ids):
 @login_required
 def list_dialogs():
     try:
+        # MarsTODO: 绑定用户id
         diags = DialogService.query(
-            tenant_id=current_user.id,
+            tenant_id=current_user.tenant_id,
             status=StatusEnum.VALID.value,
             reverse=True,
             order_by=DialogService.model.create_time)

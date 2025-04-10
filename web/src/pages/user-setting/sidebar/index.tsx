@@ -56,7 +56,7 @@ const SideBar = () => {
   const items: MenuItem[] = Object.values(UserSettingRouteKey)
     .filter((value) => {
       // 如果是部门菜单，并且用户不是超级管理员，就过滤掉
-      if (value === UserSettingRouteKey.Team && userInfo.role != 'admin') {
+      if (value === UserSettingRouteKey.Team && userInfo.role != 'owner') {
         return false;
       }
       return true;

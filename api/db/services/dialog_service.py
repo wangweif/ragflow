@@ -91,6 +91,8 @@ def chat_solo(dialog, messages, stream=True):
 
 
 def chat(dialog, messages, stream=True, **kwargs):
+    # logging.info(f"dialog111: {dialog}")
+    # logging.info(f"dialog222: {dialog.tenant_id}")
     assert messages[-1]["role"] == "user", "The last content of this conversation is not from user."
     if not dialog.kb_ids:
         for ans in chat_solo(dialog, messages, stream):

@@ -74,15 +74,18 @@ def get():
         e, conv = ConversationService.get_by_id(conv_id)
         if not e:
             return get_data_error_result(message="Conversation not found!")
-        tenants = UserTenantService.query(user_id=current_user.id)
+        # tenants = UserTenantService.query(user_id=current_user.id)
         avatar = None
-        for tenant in tenants:
-            dialog = DialogService.query(tenant_id=tenant.tenant_id, id=conv.dialog_id)
-            if dialog and len(dialog) > 0:
+        # for tenant in tenants:
+        #     dialog = DialogService.query(tenant_id=current_user.tenant_id, id=conv.dialog_id)
+        #     if dialog and len(dialog) > 0:
+        #         avatar = dialog[0].icon
+        #         break
+        dialog = DialogService.query(tenant_id=current_user.tenant_id, id=conv.dialog_id)
+        if dialog and len(dialog) > 0:
                 avatar = dialog[0].icon
-                break
-        else:
-            return get_json_result(data=False, message="Only owner of conversation authorized for this operation.", code=settings.RetCode.OPERATING_ERROR)
+        # else:
+            # return get_json_result(data=False, message="Only owner of conversation authorized for this operation.", code=settings.RetCode.OPERATING_ERROR)
 
         def get_value(d, k1, k2):
             return d.get(k1, d.get(k2))
