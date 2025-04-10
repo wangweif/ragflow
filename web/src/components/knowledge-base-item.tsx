@@ -20,7 +20,7 @@ const KnowledgeBaseItem = ({
 }: KnowledgeBaseItemProps) => {
   const { t } = useTranslate('chat');
   const { data: userInfo } = useFetchUserInfo();
-  const tenant_id = userInfo?.tenant_id;
+  const tenant_id = userInfo?.tenant_id ? userInfo.tenant_id : userInfo.id;
 
   const { list: knowledgeList } = useFetchKnowledgeList(tenant_id);
   console.log(knowledgeList);
