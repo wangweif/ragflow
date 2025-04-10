@@ -52,7 +52,6 @@ export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
           permission_types: Array.from(permission_types),
         });
       }
-      console.log('Git Test');
       await post(api.assignKnowledgePermission(knowledgeBaseId), {
         permissions,
       });

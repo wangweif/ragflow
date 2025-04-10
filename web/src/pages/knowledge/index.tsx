@@ -37,8 +37,9 @@ const KnowledgeList = () => {
     searchString,
     handleInputChange,
     loading,
-  } = useInfiniteFetchKnowledgeList(userInfo.tenant_id);
-
+  } = useInfiniteFetchKnowledgeList(
+    userInfo.tenant_id ? userInfo.tenant_id : userInfo.id,
+  );
   const nextList = useMemo(() => {
     const list = data?.pages?.flatMap((x) => (Array.isArray(x) ? x : [])) ?? [];
     return list;
