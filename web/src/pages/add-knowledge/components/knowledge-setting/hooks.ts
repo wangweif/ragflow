@@ -6,7 +6,10 @@ import {
 } from '@/hooks/knowledge-hooks';
 import { useSelectLlmOptionsByModelType } from '@/hooks/llm-hooks';
 import { useNavigateToDataset } from '@/hooks/route-hook';
-import { useSelectParserList } from '@/hooks/user-setting-hooks';
+import {
+  useFetchUserInfo,
+  useSelectParserList,
+} from '@/hooks/user-setting-hooks';
 import api from '@/utils/api';
 import {
   getBase64FromUploadFileList,
@@ -30,6 +33,7 @@ export const useKnowledgeBaseId = (): string => {
 
 export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
   const { saveKnowledgeConfiguration, loading } = useUpdateKnowledge();
+  const { data: userInfo } = useFetchUserInfo();
   const navigateToDataset = useNavigateToDataset();
   const [assignLoading, setAssignLoading] = useState(false);
   const knowledgeBaseId = useKnowledgeBaseId();
@@ -52,6 +56,12 @@ export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
           permission_types: Array.from(permission_types),
         });
       }
+      // 为管理员赋权
+      permissions.push({
+        user_id: userInfo.id,
+        team_id: teamId,
+        permission_types: ['write', 'read'],
+      });
       await post(api.assignKnowledgePermission(knowledgeBaseId), {
         permissions,
       });
