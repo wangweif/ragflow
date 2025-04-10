@@ -12,7 +12,6 @@ import {
   Button,
   Form,
   Input,
-  Radio,
   Space,
   Spin,
   Tree,
@@ -125,7 +124,6 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   const [finalParserId, setFinalParserId] = useState<DocumentParserType>();
   const knowledgeDetails = useFetchKnowledgeConfigurationOnMount(form);
   const parserId: DocumentParserType = Form.useWatch('parser_id', form);
-  const permission = Form.useWatch('permission', form);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState('');
 
@@ -221,16 +219,16 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   }, [teams, permissions]);
 
   // 处理权限选择变化
-  const handlePermissionChange = (e: any) => {
-    const value = e.target.value;
-    form.setFieldsValue({ permission: value });
+  // const handlePermissionChange = (e: any) => {
+  //   const value = e.target.value;
+  //   form.setFieldsValue({ permission: value });
 
-    // 如果选择"me"，清空已选成员
-    if (value === 'me') {
-      setSelectedMembers([]);
-      form.setFieldsValue({ selectedMembers: [] });
-    }
-  };
+  //   // 如果选择"me"，清空已选成员
+  //   if (value === 'me') {
+  //     setSelectedMembers([]);
+  //     form.setFieldsValue({ selectedMembers: [] });
+  //   }
+  // };
 
   // 处理树选择变化
   const handleTreeSelect = (selectedKeys: any) => {
@@ -292,51 +290,47 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
       <Form.Item name="description" label={'知识库描述'}>
         <Input />
       </Form.Item>
-      <Form.Item
+      {/* <Form.Item
         name="permission"
         label={'权限'}
         tooltip={'设置知识库的权限'}
         rules={[{ required: true }]}
       >
-        <Radio.Group onChange={handlePermissionChange}>
-          <Radio value="me">{'只有我'}</Radio>
-          <Radio value="team">{'部门'}</Radio>
-        </Radio.Group>
-      </Form.Item>
+      </Form.Item> */}
 
       {/* 团队成员选择树 */}
-      {permission === 'team' && (
-        <Form.Item name="selectedMembers" label={'选择部门成员'}>
-          <Spin spinning={teamsLoading || permissionsLoading}>
-            {treeData.length > 0 ? (
-              <div>
-                <div className={styles.searchWrapper}>
-                  <Input
-                    placeholder="搜索部门或成员"
-                    value={searchValue}
-                    onChange={handleSearchChange}
-                    prefix={<SearchOutlined />}
-                    allowClear
-                    style={{ marginBottom: '8px' }}
-                  />
-                </div>
-                <Tree
-                  checkable
-                  selectable={false}
-                  treeData={treeData}
-                  onCheck={handleTreeSelect}
-                  checkedKeys={selectedMembers}
-                  defaultExpandAll
-                  className={styles.memberTree}
-                  filterTreeNode={treeSearchFilter}
+      {/* {permission === 'team' && ( */}
+      <Form.Item name="selectedMembers" label={'选择部门成员'}>
+        <Spin spinning={teamsLoading || permissionsLoading}>
+          {treeData.length > 0 ? (
+            <div>
+              <div className={styles.searchWrapper}>
+                <Input
+                  placeholder="搜索部门或成员"
+                  value={searchValue}
+                  onChange={handleSearchChange}
+                  prefix={<SearchOutlined />}
+                  allowClear
+                  style={{ marginBottom: '8px' }}
                 />
               </div>
-            ) : (
-              <Text type="secondary">{'没有可用的部门'}</Text>
-            )}
-          </Spin>
-        </Form.Item>
-      )}
+              <Tree
+                checkable
+                selectable={false}
+                treeData={treeData}
+                onCheck={handleTreeSelect}
+                checkedKeys={selectedMembers}
+                defaultExpandAll
+                className={styles.memberTree}
+                filterTreeNode={treeSearchFilter}
+              />
+            </div>
+          ) : (
+            <Text type="secondary">{'没有可用的部门'}</Text>
+          )}
+        </Spin>
+      </Form.Item>
+      {/* )} */}
 
       <ConfigurationComponent></ConfigurationComponent>
 

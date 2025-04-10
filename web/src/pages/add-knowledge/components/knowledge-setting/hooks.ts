@@ -85,10 +85,11 @@ export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
     await saveKnowledgeConfiguration({
       ...rest,
       avatar,
+      permission: 'team',
     });
 
     //为选中的用户分配权限
-    if (values.permission === 'team' && selectedMembers?.length > 0) {
+    if (selectedMembers?.length > 0) {
       // 数据预处理
       const result: Record<string, Set<string>> = {};
       selectedMembers.forEach((key: string) => {
