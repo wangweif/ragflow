@@ -141,6 +141,7 @@ const Chat = () => {
 
   const handleDialogCardClick = useCallback(
     (dialogId: string) => () => {
+      console.log('dialogId', dialogId);
       handleClickDialog(dialogId);
     },
     [handleClickDialog],

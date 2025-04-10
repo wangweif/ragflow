@@ -53,10 +53,16 @@ const SideBar = () => {
     } as MenuItem;
   }
 
+  const ownerOnlyRoutes = [
+    UserSettingRouteKey.Team,
+    UserSettingRouteKey.Model,
+    UserSettingRouteKey.System,
+    UserSettingRouteKey.Api,
+  ];
+
   const items: MenuItem[] = Object.values(UserSettingRouteKey)
     .filter((value) => {
-      // 如果是部门菜单，并且用户不是超级管理员，就过滤掉
-      if (value === UserSettingRouteKey.Team && userInfo.role != 'owner') {
+      if (ownerOnlyRoutes.includes(value) && userInfo.role !== 'owner') {
         return false;
       }
       return true;

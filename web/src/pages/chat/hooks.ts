@@ -250,9 +250,9 @@ export const useSelectDerivedConversationList = () => {
   }, [conversationList, dialogId, prologue, t, setNewConversationRouteParams]);
 
   // When you first enter the page, select the top conversation card
-
+  console.log('conversationList', conversationList);
   useEffect(() => {
-    setList([...conversationList]);
+    setList(conversationList ? [...conversationList] : []);
   }, [conversationList]);
 
   return { list, addTemporaryConversation, loading };

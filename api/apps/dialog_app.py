@@ -84,6 +84,7 @@ def set_dialog():
         if not dialog_id:
             dia = {
                 "id": get_uuid(),
+                "user_id": current_user.id,
                 "tenant_id": current_user.tenant_id,
                 "name": name,
                 "kb_ids": req.get("kb_ids", []),
@@ -148,12 +149,13 @@ def get_kb_names(kb_ids):
 @login_required
 def list_dialogs():
     try:
-        # MarsTODO: 绑定用户id
         diags = DialogService.query(
+            user_id=current_user.id,
             tenant_id=current_user.tenant_id,
             status=StatusEnum.VALID.value,
             reverse=True,
             order_by=DialogService.model.create_time)
+        logger.info(f"diags: {diags}")
         diags = [d.to_dict() for d in diags]
         for d in diags:
             d["kb_ids"], d["kb_names"] = get_kb_names(d["kb_ids"])
