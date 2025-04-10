@@ -100,7 +100,7 @@ export const useInfiniteFetchKnowledgeList = (tenant_id: string) => {
     isFetchingNextPage,
     status,
   } = useInfiniteQuery({
-    queryKey: ['infiniteFetchKnowledgeList', debouncedSearchString],
+    queryKey: ['infiniteFetchKnowledgeList', tenant_id],
     queryFn: async ({ pageParam }) => {
       const { data } = await getKnowledgeList(tenant_id);
       let list = data?.data ?? [];

@@ -22,7 +22,6 @@ import styles from './index.less';
 
 const KnowledgeList = () => {
   const { data: userInfo } = useFetchUserInfo();
-  console.log(userInfo);
   const { t } = useTranslation('translation', { keyPrefix: 'knowledgeList' });
   const {
     visible,
