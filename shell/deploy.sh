@@ -23,7 +23,7 @@ fi
 echo "等待2秒确保端口完全释放..."
 sleep 2
 
-export CUDA_VISIBLE_DEVICES=''
+# export CUDA_VISIBLE_DEVICES=''
 echo "激活Python虚拟环境..."
 source .venv/bin/activate
 export PYTHONPATH=$(pwd)
