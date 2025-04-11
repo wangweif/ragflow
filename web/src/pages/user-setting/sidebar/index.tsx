@@ -62,7 +62,11 @@ const SideBar = () => {
 
   const items: MenuItem[] = Object.values(UserSettingRouteKey)
     .filter((value) => {
-      if (ownerOnlyRoutes.includes(value) && userInfo.role !== 'owner') {
+      if (
+        ownerOnlyRoutes.includes(value) &&
+        userInfo.role !== 'owner' &&
+        userInfo.role !== 'admin'
+      ) {
         return false;
       }
       return true;
