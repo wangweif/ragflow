@@ -160,7 +160,7 @@ def rm():
 def list_convsersation():
     dialog_id = request.args["dialog_id"]
     try:
-        if not DialogService.query(tenant_id=current_user.id, id=dialog_id):
+        if not DialogService.query(tenant_id=current_user.tenant_id, user_id=current_user.id, id=dialog_id):
             return get_json_result(data=False, message="Only owner of dialog authorized for this operation.", code=settings.RetCode.OPERATING_ERROR)
         convs = ConversationService.query(dialog_id=dialog_id, order_by=ConversationService.model.create_time, reverse=True)
 

@@ -693,6 +693,7 @@ class Task(DataBaseModel):
 
 class Dialog(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
+    user_id = CharField(max_length=32, null=False, index=True)
     tenant_id = CharField(max_length=32, null=False, index=True)
     name = CharField(max_length=255, null=True, help_text="dialog application name", index=True)
     description = TextField(null=True, help_text="Dialog description")
@@ -901,5 +902,9 @@ def migrate_db():
         migrate(migrator.add_column("user", "team_id", CharField(max_length=32, null=True, help_text="team id", index=True)))
         migrate(migrator.add_column("user", "role", CharField(max_length=32, null=True, help_text="role", index=True)))
         migrate(migrator.add_column("user", "tenant_id", CharField(max_length=32, null=True, help_text="tenant id", index=True)))
+    except Exception:
+        pass
+    try:
+        migrate(migrator.add_column("dialog", "user_id", CharField(max_length=32, null=True, help_text="user id", index=True)))
     except Exception:
         pass
