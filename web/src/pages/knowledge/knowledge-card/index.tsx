@@ -23,7 +23,7 @@ const KnowledgeCard = ({ item }: IProps) => {
   const { deleteKnowledge } = useDeleteKnowledge();
 
   const removeKnowledge = async () => {
-    return deleteKnowledge(item.id);
+    return deleteKnowledge(item.kb_id || '');
   };
 
   const handleCardClick = () => {
