@@ -71,6 +71,7 @@ const routes = [
           {
             path: '/knowledge/configuration',
             component: '@/pages/add-knowledge/components/knowledge-setting',
+            wrappers: ['@/wrappers/knowledgeConfiguration'],
           },
           {
             path: '/knowledge/testing',
@@ -110,6 +111,7 @@ const routes = [
           {
             path: '/user-setting/team',
             component: '@/pages/user-setting/setting-team',
+            wrappers: ['@/wrappers/settingTeam'],
           },
           {
             path: '/user-setting/system',
