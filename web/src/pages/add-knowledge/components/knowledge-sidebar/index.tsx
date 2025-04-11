@@ -17,14 +17,15 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'umi';
 import { KnowledgeRouteKey } from '../../constant';
 
+import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { isEmpty } from 'lodash';
 import { GitGraph } from 'lucide-react';
 import styles from './index.less';
-
 const KnowledgeSidebar = () => {
   let navigate = useNavigate();
   const activeKey = useSecondPathName();
   const { knowledgeId } = useGetKnowledgeSearchParams();
+  const { data: userInfo } = useFetchUserInfo();
 
   const [windowWidth, setWindowWidth] = useState(getWidth());
   const [collapsed, setCollapsed] = useState(false);
@@ -72,12 +73,16 @@ const KnowledgeSidebar = () => {
         KnowledgeRouteKey.Testing,
         <TestingIcon />,
       ),
-      getItem(
-        KnowledgeRouteKey.Configuration,
-        KnowledgeRouteKey.Configuration,
-        <ConfigurationIcon />,
-      ),
     ];
+    if (userInfo?.id === userInfo.tenant_id) {
+      list.push(
+        getItem(
+          KnowledgeRouteKey.Configuration,
+          KnowledgeRouteKey.Configuration,
+          <ConfigurationIcon />,
+        ),
+      );
+    }
 
     if (!isEmpty(data?.graph)) {
       list.push(
