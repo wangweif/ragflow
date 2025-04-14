@@ -2,9 +2,10 @@ import { PromptIcon } from '@/assets/icon/Icon';
 import CopyToClipboard from '@/components/copy-to-clipboard';
 import { useSetModalState } from '@/hooks/common-hooks';
 import { IRemoveMessageById } from '@/hooks/logic-hooks';
+import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { DeleteOutlined, SyncOutlined } from '@ant-design/icons';
 import { Radio, Tooltip } from 'antd';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import FeedbackModal from './feedback-modal';
 import { useRemoveMessage, useSendFeedback, useSpeech } from './hooks';
@@ -37,6 +38,11 @@ export const AssistantGroupButton = ({
   const { t } = useTranslation();
   const { handleRead, ref, isPlaying } = useSpeech(content, audioBinary);
 
+  // 获取用户信息
+  const { data: userInfo } = useFetchUserInfo();
+  // 判断是否是管理员用户（tenant_id === id）
+  const isAdmin = useMemo(() => userInfo.tenant_id === userInfo.id, [userInfo]);
+
   const handleLike = useCallback(() => {
     onFeedbackOk({ thumbup: true });
   }, [onFeedbackOk]);
@@ -65,7 +71,7 @@ export const AssistantGroupButton = ({
             </Radio.Button>
           </>
         )} */}
-        {prompt && (
+        {prompt && isAdmin && (
           <Radio.Button value="e" onClick={showPromptModal}>
             <PromptIcon style={{ fontSize: '16px' }} />
           </Radio.Button>
