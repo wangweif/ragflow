@@ -1,7 +1,7 @@
 import SvgIcon from '@/components/svg-icon';
 import { useTranslate } from '@/hooks/common-hooks';
 import { useSelectParserList } from '@/hooks/user-setting-hooks';
-import { Col, Divider, Empty, Row, Typography } from 'antd';
+import { Empty, Typography } from 'antd';
 import DOMPurify from 'dompurify';
 import camelCase from 'lodash/camelCase';
 import { useMemo } from 'react';
@@ -45,7 +45,7 @@ const CategoryPanel = ({ chunkMethod }: { chunkMethod: string }) => {
               __html: DOMPurify.sanitize(item.description),
             }}
           ></p>
-          <h5 className="font-semibold text-base mt-4 mb-1">{`"${item.title}" ${t('methodExamples')}`}</h5>
+          {/* <h5 className="font-semibold text-base mt-4 mb-1">{`"${item.title}" ${t('methodExamples')}`}</h5>
           <Text>{t('methodExamplesDescription')}</Text>
           <Row gutter={[10, 10]} className={styles.imageRow}>
             {imageList.map((x) => (
@@ -61,7 +61,7 @@ const CategoryPanel = ({ chunkMethod }: { chunkMethod: string }) => {
           <h5 className="font-semibold text-base mt-4 mb-1">
             {item.title} {t('dialogueExamplesTitle')}
           </h5>
-          <Divider></Divider>
+          <Divider></Divider> */}
         </>
       ) : (
         <Empty description={''} image={null}>
