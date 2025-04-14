@@ -1,5 +1,6 @@
 import { useShowDeleteConfirm, useTranslate } from '@/hooks/common-hooks';
 import { useRemoveNextDocument } from '@/hooks/document-hooks';
+import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { IDocumentInfo } from '@/interfaces/database/document';
 import { downloadDocument } from '@/utils/file-util';
 import {
@@ -11,7 +12,7 @@ import {
 import { Button, Dropdown, MenuProps, Space, Tooltip } from 'antd';
 import { isParserRunning } from '../utils';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { DocumentType } from '../constant';
 import styles from './index.less';
 
@@ -36,6 +37,11 @@ const ParsingActionCell = ({
   const { removeDocument } = useRemoveNextDocument();
   const showDeleteConfirm = useShowDeleteConfirm();
   const isVirtualDocument = record.type === DocumentType.Virtual;
+
+  // 获取用户信息
+  const { data: userInfo } = useFetchUserInfo();
+  // 判断是否是管理员用户（tenant_id === id）
+  const isAdmin = useMemo(() => userInfo.tenant_id === userInfo.id, [userInfo]);
 
   const onRmDocument = () => {
     if (!isRunning) {
@@ -99,7 +105,7 @@ const ParsingActionCell = ({
 
   return (
     <Space size={0}>
-      {isVirtualDocument || (
+      {isVirtualDocument || !isAdmin || (
         <Dropdown
           menu={{ items: chunkItems }}
           trigger={['click']}
