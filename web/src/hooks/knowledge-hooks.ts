@@ -139,7 +139,10 @@ export const useCreateKnowledge = () => {
   } = useMutation({
     mutationKey: ['createKnowledge'],
     mutationFn: async (params: { id?: string; name: string }) => {
-      const { data = {} } = await kbService.createKb(params);
+      const { data = {} } = await kbService.createKb({
+        ...params,
+        language: 'Chinese',
+      });
       if (data.code === 0) {
         message.success(
           i18n.t(`message.${params?.id ? 'modified' : 'created'}`),

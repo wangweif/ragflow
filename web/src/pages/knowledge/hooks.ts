@@ -37,7 +37,7 @@ export const useSaveKnowledge = () => {
         team_id: ret.data.kb_id,
         permission_types: ['write', 'read'],
       });
-      await post(api.assignKnowledgePermission(ret.data.kb_id), {
+      const res = await post(api.assignKnowledgePermission(ret.data.kb_id), {
         permissions,
       });
 
