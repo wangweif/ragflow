@@ -43,7 +43,6 @@ import {
 import { useTranslate } from '@/hooks/common-hooks';
 import { useSetSelectedRecord } from '@/hooks/logic-hooks';
 import { IDialog } from '@/interfaces/database/chat';
-import { PictureInPicture2 } from 'lucide-react';
 import styles from './index.less';
 
 const { Text } = Typography;
@@ -187,18 +186,18 @@ const Chat = () => {
           </Space>
         ),
       },
-      { type: 'divider' },
-      {
-        key: '3',
-        onClick: handleShowOverviewModal(dialog),
-        label: (
-          <Space>
-            {/* <KeyOutlined /> */}
-            <PictureInPicture2 className="size-4" />
-            {t('embedIntoSite', { keyPrefix: 'common' })}
-          </Space>
-        ),
-      },
+      // { type: 'divider' },
+      // {
+      //   key: '3',
+      //   onClick: handleShowOverviewModal(dialog),
+      //   label: (
+      //     <Space>
+      //       {/* <KeyOutlined /> */}
+      //       <PictureInPicture2 className="size-4" />
+      //       {t('embedIntoSite', { keyPrefix: 'common' })}
+      //     </Space>
+      //   ),
+      // },
     ];
 
     return appItems;
