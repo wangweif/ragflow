@@ -1,9 +1,8 @@
 import KnowledgeBaseItem from '@/components/knowledge-base-item';
-import { TavilyItem } from '@/components/tavily-item';
 import { useTranslate } from '@/hooks/common-hooks';
 import { useFetchTenantInfo } from '@/hooks/user-setting-hooks';
 import { PlusOutlined } from '@ant-design/icons';
-import { Form, Input, message, Select, Switch, Upload } from 'antd';
+import { Form, Input, message, Switch, Upload } from 'antd';
 import classNames from 'classnames';
 import { useCallback } from 'react';
 import { ISegmentedContentProps } from '../interface';
@@ -92,7 +91,7 @@ const AssistantSetting = ({
           {show ? uploadButton : null}
         </Upload>
       </Form.Item>
-      <Form.Item
+      {/* <Form.Item
         name={'language'}
         label={t('language')}
         initialValue={'English'}
@@ -112,7 +111,7 @@ const AssistantSetting = ({
         tooltip={t('emptyResponseTip')}
       >
         <Input placeholder="" onChange={handleChange} />
-      </Form.Item>
+      </Form.Item> */}
       <Form.Item
         name={['prompt_config', 'prologue']}
         label={t('setAnOpener')}
@@ -130,7 +129,7 @@ const AssistantSetting = ({
       >
         <Switch />
       </Form.Item>
-      <Form.Item
+      {/* <Form.Item
         label={t('keyword')}
         valuePropName="checked"
         name={['prompt_config', 'keyword']}
@@ -148,7 +147,7 @@ const AssistantSetting = ({
       >
         <Switch onChange={handleTtsChange} />
       </Form.Item>
-      <TavilyItem></TavilyItem>
+      <TavilyItem></TavilyItem> */}
       <KnowledgeBaseItem
         required={false}
         onChange={handleChange}

@@ -157,10 +157,12 @@ const ChatConfigurationModal = ({
         size={'large'}
         value={value}
         onChange={handleSegmentedChange}
-        options={Object.values(ConfigurationSegmented).map((x) => ({
-          label: t(camelCase(x)),
-          value: x,
-        }))}
+        options={[
+          {
+            label: t(camelCase(ConfigurationSegmented.AssistantSetting)),
+            value: ConfigurationSegmented.AssistantSetting,
+          },
+        ]}
         block
       />
       <Divider></Divider>
