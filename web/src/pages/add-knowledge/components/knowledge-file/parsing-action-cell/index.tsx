@@ -84,17 +84,17 @@ const ParsingActionCell = ({
         </div>
       ),
     },
-    { type: 'divider' },
-    {
-      key: '2',
-      label: (
-        <div className="flex flex-col">
-          <Button type="link" onClick={onShowSetMetaModal}>
-            {t('setMetaData')}
-          </Button>
-        </div>
-      ),
-    },
+    // { type: 'divider' },
+    // {
+    //   key: '2',
+    //   label: (
+    //     <div className="flex flex-col">
+    //       <Button type="link" onClick={onShowSetMetaModal}>
+    //         {t('setMetaData')}
+    //       </Button>
+    //     </div>
+    //   ),
+    // },
   ];
 
   return (
