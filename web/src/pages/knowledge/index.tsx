@@ -1,16 +1,7 @@
 import { useInfiniteFetchKnowledgeList } from '@/hooks/knowledge-hooks';
 import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Divider,
-  Empty,
-  Flex,
-  Input,
-  Skeleton,
-  Space,
-  Spin,
-} from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { Button, Divider, Empty, Flex, Skeleton, Space, Spin } from 'antd';
 import { useTranslation } from 'react-i18next';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useSaveKnowledge } from './hooks';
@@ -23,6 +14,10 @@ import styles from './index.less';
 const KnowledgeList = () => {
   const { data: userInfo } = useFetchUserInfo();
   const { t } = useTranslation('translation', { keyPrefix: 'knowledgeList' });
+
+  // 判断是否是管理员用户（tenant_id === id）
+  const isAdmin = useMemo(() => userInfo.tenant_id === userInfo.id, [userInfo]);
+
   const {
     visible,
     hideModal,
@@ -58,23 +53,25 @@ const KnowledgeList = () => {
           <p className={styles.description}>{t('description')}</p>
         </div>
         <Space size={'large'}>
-          <Input
+          {/* <Input
             placeholder={t('searchKnowledgePlaceholder')}
             value={searchString}
             style={{ width: 220 }}
             allowClear
             onChange={handleInputChange}
             prefix={<SearchOutlined />}
-          />
+          /> */}
 
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={showModal}
-            className={styles.topButton}
-          >
-            {t('createKnowledgeBase')}
-          </Button>
+          {isAdmin && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={showModal}
+              className={styles.topButton}
+            >
+              {t('createKnowledgeBase')}
+            </Button>
+          )}
         </Space>
       </div>
       <Spin spinning={loading}>
