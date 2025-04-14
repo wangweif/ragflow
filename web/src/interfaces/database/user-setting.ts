@@ -98,3 +98,10 @@ export interface ITenant {
   tenant_id: string;
   update_date: string;
 }
+
+// 部门
+export interface ITeam {
+  id: string;
+  name: string;
+  tenant_id: string;
+}

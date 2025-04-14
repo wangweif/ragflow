@@ -140,7 +140,16 @@ export const deleteTenantUser = ({
   userId: string;
 }) => request.delete(api.deleteTenantUser(tenantId, userId));
 
-export const listTenant = (userId: string) => request.get(api.listTeam(userId));
+export const removeTeamUser = ({
+  teamId,
+  userId,
+}: {
+  teamId: string;
+  userId: string;
+}) => request.post(api.removeTeamUser(teamId, userId));
+
+export const listTeamByTenant = (tenantId: string) =>
+  request.get(api.listTeam(tenantId));
 
 export const agreeTenant = (tenantId: string) =>
   request.post(api.agreeTenant(tenantId));
@@ -150,6 +159,9 @@ export const createTeam = (tenant_id: string, name: string) =>
 
 export const updateTenant = (tenantId: string, name: string) =>
   request.post(api.updateTenant(tenantId), { name });
+
+export const deleteTeam = (teamId: string) =>
+  request.post(api.deleteTeam(teamId));
 
 export const addUser = (
   teamId: string,

@@ -18,10 +18,13 @@ export default {
     `${api_host}/tenant/${tenantId}/user/list`,
   deleteTenantUser: (tenantId: string, userId: string) =>
     `${api_host}/tenant/${tenantId}/user/${userId}`,
+  removeTeamUser: (teamId: string, userId: string) =>
+    `${api_host}/team/${teamId}/member/${userId}`,
   listTenant: `${api_host}/tenant/list`,
   agreeTenant: (tenantId: string) => `${api_host}/tenant/agree/${tenantId}`,
   createTenant: `${api_host}/tenant/create`,
   updateTenant: (tenantId: string) => `${api_host}/tenant/${tenantId}/update`,
+  deleteTeam: (teamId: string) => `${api_host}/team/delete/${teamId}`,
   listTeam: (tenantId: string) => `${api_host}/team/list?tenant_id=${tenantId}`,
   createTeam: `${api_host}/team`,
   addUser: (teamId: string) => `${api_host}/team/${teamId}/member`,

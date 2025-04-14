@@ -1,5 +1,5 @@
 import { useListTenant } from '@/hooks/user-setting-hooks';
-import { ITenant } from '@/interfaces/database/user-setting';
+import { ITeam } from '@/interfaces/database/user-setting';
 
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
@@ -18,7 +18,7 @@ const TeamList = ({
   startEditTeam,
 }: TeamListProps) => {
   const { data, loading } = useListTenant();
-  console.log(data);
+  // console.log('teamlist: ', data);
   const { handleDeleteTeam } = useHandleDeleteTeam();
   // const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
 
@@ -38,7 +38,7 @@ const TeamList = ({
   //   fetchMemberCounts();
   // }, [data]);
 
-  const columns: TableProps<ITenant>['columns'] = [
+  const columns: TableProps<ITeam>['columns'] = [
     {
       title: '名称',
       dataIndex: 'name',
@@ -73,8 +73,8 @@ const TeamList = ({
               type="text"
               icon={<EditOutlined />}
               onClick={() => {
-                console.log('点击编辑按钮', record.tenant_id);
-                startEditTeam(record.tenant_id);
+                console.log('点击编辑按钮', record.id);
+                startEditTeam(record.id);
               }}
             />
           </Tooltip>
@@ -84,7 +84,7 @@ const TeamList = ({
               type="text"
               danger
               icon={<DeleteOutlined />}
-              onClick={handleDeleteTeam(record.tenant_id)}
+              onClick={handleDeleteTeam(record.id)}
             />
           </Tooltip>
         </Space>
@@ -93,7 +93,7 @@ const TeamList = ({
   ];
 
   return (
-    <Table<ITenant>
+    <Table<ITeam>
       rowKey={'id'}
       columns={columns}
       dataSource={data}

@@ -4,7 +4,8 @@ import { ITenantInfo } from '@/interfaces/database/knowledge';
 import { ILangfuseConfig } from '@/interfaces/database/system';
 import {
   ISystemStatus,
-  ITenant,
+  // ITenant,
+  ITeam,
   ITenantUser,
   IUserInfo,
 } from '@/interfaces/database/user-setting';
@@ -13,10 +14,12 @@ import userService, {
   addTenantUser,
   agreeTenant,
   createTeam,
+  deleteTeam,
   deleteTenantUser,
+  listTeamByTenant,
   listTeamUser,
-  listTenant,
   listTenantUser,
+  removeTeamUser,
   updateTenant,
 } from '@/services/user-service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -342,7 +345,7 @@ export const useDeleteTenantUser = () => {
       if (data.code === 0) {
         message.success(t('message.deleted'));
         queryClient.invalidateQueries({ queryKey: ['listTenantUser'] });
-        queryClient.invalidateQueries({ queryKey: ['listTenant'] });
+        queryClient.invalidateQueries({ queryKey: ['listTeamByTenant'] });
       }
       return data?.data ?? [];
     },
@@ -351,20 +354,75 @@ export const useDeleteTenantUser = () => {
   return { data, loading, deleteTenantUser: mutateAsync };
 };
 
+export const useDeleteTeam = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  const {
+    data,
+    isPending: loading,
+    mutateAsync,
+  } = useMutation({
+    mutationKey: ['deleteTeam'],
+    mutationFn: async ({ teamId }: { teamId: string }) => {
+      const { data } = await deleteTeam(teamId);
+      if (data.code === 0) {
+        message.success(t('message.deleted'));
+        queryClient.invalidateQueries({ queryKey: ['listTeamByTenant'] });
+      }
+      return data?.code;
+    },
+  });
+
+  return { data, loading, deleteTeam: mutateAsync };
+};
+
+export const useRemoveTeamUser = () => {
+  const { t } = useTranslation();
+
+  const {
+    data,
+    isPending: loading,
+    mutateAsync,
+  } = useMutation({
+    mutationKey: ['removeTeamUser'],
+    mutationFn: async ({
+      teamId,
+      userId,
+    }: {
+      teamId: string;
+      userId: string;
+    }) => {
+      const { data } = await removeTeamUser({
+        teamId,
+        userId,
+      });
+      if (data.code === 0 && data.data === true) {
+        message.success(t('message.deleted'));
+      } else {
+        message.warning('删除失败');
+      }
+      return data?.code;
+    },
+  });
+
+  return { data, loading, removeTeamUser: mutateAsync };
+};
+
 export const useListTenant = () => {
   const { data: userInfo } = useFetchUserInfo();
-  const userId = userInfo.id;
+  const tenantId = userInfo.tenant_id;
   const {
     data,
     isFetching: loading,
     refetch,
-  } = useQuery<ITenant[]>({
-    queryKey: ['listTenant', userId],
+  } = useQuery<ITeam[]>({
+    queryKey: ['listTeamByTenant', tenantId],
     initialData: [],
     gcTime: 0,
-    enabled: !!userId,
+    enabled: !!tenantId,
     queryFn: async () => {
-      const { data } = await listTenant(userId);
+      const { data } = await listTeamByTenant(tenantId);
 
       return data?.data ?? [];
     },
@@ -387,7 +445,7 @@ export const useAgreeTenant = () => {
       const { data } = await agreeTenant(tenantId);
       if (data.code === 0) {
         message.success(t('message.operated'));
-        queryClient.invalidateQueries({ queryKey: ['listTenant'] });
+        queryClient.invalidateQueries({ queryKey: ['listTeamByTenant'] });
       }
       return data?.data ?? [];
     },
@@ -465,7 +523,7 @@ export const useCreateTenant = () => {
       const { data } = await createTeam(params.tenantId ?? '', params.name);
       if (data.code === 0) {
         message.success(t('message.created'));
-        queryClient.invalidateQueries({ queryKey: ['listTenant'] });
+        queryClient.invalidateQueries({ queryKey: ['listTeamByTenant'] });
       }
       return data?.data ?? {};
     },
@@ -494,7 +552,7 @@ export const useUpdateTenant = () => {
       const { data } = await updateTenant(tenantId, name);
       if (data.code === 0) {
         message.success(t('message.updated'));
-        queryClient.invalidateQueries({ queryKey: ['listTenant'] });
+        queryClient.invalidateQueries({ queryKey: ['listTeamByTenant'] });
       }
       return data?.code;
     },

@@ -6,7 +6,7 @@ import { Button, Table, Tag } from 'antd';
 import { upperFirst } from 'lodash';
 import { useEffect } from 'react';
 import { TenantRole } from '../constants';
-import { useHandleDeleteUser } from './hooks';
+import { useHandleRemoveTeamMember } from './hooks';
 
 const ColorMap = {
   [TenantRole.Normal]: 'green',
@@ -23,8 +23,10 @@ interface UserTableProps {
 const UserTable = ({ team, onRefresh }: UserTableProps) => {
   const teamId = team.id;
   const { data, loading, refetch } = useListTeamUser(teamId);
-  console.log(data);
-  const { handleDeleteTenantUser } = useHandleDeleteUser();
+  console.log('memberlist: ', data);
+  const { handleRemoveTeamUser } = useHandleRemoveTeamMember(() => {
+    refetch();
+  });
 
   // 将refetch函数传递给父组件
   useEffect(() => {
@@ -81,7 +83,7 @@ const UserTable = ({ team, onRefresh }: UserTableProps) => {
       title: '操作',
       key: 'action',
       render: (_, record) => (
-        <Button type="text" onClick={handleDeleteTenantUser(record.user_id)}>
+        <Button type="text" onClick={handleRemoveTeamUser(teamId, record.id)}>
           <DeleteOutlined size={20} />
         </Button>
       ),
@@ -90,7 +92,7 @@ const UserTable = ({ team, onRefresh }: UserTableProps) => {
 
   return (
     <Table<ITenantUser>
-      rowKey={'user_id'}
+      rowKey={'id'}
       columns={columns}
       dataSource={data}
       loading={loading}

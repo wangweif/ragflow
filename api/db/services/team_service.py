@@ -24,6 +24,7 @@ from api.db import StatusEnum, UserTenantRole
 from api.db.db_models_extension import Team
 from api.db.init_data import encode_to_base64
 from api.db.services.user_service import UserService, UserTenantService
+from api.utils import current_timestamp, datetime_format
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +164,7 @@ class TeamService:
                 return False
             
             # 逻辑删除团队
-            team.status = StatusEnum.DELETED.value
+            team.status = StatusEnum.INVALID.value
             team.save()
             
             return True
@@ -189,7 +190,12 @@ class TeamService:
         
         result = []
         for team in teams:
-            team_dict = team.to_dict()
+            # 只返回需要的字段
+            team_dict = {
+                "id": team.id,
+                "name": team.name,
+                "tenant_id": team.tenant_id
+            }
             result.append(team_dict)
             
         return result
@@ -302,38 +308,20 @@ class TeamService:
             # 检查团队是否存在
             team = Team.get_or_none(Team.id == team_id, Team.status == StatusEnum.VALID.value)
             if not team:
-                raise ValueError(f"团队 {team_id} 不存在")
-            
-            # 解析现有成员数据
-            if not team.members:
                 return False
-                
-            members = json.loads(team.members)
-            
-            # 检查成员是否存在
-            if user_id not in members:
-                return False
-            
-            # 检查是否是最后一个拥有者
-            if members[user_id]["role"] == "owner":
-                owner_count = 0
-                for uid, info in members.items():
-                    if info["role"] == "owner":
-                        owner_count += 1
-                
-                if owner_count <= 1:
-                    raise ValueError("不能移除团队的最后一个拥有者")
-            
-            # 移除成员
-            del members[user_id]
-            
-            # 保存到数据库
-            team.members = json.dumps(members)
-            team.save()
-            
+
+            # 调用 UserService 的方法来更新用户状态
+            UserService.update_user(
+                user_id,
+                {
+                    "status": StatusEnum.INVALID.value,
+                    "update_time": current_timestamp(),
+                    "update_date": datetime_format(datetime.now())
+                }
+            )
             return True
         except Exception as e:
-            logger.error(f"移除团队成员失败: {str(e)}")
+            logger.error(f"Failed to remove team member: {e}")
             raise
     
     @classmethod

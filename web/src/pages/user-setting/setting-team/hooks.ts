@@ -4,12 +4,14 @@ import {
   useAddTenantUser,
   useAgreeTenant,
   useCreateTenant,
+  useDeleteTeam,
   useDeleteTenantUser,
   useFetchUserInfo,
+  useRemoveTeamUser,
   useUpdateTenant,
 } from '@/hooks/user-setting-hooks';
 import { addUser } from '@/services/user-service';
-import { Modal } from 'antd';
+import { Modal, message } from 'antd';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -84,6 +86,32 @@ export const useHandleDeleteUser = () => {
   return { handleDeleteTenantUser, loading };
 };
 
+export const useHandleRemoveTeamMember = (refreshUsers?: () => void) => {
+  const { removeTeamUser, loading } = useRemoveTeamUser();
+  const showDeleteConfirm = useShowDeleteConfirm();
+  const { t } = useTranslation();
+
+  const handleRemoveTeamUser = (teamId: string, userId: string) => () => {
+    showDeleteConfirm({
+      title: t('setting.sureDelete'),
+      onOk: async () => {
+        try {
+          const code = await removeTeamUser({ teamId, userId });
+          if (code === 0) {
+            if (refreshUsers) {
+              await refreshUsers();
+            }
+          }
+        } catch (error) {
+          message.error(t('common.deleteError'));
+        }
+      },
+    });
+  };
+
+  return { handleRemoveTeamUser, loading };
+};
+
 export const useHandleAgreeTenant = () => {
   const { agreeTenant } = useAgreeTenant();
   const { deleteTenantUser } = useDeleteTenantUser();
@@ -121,7 +149,7 @@ export const useCreateTeam = () => {
   const { createTenant, loading } = useCreateTenant();
   // 获取当前用户信息
   const { data: userInfo } = useFetchUserInfo();
-  console.log(userInfo);
+  // console.log(userInfo);
   const {
     visible: createTeamModalVisible,
     hideModal: hideCreateTeamModal,
@@ -164,7 +192,7 @@ export const useTeamSelection = () => {
 };
 
 export const useHandleDeleteTeam = () => {
-  const { deleteTenantUser, loading } = useDeleteTenantUser();
+  const { deleteTeam, loading } = useDeleteTeam();
   const showDeleteConfirm = useShowDeleteConfirm();
 
   const handleDeleteTeam = (teamId: string) => () => {
@@ -174,7 +202,8 @@ export const useHandleDeleteTeam = () => {
         // 在实际应用中，这里应该调用删除团队的API
         // 暂时模拟，使用已有的删除团队成员API
         // 实际中应该替换为删除团队的方法
-        await deleteTenantUser({ userId: teamId, tenantId: teamId });
+        await deleteTeam({ teamId: teamId });
+        console.log('teamId', teamId);
       },
     });
   };

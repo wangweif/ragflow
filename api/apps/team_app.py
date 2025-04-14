@@ -22,6 +22,9 @@ from api import settings
 from api.db.services.team_service import TeamService
 from api.db.services.user_service import UserService
 from api.utils.api_utils import get_json_result, validate_request, server_error_response, get_data_error_result
+from api.db import StatusEnum
+from api.utils import current_timestamp, datetime_format
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +126,7 @@ def update_team(team_id):
         return server_error_response(e)
 
 
-@manager.route('/<team_id>', methods=['POST'])
+@manager.route('/delete/<team_id>', methods=['POST'])
 @login_required
 def delete_team(team_id):
     """删除团队"""
@@ -142,7 +145,22 @@ def delete_team(team_id):
             )
         
         success = TeamService.delete_team(team_id)
-        
+        logging.info(f"删除团队成功: {success}")
+        # 如果删除团队成功, 需要继续删除team_id是这个的所有用户
+        users = UserService.get_users_by_team_id(team_id)
+        logging.info(f"users:  {users}")
+        user_ids = [user.id for user in users]
+        logging.info(f"user_ids:  {user_ids}")
+        for user_id in user_ids:
+            UserService.update_user(
+                user_id,
+                {
+                    "status": StatusEnum.INVALID.value,
+                    "update_time": current_timestamp(),
+                    "update_date": datetime_format(datetime.now())
+                }
+            )
+
         return get_json_result(data=success)
     except Exception as e:
         logger.exception(f"删除团队失败: {str(e)}")
@@ -175,7 +193,7 @@ def list_team_members(team_id):
                 code=settings.RetCode.AUTHENTICATION_ERROR
             )
         
-        # 直接从用户表查询与team_id相关的用户
+        # 直接从用户表查询与team_id相关的用户(without members at team)
         users = UserService.get_users_by_team_id(team_id)
         
         # 处理返回数据，排除敏感信息

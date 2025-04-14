@@ -1,6 +1,6 @@
 import { DocumentParserType } from '@/constants/knowledge';
 import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
-import { listTeamUser, listTenant } from '@/services/user-service';
+import { listTeamByTenant, listTeamUser } from '@/services/user-service';
 import { normFile } from '@/utils/file-util';
 import {
   PlusOutlined,
@@ -79,7 +79,7 @@ const useTeamMembers = () => {
       setLoading(true);
       try {
         // 获取部门列表
-        const teamsResponse = await listTenant(userInfo.id);
+        const teamsResponse = await listTeamByTenant(userInfo.id);
         const teamsData = teamsResponse.data?.data || [];
 
         // 为每个部门获取成员
