@@ -162,6 +162,14 @@ const ChatConfigurationModal = ({
             label: t(camelCase(ConfigurationSegmented.AssistantSetting)),
             value: ConfigurationSegmented.AssistantSetting,
           },
+          // {
+          //   label: t(camelCase(ConfigurationSegmented.ModelSetting)),
+          //   value: ConfigurationSegmented.ModelSetting
+          // },
+          // {
+          //   label: t(camelCase(ConfigurationSegmented.PromptEngine)),
+          //   value: ConfigurationSegmented.PromptEngine
+          // }
         ]}
         block
       />

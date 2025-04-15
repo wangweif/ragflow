@@ -197,7 +197,7 @@ export const useHandleDeleteTeam = () => {
 
   const handleDeleteTeam = (teamId: string) => () => {
     showDeleteConfirm({
-      title: '您确定要删除该团队吗',
+      title: '您确定要删除该部门吗',
       onOk: async () => {
         // 在实际应用中，这里应该调用删除团队的API
         // 暂时模拟，使用已有的删除团队成员API

@@ -24,10 +24,11 @@ const EditTeamModal = ({
   // 当模态框打开时，设置表单的初始值
   useEffect(() => {
     if (visible && teamId && teams) {
-      const currentTeam = teams.find((team) => team.tenant_id === teamId);
+      const currentTeam = teams.find((team) => team.id === teamId);
+      console.log(currentTeam);
       if (currentTeam) {
         form.setFieldsValue({
-          name: currentTeam.nickname,
+          name: currentTeam.name,
         });
       }
     }
