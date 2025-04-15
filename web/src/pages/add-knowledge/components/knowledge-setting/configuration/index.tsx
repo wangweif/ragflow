@@ -2,12 +2,7 @@ import { DocumentParserType } from '@/constants/knowledge';
 import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { listTeamByTenant, listTeamUser } from '@/services/user-service';
 import { normFile } from '@/utils/file-util';
-import {
-  PlusOutlined,
-  SearchOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import {
   Button,
   Form,
@@ -157,7 +152,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
       return {
         title: (
           <Space>
-            <TeamOutlined />
+            {/* <TeamOutlined /> */}
             <span>
               {team.name ||
                 team.nickname ||
@@ -185,7 +180,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
           return {
             title: (
               <Space>
-                <UserOutlined />
+                {/* <UserOutlined /> */}
                 <span>{member.nickname || member.email}</span>
                 {member.role === 'owner' && (
                   <Text type="secondary" style={{ fontSize: '12px' }}>
@@ -304,7 +299,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
         <Spin spinning={teamsLoading || permissionsLoading}>
           {treeData.length > 0 ? (
             <div>
-              <div className={styles.searchWrapper}>
+              {/* <div className={styles.searchWrapper}>
                 <Input
                   placeholder="搜索部门或成员"
                   value={searchValue}
@@ -313,7 +308,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
                   allowClear
                   style={{ marginBottom: '8px' }}
                 />
-              </div>
+              </div> */}
               <Tree
                 checkable
                 selectable={false}
