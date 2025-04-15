@@ -69,9 +69,9 @@ class KnowledgebasePermission(DataBaseModelExtension):
     
     class Meta:
         table_name = "kb_permissions"
-        indexes = (
+        indexes = [
             (('kb_id', 'user_id', 'permission_type'), True)  # 联合唯一索引：知识库ID、用户ID和权限类型
-        )
+        ]
         
     def to_dict(self):
         """转换为字典"""

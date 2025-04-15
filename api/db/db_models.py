@@ -477,6 +477,9 @@ class User(DataBaseModel, UserMixin):
     team_id = CharField(max_length=32, null=True, help_text="team id", index=True)
     role = CharField(max_length=32, null=True, help_text="role", index=True)
     tenant_id = CharField(max_length=32, null=True, help_text="tenant id", index=True)
+    phone = CharField(max_length=32, null=True, help_text="phone", index=True)
+    user_type = CharField(max_length=32, null=True, help_text="user type", index=True)
+    note = TextField(null=True, help_text="note")
 
     def __str__(self):
         return self.email
@@ -908,3 +911,10 @@ def migrate_db():
         migrate(migrator.add_column("dialog", "user_id", CharField(max_length=32, null=True, help_text="user id", index=True)))
     except Exception:
         pass
+    try:
+        migrate(migrator.add_column("user", "phone", CharField(max_length=32, null=True, help_text="phone", index=True)))
+        migrate(migrator.add_column("user", "user_type", CharField(max_length=32, null=True, help_text="user type", index=True)))
+        migrate(migrator.add_column("user", "note", TextField(null=True, help_text="note")))
+    except Exception:
+        pass
+

@@ -187,12 +187,34 @@ class UserService(CommonService):
             team_id: 团队ID（字符串或整数类型）
             
         Returns:
-            用户列表
+            用户列表，不包含密码字段
         """
         try:
             # 确保team_id是字符串类型
             team_id_str = str(team_id)
-            users = User.select().where(
+            
+            # 明确指定要查询的字段，排除password字段
+            fields = [
+                User.id,
+                User.email,
+                User.nickname,
+                User.avatar,
+                User.is_authenticated,
+                User.is_active,
+                User.is_anonymous,
+                User.status,
+                User.team_id,
+                User.role,
+                User.tenant_id,
+                User.create_time,
+                User.create_date,
+                User.update_time,
+                User.update_date,
+                User.is_superuser,
+                User.language
+            ]
+            
+            users = User.select(*fields).where(
                 User.team_id == team_id_str,
                 User.status == StatusEnum.VALID.value
             )
