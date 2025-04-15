@@ -57,11 +57,15 @@ const SideBar = () => {
     UserSettingRouteKey.Team,
     UserSettingRouteKey.Model,
     UserSettingRouteKey.System,
-    UserSettingRouteKey.Api,
+    // UserSettingRouteKey.Api,
   ];
 
   const items: MenuItem[] = Object.values(UserSettingRouteKey)
     .filter((value) => {
+      // 对所有用户都不显示Api选项
+      if (value === UserSettingRouteKey.Api) {
+        return false;
+      }
       if (
         ownerOnlyRoutes.includes(value) &&
         userInfo.role !== 'owner' &&

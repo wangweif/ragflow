@@ -120,6 +120,7 @@ const routes = [
           {
             path: '/user-setting/api',
             component: '@/pages/user-setting/setting-api',
+            wrappers: ['@/wrappers/settingApi'],
           },
         ],
       },
