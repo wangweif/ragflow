@@ -33,7 +33,7 @@ def set_api_key():
     public_key = req.get("public_key", "")
     host = req.get("host", "")
     if not all([secret_key, public_key, host]):
-        return get_error_data_result(message="Missing required fields")
+        return get_error_data_result(message="缺少必填字段")
 
     langfuse_keys = dict(
         tenant_id=current_user.id,
@@ -44,7 +44,7 @@ def set_api_key():
 
     langfuse = Langfuse(public_key=langfuse_keys["public_key"], secret_key=langfuse_keys["secret_key"], host=langfuse_keys["host"])
     if not langfuse.auth_check():
-        return get_error_data_result(message="Invalid Langfuse keys")
+        return get_error_data_result(message="Langfuse密钥无效")
 
     langfuse_entry = TenantLangfuseService.filter_by_tenant(tenant_id=current_user.id)
     with DB.atomic():
@@ -64,14 +64,14 @@ def set_api_key():
 def get_api_key():
     langfuse_entry = TenantLangfuseService.filter_by_tenant_with_info(tenant_id=current_user.id)
     if not langfuse_entry:
-        return get_json_result(message="Have not record any Langfuse keys.")
+        return get_json_result(message="未记录任何Langfuse密钥.")
 
     langfuse = Langfuse(public_key=langfuse_entry["public_key"], secret_key=langfuse_entry["secret_key"], host=langfuse_entry["host"])
     try:
         if not langfuse.auth_check():
-            return get_error_data_result(message="Invalid Langfuse keys loaded")
+            return get_error_data_result(message="加载的Langfuse密钥无效")
     except langfuse.api.core.api_error.ApiError as api_err:
-        return get_json_result(message=f"Error from Langfuse: {api_err}")
+        return get_json_result(message=f"来自Langfuse的错误: {api_err}")
     except Exception as e:
         server_error_response(e)
 
@@ -87,7 +87,7 @@ def get_api_key():
 def delete_api_key():
     langfuse_entry = TenantLangfuseService.filter_by_tenant(tenant_id=current_user.id)
     if not langfuse_entry:
-        return get_json_result(message="Have not record any Langfuse keys.")
+        return get_json_result(message="未记录任何Langfuse密钥.")
 
     with DB.atomic():
         try:

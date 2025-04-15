@@ -56,20 +56,20 @@ def upload():
     kb_id = request.form.get("kb_id")
     if not kb_id:
         return get_json_result(
-            data=False, message='Lack of "KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='缺少"KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
     if 'file' not in request.files:
         return get_json_result(
-            data=False, message='No file part!', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='没有文件部分！', code=settings.RetCode.ARGUMENT_ERROR)
 
     file_objs = request.files.getlist('file')
     for file_obj in file_objs:
         if file_obj.filename == '':
             return get_json_result(
-                data=False, message='No file selected!', code=settings.RetCode.ARGUMENT_ERROR)
+                data=False, message='未选择文件！', code=settings.RetCode.ARGUMENT_ERROR)
 
     e, kb = KnowledgebaseService.get_by_id(kb_id)
     if not e:
-        raise LookupError("Can't find this knowledgebase!")
+        raise LookupError("找不到此知识库！")
 
     err, files = FileService.upload_document(kb, file_objs, current_user.id)
     files = [f[0] for f in files] # remove the blob
@@ -87,19 +87,19 @@ def web_crawl():
     kb_id = request.form.get("kb_id")
     if not kb_id:
         return get_json_result(
-            data=False, message='Lack of "KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='缺少"KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
     name = request.form.get("name")
     url = request.form.get("url")
     if not is_valid_url(url):
         return get_json_result(
-            data=False, message='The URL format is invalid', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='URL格式无效', code=settings.RetCode.ARGUMENT_ERROR)
     e, kb = KnowledgebaseService.get_by_id(kb_id)
     if not e:
-        raise LookupError("Can't find this knowledgebase!")
+        raise LookupError("找不到此知识库！")
 
     blob = html2pdf(url)
     if not blob:
-        return server_error_response(ValueError("Download failure."))
+        return server_error_response(ValueError("下载失败。"))
 
     root_folder = FileService.get_root_folder(current_user.id)
     pf_id = root_folder["id"]
@@ -114,7 +114,7 @@ def web_crawl():
             kb_id=kb.id)
         filetype = filename_type(filename)
         if filetype == FileType.OTHER.value:
-            raise RuntimeError("This type of file has not been supported yet!")
+            raise RuntimeError("尚不支持此类型的文件！")
 
         location = filename
         while STORAGE_IMPL.obj_exist(kb_id, location):
@@ -155,17 +155,17 @@ def create():
     kb_id = req["kb_id"]
     if not kb_id:
         return get_json_result(
-            data=False, message='Lack of "KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='缺少"KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
 
     try:
         e, kb = KnowledgebaseService.get_by_id(kb_id)
         if not e:
             return get_data_error_result(
-                message="Can't find this knowledgebase!")
+                message="找不到此知识库！")
 
         if DocumentService.query(name=req["name"], kb_id=kb_id):
             return get_data_error_result(
-                message="Duplicated document name in the same knowledgebase.")
+                message="同一知识库中存在重复的文档名称。")
 
         doc = DocumentService.insert({
             "id": get_uuid(),
@@ -189,7 +189,7 @@ def list_docs():
     kb_id = request.args.get("kb_id")
     if not kb_id:
         return get_json_result(
-            data=False, message='Lack of "KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='缺少"KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
     tenants = UserTenantService.query(user_id=current_user.id)
     for tenant in tenants:
         if KnowledgebaseService.query(
@@ -197,7 +197,7 @@ def list_docs():
             break
     else:
         return get_json_result(
-            data=False, message='Only owner of knowledgebase authorized for this operation.',
+            data=False, message='只有知识库所有者有权进行此操作。',
             code=settings.RetCode.OPERATING_ERROR)
     keywords = request.args.get("keywords", "")
 
@@ -227,7 +227,7 @@ def docinfos():
         if not DocumentService.accessible(doc_id, current_user.id):
             return get_json_result(
                 data=False,
-                message='No authorization.',
+                message='没有授权。',
                 code=settings.RetCode.AUTHENTICATION_ERROR
             )
     docs = DocumentService.get_by_ids(doc_ids)
@@ -240,7 +240,7 @@ def thumbnails():
     doc_ids = request.args.get("doc_ids").split(",")
     if not doc_ids:
         return get_json_result(
-            data=False, message='Lack of "Document ID"', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='缺少"文档ID"', code=settings.RetCode.ARGUMENT_ERROR)
 
     try:
         docs = DocumentService.get_thumbnails(doc_ids)
@@ -262,28 +262,28 @@ def change_status():
     if str(req["status"]) not in ["0", "1"]:
         return get_json_result(
             data=False,
-            message='"Status" must be either 0 or 1!',
+            message='"状态"必须为0或1！',
             code=settings.RetCode.ARGUMENT_ERROR)
 
     if not DocumentService.accessible(req["doc_id"], current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='没有授权。',
             code=settings.RetCode.AUTHENTICATION_ERROR)
 
     try:
         e, doc = DocumentService.get_by_id(req["doc_id"])
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
         e, kb = KnowledgebaseService.get_by_id(doc.kb_id)
         if not e:
             return get_data_error_result(
-                message="Can't find this knowledgebase!")
+                message="找不到此知识库！")
 
         if not DocumentService.update_by_id(
                 req["doc_id"], {"status": str(req["status"])}):
             return get_data_error_result(
-                message="Database error (Document update)!")
+                message="数据库错误（文档更新）！")
 
         status = int(req["status"])
         settings.docStoreConn.update({"doc_id": req["doc_id"]}, {"available_int": status},
@@ -306,7 +306,7 @@ def rm():
         if not DocumentService.accessible4deletion(doc_id, current_user.id):
             return get_json_result(
                 data=False,
-                message='No authorization.',
+                message='没有授权。',
                 code=settings.RetCode.AUTHENTICATION_ERROR
             )
 
@@ -318,17 +318,17 @@ def rm():
         try:
             e, doc = DocumentService.get_by_id(doc_id)
             if not e:
-                return get_data_error_result(message="Document not found!")
+                return get_data_error_result(message="未找到文档！")
             tenant_id = DocumentService.get_tenant_id(doc_id)
             if not tenant_id:
-                return get_data_error_result(message="Tenant not found!")
+                return get_data_error_result(message="未找到租户！")
 
             b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
 
             TaskService.filter_delete([Task.doc_id == doc_id])
             if not DocumentService.remove_document(doc, tenant_id):
                 return get_data_error_result(
-                    message="Database error (Document removal)!")
+                    message="数据库错误（文档删除）！")
 
             f2d = File2DocumentService.get_by_document_id(doc_id)
             FileService.filter_delete([File.source_type == FileSource.KNOWLEDGEBASE, File.id == f2d[0].file_id])
@@ -353,7 +353,7 @@ def run():
         if not DocumentService.accessible(doc_id, current_user.id):
             return get_json_result(
                 data=False,
-                message='No authorization.',
+                message='没有授权。',
                 code=settings.RetCode.AUTHENTICATION_ERROR
             )
     try:
@@ -366,10 +366,10 @@ def run():
             DocumentService.update_by_id(id, info)
             tenant_id = DocumentService.get_tenant_id(id)
             if not tenant_id:
-                return get_data_error_result(message="Tenant not found!")
+                return get_data_error_result(message="未找到租户！")
             e, doc = DocumentService.get_by_id(id)
             if not e:
-                return get_data_error_result(message="Document not found!")
+                return get_data_error_result(message="未找到文档！")
             if req.get("delete", False):
                 TaskService.filter_delete([Task.doc_id == id])
                 if settings.docStoreConn.indexExist(search.index_name(tenant_id), doc.kb_id):
@@ -395,28 +395,28 @@ def rename():
     if not DocumentService.accessible(req["doc_id"], current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='没有授权。',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
     try:
         e, doc = DocumentService.get_by_id(req["doc_id"])
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
         if pathlib.Path(req["name"].lower()).suffix != pathlib.Path(
                 doc.name.lower()).suffix:
             return get_json_result(
                 data=False,
-                message="The extension of file can't be changed",
+                message="不能更改文件的扩展名",
                 code=settings.RetCode.ARGUMENT_ERROR)
         for d in DocumentService.query(name=req["name"], kb_id=doc.kb_id):
             if d.name == req["name"]:
                 return get_data_error_result(
-                    message="Duplicated document name in the same knowledgebase.")
+                    message="同一知识库中存在重复的文档名称。")
 
         if not DocumentService.update_by_id(
                 req["doc_id"], {"name": req["name"]}):
             return get_data_error_result(
-                message="Database error (Document rename)!")
+                message="数据库错误（文档重命名）！")
 
         informs = File2DocumentService.get_by_document_id(req["doc_id"])
         if informs:
@@ -434,7 +434,7 @@ def get(doc_id):
     try:
         e, doc = DocumentService.get_by_id(doc_id)
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
 
         b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
         response = flask.make_response(STORAGE_IMPL.get(b, n))
@@ -462,13 +462,13 @@ def change_parser():
     if not DocumentService.accessible(req["doc_id"], current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='没有授权。',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
     try:
         e, doc = DocumentService.get_by_id(req["doc_id"])
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
         if doc.parser_id.lower() == req["parser_id"].lower():
             if "parser_config" in req:
                 if req["parser_config"] == doc.parser_config:
@@ -479,23 +479,23 @@ def change_parser():
         if ((doc.type == FileType.VISUAL and req["parser_id"] != "picture")
                 or (re.search(
                     r"\.(ppt|pptx|pages)$", doc.name) and req["parser_id"] != "presentation")):
-            return get_data_error_result(message="Not supported yet!")
+            return get_data_error_result(message="尚不支持此功能！")
 
         e = DocumentService.update_by_id(doc.id,
                                          {"parser_id": req["parser_id"], "progress": 0, "progress_msg": "",
                                           "run": TaskStatus.UNSTART.value})
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
         if "parser_config" in req:
             DocumentService.update_parser_config(doc.id, req["parser_config"])
         if doc.token_num > 0:
             e = DocumentService.increment_chunk_num(doc.id, doc.kb_id, doc.token_num * -1, doc.chunk_num * -1,
                                                     doc.process_duation * -1)
             if not e:
-                return get_data_error_result(message="Document not found!")
+                return get_data_error_result(message="未找到文档！")
             tenant_id = DocumentService.get_tenant_id(req["doc_id"])
             if not tenant_id:
-                return get_data_error_result(message="Tenant not found!")
+                return get_data_error_result(message="未找到租户！")
             if settings.docStoreConn.indexExist(search.index_name(tenant_id), doc.kb_id):
                 settings.docStoreConn.delete({"doc_id": doc.id}, search.index_name(tenant_id), doc.kb_id)
 
@@ -510,7 +510,7 @@ def get_image(image_id):
     try:
         arr = image_id.split("-")
         if len(arr) != 2:
-            return get_data_error_result(message="Image not found.")
+            return get_data_error_result(message="未找到图片。")
         bkt, nm = image_id.split("-")
         response = flask.make_response(STORAGE_IMPL.get(bkt, nm))
         response.headers.set('Content-Type', 'image/JPEG')
@@ -525,13 +525,13 @@ def get_image(image_id):
 def upload_and_parse():
     if 'file' not in request.files:
         return get_json_result(
-            data=False, message='No file part!', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='没有文件部分！', code=settings.RetCode.ARGUMENT_ERROR)
 
     file_objs = request.files.getlist('file')
     for file_obj in file_objs:
         if file_obj.filename == '':
             return get_json_result(
-                data=False, message='No file selected!', code=settings.RetCode.ARGUMENT_ERROR)
+                data=False, message='未选择文件！', code=settings.RetCode.ARGUMENT_ERROR)
 
     doc_ids = doc_upload_and_parse(request.form.get("conversation_id"), file_objs, current_user.id)
 
@@ -545,7 +545,7 @@ def parse():
     if url:
         if not is_valid_url(url):
             return get_json_result(
-                data=False, message='The URL format is invalid', code=settings.RetCode.ARGUMENT_ERROR)
+                data=False, message='URL格式无效', code=settings.RetCode.ARGUMENT_ERROR)
         download_path = os.path.join(get_project_base_directory(), "logs/downloads")
         os.makedirs(download_path, exist_ok=True)
         from seleniumwire.webdriver import Chrome, ChromeOptions
@@ -583,14 +583,14 @@ def parse():
         r = re.search(r"filename=\"([^\"]+)\"", str(res_headers))
         if not r or not r.group(1):
             return get_json_result(
-                data=False, message="Can't not identify downloaded file", code=settings.RetCode.ARGUMENT_ERROR)
+                data=False, message="无法识别下载的文件", code=settings.RetCode.ARGUMENT_ERROR)
         f = File(r.group(1), os.path.join(download_path, r.group(1)))
         txt = FileService.parse_docs([f], current_user.id)
         return get_json_result(data=txt)
 
     if 'file' not in request.files:
         return get_json_result(
-            data=False, message='No file part!', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='没有文件部分！', code=settings.RetCode.ARGUMENT_ERROR)
 
     file_objs = request.files.getlist('file')
     txt = FileService.parse_docs(file_objs, current_user.id)
@@ -606,27 +606,27 @@ def set_meta():
     if not DocumentService.accessible(req["doc_id"], current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='没有授权。',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
     try:
         meta = json.loads(req["meta"])
     except Exception as e:
         return get_json_result(
-            data=False, message=f'Json syntax error: {e}', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message=f'Json语法错误: {e}', code=settings.RetCode.ARGUMENT_ERROR)
     if not isinstance(meta, dict):
         return get_json_result(
-            data=False, message='Meta data should be in Json map format, like {"key": "value"}', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='元数据应为Json映射格式，如{"key": "value"}', code=settings.RetCode.ARGUMENT_ERROR)
 
     try:
         e, doc = DocumentService.get_by_id(req["doc_id"])
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
 
         if not DocumentService.update_by_id(
                 req["doc_id"], {"meta_fields": meta}):
             return get_data_error_result(
-                message="Database error (meta updates)!")
+                message="数据库错误（元数据更新）！")
 
         return get_json_result(data=True)
     except Exception as e:

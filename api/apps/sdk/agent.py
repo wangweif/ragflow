@@ -27,7 +27,7 @@ def list_agents(tenant_id):
     if id or title:
         canvas = UserCanvasService.query(id=id, title=title, user_id=tenant_id)
         if not canvas:
-            return get_error_data_result("The agent doesn't exist.")
+            return get_error_data_result("代理不存在。")
     page_number = int(request.args.get("page", 1))
     items_per_page = int(request.args.get("page_size", 30))
     orderby = request.args.get("orderby", "update_time")

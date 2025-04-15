@@ -43,7 +43,7 @@ def convert():
         for file_id in file_ids:
             file = files_set[file_id]
             if not file:
-                return get_data_error_result(message="File not found!")
+                return get_data_error_result(message="找不到文件!")
             file_ids_list = [file_id]
             if file.type == FileType.FOLDER.value:
                 file_ids_list = FileService.get_all_innermost_file_ids(file_id, [])
@@ -54,13 +54,13 @@ def convert():
                     doc_id = inform.document_id
                     e, doc = DocumentService.get_by_id(doc_id)
                     if not e:
-                        return get_data_error_result(message="Document not found!")
+                        return get_data_error_result(message="文档未找到!")
                     tenant_id = DocumentService.get_tenant_id(doc_id)
                     if not tenant_id:
-                        return get_data_error_result(message="Tenant not found!")
+                        return get_data_error_result(message="未找到租户!")
                     if not DocumentService.remove_document(doc, tenant_id):
                         return get_data_error_result(
-                            message="Database error (Document removal)!")
+                            message="数据库错误（文档删除）!")
                 File2DocumentService.delete_by_file_id(id)
 
                 # insert
@@ -68,11 +68,11 @@ def convert():
                     e, kb = KnowledgebaseService.get_by_id(kb_id)
                     if not e:
                         return get_data_error_result(
-                            message="Can't find this knowledgebase!")
+                            message="找不到此知识库!")
                     e, file = FileService.get_by_id(id)
                     if not e:
                         return get_data_error_result(
-                            message="Can't find this file!")
+                            message="找不到此文件!")
 
                     doc = DocumentService.insert({
                         "id": get_uuid(),
@@ -105,26 +105,26 @@ def rm():
     file_ids = req["file_ids"]
     if not file_ids:
         return get_json_result(
-            data=False, message='Lack of "Files ID"', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='缺少文件ID', code=settings.RetCode.ARGUMENT_ERROR)
     try:
         for file_id in file_ids:
             informs = File2DocumentService.get_by_file_id(file_id)
             if not informs:
-                return get_data_error_result(message="Inform not found!")
+                return get_data_error_result(message="未找到文件!")
             for inform in informs:
                 if not inform:
-                    return get_data_error_result(message="Inform not found!")
+                    return get_data_error_result(message="未找到文件!")
                 File2DocumentService.delete_by_file_id(file_id)
                 doc_id = inform.document_id
                 e, doc = DocumentService.get_by_id(doc_id)
                 if not e:
-                    return get_data_error_result(message="Document not found!")
+                    return get_data_error_result(message="文档未找到!")
                 tenant_id = DocumentService.get_tenant_id(doc_id)
                 if not tenant_id:
-                    return get_data_error_result(message="Tenant not found!")
+                    return get_data_error_result(message="未找到租户!")
                 if not DocumentService.remove_document(doc, tenant_id):
                     return get_data_error_result(
-                        message="Database error (Document removal)!")
+                        message="数据库错误（文档删除）!")
         return get_json_result(data=True)
     except Exception as e:
         return server_error_response(e)

@@ -35,11 +35,11 @@ def create(tenant_id):
     for kb_id in ids:
         kbs = KnowledgebaseService.accessible(kb_id=kb_id, user_id=tenant_id)
         if not kbs:
-            return get_error_data_result(f"You don't own the dataset {kb_id}")
+            return get_error_data_result(f"您不拥有数据集 {kb_id}")
         kbs = KnowledgebaseService.query(id=kb_id)
         kb = kbs[0]
         if kb.chunk_num == 0:
-            return get_error_data_result(f"The dataset {kb_id} doesn't own parsed file")
+            return get_error_data_result(f"数据集 {kb_id} 没有已解析的文件")
     
     kbs = KnowledgebaseService.get_by_ids(ids) if ids else []
     embd_ids = [TenantLLMService.split_model_name_and_factory(kb.embd_id)[0] for kb in kbs]  # remove vendor suffix for comparison
@@ -54,11 +54,11 @@ def create(tenant_id):
         if "model_name" in llm:
             req["llm_id"] = llm.pop("model_name")
             if not TenantLLMService.query(tenant_id=tenant_id, llm_name=req["llm_id"], model_type="chat"):
-                return get_error_data_result(f"`model_name` {req.get('llm_id')} doesn't exist")
+                return get_error_data_result(f"模型名称 {req.get('llm_id')} 不存在")
         req["llm_setting"] = req.pop("llm")
     e, tenant = TenantService.get_by_id(tenant_id)
     if not e:
-        return get_error_data_result(message="Tenant not found!")
+        return get_error_data_result(message="租户未找到！")
     # prompt
     prompt = req.get("prompt")
     key_mapping = {"parameters": "variables",
@@ -88,16 +88,16 @@ def create(tenant_id):
         if req["rerank_id"] not in value_rerank_model and not TenantLLMService.query(tenant_id=tenant_id,
                                                                                      llm_name=req.get("rerank_id"),
                                                                                      model_type="rerank"):
-            return get_error_data_result(f"`rerank_model` {req.get('rerank_id')} doesn't exist")
+            return get_error_data_result(f"重排序模型 {req.get('rerank_id')} 不存在")
     if not req.get("llm_id"):
         req["llm_id"] = tenant.llm_id
     if not req.get("name"):
-        return get_error_data_result(message="`name` is required.")
+        return get_error_data_result(message="名称为必填项。")
     if DialogService.query(name=req["name"], tenant_id=tenant_id, status=StatusEnum.VALID.value):
-        return get_error_data_result(message="Duplicated chat name in creating chat.")
+        return get_error_data_result(message="创建聊天时聊天名称重复。")
     # tenant_id
     if req.get("tenant_id"):
-        return get_error_data_result(message="`tenant_id` must not be provided.")
+        return get_error_data_result(message="租户ID不能提供。")
     req["tenant_id"] = tenant_id
     # prompt more parameter
     default_prompt = {
@@ -126,14 +126,14 @@ def create(tenant_id):
             continue
         if req['prompt_config']["system"].find("{%s}" % p["key"]) < 0:
             return get_error_data_result(
-                message="Parameter '{}' is not used".format(p["key"]))
+                message="参数 '{}' 未被使用".format(p["key"]))
     # save
     if not DialogService.save(**req):
-        return get_error_data_result(message="Fail to new a chat!")
+        return get_error_data_result(message="创建聊天失败！")
     # response
     e, res = DialogService.get_by_id(req["id"])
     if not e:
-        return get_error_data_result(message="Fail to new a chat!")
+        return get_error_data_result(message="创建聊天失败！")
     res = res.to_json()
     renamed_dict = {}
     for key, value in res["prompt_config"].items():
@@ -160,23 +160,23 @@ def create(tenant_id):
 @token_required
 def update(tenant_id, chat_id):
     if not DialogService.query(tenant_id=tenant_id, id=chat_id, status=StatusEnum.VALID.value):
-        return get_error_data_result(message='You do not own the chat')
+        return get_error_data_result(message='您不拥有此聊天')
     req = request.json
     ids = req.get("dataset_ids")
     if "show_quotation" in req:
         req["do_refer"] = req.pop("show_quotation")
     if "dataset_ids" in req:
         if not ids:
-            return get_error_data_result("`dataset_ids` can't be empty")
+            return get_error_data_result("数据集ID不能为空")
         if ids:
             for kb_id in ids:
                 kbs = KnowledgebaseService.accessible(kb_id=kb_id, user_id=tenant_id)
                 if not kbs:
-                    return get_error_data_result(f"You don't own the dataset {kb_id}")
+                    return get_error_data_result(f"您不拥有数据集 {kb_id}")
                 kbs = KnowledgebaseService.query(id=kb_id)
                 kb = kbs[0]
                 if kb.chunk_num == 0:
-                    return get_error_data_result(f"The dataset {kb_id} doesn't own parsed file")
+                    return get_error_data_result(f"数据集 {kb_id} 没有已解析的文件")
                 
             kbs = KnowledgebaseService.get_by_ids(ids)
             embd_ids = [TenantLLMService.split_model_name_and_factory(kb.embd_id)[0] for kb in kbs]  # remove vendor suffix for comparison
@@ -191,11 +191,11 @@ def update(tenant_id, chat_id):
         if "model_name" in llm:
             req["llm_id"] = llm.pop("model_name")
             if not TenantLLMService.query(tenant_id=tenant_id, llm_name=req["llm_id"], model_type="chat"):
-                return get_error_data_result(f"`model_name` {req.get('llm_id')} doesn't exist")
+                return get_error_data_result(f"模型名称 {req.get('llm_id')} 不存在")
         req["llm_setting"] = req.pop("llm")
     e, tenant = TenantService.get_by_id(tenant_id)
     if not e:
-        return get_error_data_result(message="Tenant not found!")
+        return get_error_data_result(message="租户未找到！")
     # prompt
     prompt = req.get("prompt")
     key_mapping = {"parameters": "variables",
@@ -220,21 +220,21 @@ def update(tenant_id, chat_id):
         if req["rerank_id"] not in value_rerank_model and not TenantLLMService.query(tenant_id=tenant_id,
                                                                                      llm_name=req.get("rerank_id"),
                                                                                      model_type="rerank"):
-            return get_error_data_result(f"`rerank_model` {req.get('rerank_id')} doesn't exist")
+            return get_error_data_result(f"重排序模型 {req.get('rerank_id')} 不存在")
     if "name" in req:
         if not req.get("name"):
-            return get_error_data_result(message="`name` cannot be empty.")
+            return get_error_data_result(message="名称不能为空。")
         if req["name"].lower() != res["name"].lower() \
                 and len(
             DialogService.query(name=req["name"], tenant_id=tenant_id, status=StatusEnum.VALID.value)) > 0:
-            return get_error_data_result(message="Duplicated chat name in updating chat.")
+            return get_error_data_result(message="更新聊天时聊天名称重复。")
     if "prompt_config" in req:
         res["prompt_config"].update(req["prompt_config"])
         for p in res["prompt_config"]["parameters"]:
             if p["optional"]:
                 continue
             if res["prompt_config"]["system"].find("{%s}" % p["key"]) < 0:
-                return get_error_data_result(message="Parameter '{}' is not used".format(p["key"]))
+                return get_error_data_result(message="参数 '{}' 未被使用".format(p["key"]))
     if "llm_setting" in req:
         res["llm_setting"].update(req["llm_setting"])
     req["prompt_config"] = res["prompt_config"]
@@ -245,7 +245,7 @@ def update(tenant_id, chat_id):
     if "dataset_ids" in req:
         req.pop("dataset_ids")
     if not DialogService.update_by_id(chat_id, req):
-        return get_error_data_result(message="Chat not found!")
+        return get_error_data_result(message="未找到聊天！")
     return get_result()
 
 
@@ -271,7 +271,7 @@ def delete(tenant_id):
 
     for id in unique_id_list:
         if not DialogService.query(tenant_id=tenant_id, id=id, status=StatusEnum.VALID.value):
-            errors.append(f"Assistant({id}) not found.")
+            errors.append(f"助手({id})未找到。")
             continue
         temp_dict = {"status": StatusEnum.INVALID.value}
         DialogService.update_by_id(id, temp_dict)
@@ -281,7 +281,7 @@ def delete(tenant_id):
         if success_count > 0:
             return get_result(
                 data={"success_count": success_count, "errors": errors},
-                message=f"Partially deleted {success_count} chats with {len(errors)} errors"
+                message=f"已部分删除 {success_count} 个聊天，有 {len(errors)} 个错误"
             )
         else:
             return get_error_data_result(message="; ".join(errors))
@@ -289,7 +289,7 @@ def delete(tenant_id):
     if duplicate_messages:
         if success_count > 0:
             return get_result(
-                message=f"Partially deleted {success_count} chats with {len(duplicate_messages)} errors", 
+                message=f"已部分删除 {success_count} 个聊天，有 {len(duplicate_messages)} 个错误", 
                 data={"success_count": success_count, "errors": duplicate_messages}
             )
         else:
@@ -307,7 +307,7 @@ def list_chat(tenant_id):
     if id or name:
         chat = DialogService.query(id=id, name=name, status=StatusEnum.VALID.value, tenant_id=tenant_id)
         if not chat:
-            return get_error_data_result(message="The chat doesn't exist")
+            return get_error_data_result(message="聊天不存在")
     page_number = int(request.args.get("page", 1))
     items_per_page = int(request.args.get("page_size", 30))
     orderby = request.args.get("orderby", "create_time")

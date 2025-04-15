@@ -46,22 +46,22 @@ def upload():
 
     if 'file' not in request.files:
         return get_json_result(
-            data=False, message='No file part!', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='没有文件!', code=settings.RetCode.ARGUMENT_ERROR)
     file_objs = request.files.getlist('file')
 
     for file_obj in file_objs:
         if file_obj.filename == '':
             return get_json_result(
-                data=False, message='No file selected!', code=settings.RetCode.ARGUMENT_ERROR)
+                data=False, message='没有选择文件!', code=settings.RetCode.ARGUMENT_ERROR)
     file_res = []
     try:
         e, pf_folder = FileService.get_by_id(pf_id)
         if not e:
-            return get_data_error_result( message="Can't find this folder!")
+            return get_data_error_result( message="找不到这个文件夹!")
         for file_obj in file_objs:
             MAX_FILE_NUM_PER_USER = int(os.environ.get('MAX_FILE_NUM_PER_USER', 0))
             if MAX_FILE_NUM_PER_USER > 0 and DocumentService.get_doc_count(current_user.id) >= MAX_FILE_NUM_PER_USER:
-                return get_data_error_result( message="Exceed the maximum file number of a free user!")
+                return get_data_error_result( message="超过免费用户最大文件数量!")
 
             # split file name path
             if not file_obj.filename:
@@ -79,13 +79,13 @@ def upload():
             if file_len != len_id_list:
                 e, file = FileService.get_by_id(file_id_list[len_id_list - 1])
                 if not e:
-                    return get_data_error_result(message="Folder not found!")
+                    return get_data_error_result(message="找不到这个文件夹!")
                 last_folder = FileService.create_folder(file, file_id_list[len_id_list - 1], file_obj_names,
                                                         len_id_list)
             else:
                 e, file = FileService.get_by_id(file_id_list[len_id_list - 2])
                 if not e:
-                    return get_data_error_result(message="Folder not found!")
+                    return get_data_error_result(message="找不到这个文件夹!")
                 last_folder = FileService.create_folder(file, file_id_list[len_id_list - 2], file_obj_names,
                                                         len_id_list)
 
@@ -131,10 +131,10 @@ def create():
     try:
         if not FileService.is_parent_folder_exist(pf_id):
             return get_json_result(
-                data=False, message="Parent Folder Doesn't Exist!", code=settings.RetCode.OPERATING_ERROR)
+                data=False, message="父文件夹不存在!", code=settings.RetCode.OPERATING_ERROR)
         if FileService.query(name=req["name"], parent_id=pf_id):
             return get_data_error_result(
-                message="Duplicated folder name in the same folder.")
+                message="文件夹名称重复!")
 
         if input_file_type == FileType.FOLDER.value:
             file_type = FileType.FOLDER.value
@@ -175,14 +175,14 @@ def list_files():
     try:
         e, file = FileService.get_by_id(pf_id)
         if not e:
-            return get_data_error_result(message="Folder not found!")
+            return get_data_error_result(message="文件夹不存在!")
 
         files, total = FileService.get_by_pf_id(
             current_user.id, pf_id, page_number, items_per_page, orderby, desc, keywords)
 
         parent_folder = FileService.get_parent_folder(pf_id)
         if not parent_folder:
-            return get_json_result(message="File not found!")
+            return get_json_result(message="文件不存在!")
 
         return get_json_result(data={"total": total, "files": files, "parent_folder": parent_folder.to_json()})
     except Exception as e:
@@ -206,7 +206,7 @@ def get_parent_folder():
     try:
         e, file = FileService.get_by_id(file_id)
         if not e:
-            return get_data_error_result(message="Folder not found!")
+            return get_data_error_result(message="找不到这个文件夹!")
 
         parent_folder = FileService.get_parent_folder(file_id)
         return get_json_result(data={"parent_folder": parent_folder.to_json()})
@@ -221,7 +221,7 @@ def get_all_parent_folders():
     try:
         e, file = FileService.get_by_id(file_id)
         if not e:
-            return get_data_error_result(message="Folder not found!")
+            return get_data_error_result(message="找不到这个文件夹!")
 
         parent_folders = FileService.get_all_parent_folders(file_id)
         parent_folders_res = []
@@ -242,9 +242,9 @@ def rm():
         for file_id in file_ids:
             e, file = FileService.get_by_id(file_id)
             if not e:
-                return get_data_error_result(message="File or Folder not found!")
+                return get_data_error_result(message="找不到这个文件或文件夹!")
             if not file.tenant_id:
-                return get_data_error_result(message="Tenant not found!")
+                return get_data_error_result(message="找不到租户!")
             if file.source_type == FileSource.KNOWLEDGEBASE:
                 continue
 
@@ -253,13 +253,13 @@ def rm():
                 for inner_file_id in file_id_list:
                     e, file = FileService.get_by_id(inner_file_id)
                     if not e:
-                        return get_data_error_result(message="File not found!")
+                        return get_data_error_result(message="找不到这个文件!")
                     STORAGE_IMPL.rm(file.parent_id, file.location)
                 FileService.delete_folder_by_pf_id(current_user.id, file_id)
             else:
                 if not FileService.delete(file):
                     return get_data_error_result(
-                        message="Database error (File removal)!")
+                        message="数据库错误(文件删除)!")
 
             # delete file2document
             informs = File2DocumentService.get_by_file_id(file_id)
@@ -267,13 +267,13 @@ def rm():
                 doc_id = inform.document_id
                 e, doc = DocumentService.get_by_id(doc_id)
                 if not e:
-                    return get_data_error_result(message="Document not found!")
+                    return get_data_error_result(message="找不到这个文档!")
                 tenant_id = DocumentService.get_tenant_id(doc_id)
                 if not tenant_id:
-                    return get_data_error_result(message="Tenant not found!")
+                    return get_data_error_result(message="找不到租户!")
                 if not DocumentService.remove_document(doc, tenant_id):
                     return get_data_error_result(
-                        message="Database error (Document removal)!")
+                        message="数据库错误(文档删除)!")
             File2DocumentService.delete_by_file_id(file_id)
 
         return get_json_result(data=True)
@@ -289,30 +289,30 @@ def rename():
     try:
         e, file = FileService.get_by_id(req["file_id"])
         if not e:
-            return get_data_error_result(message="File not found!")
+            return get_data_error_result(message="找不到这个文件!")
         if file.type != FileType.FOLDER.value \
             and pathlib.Path(req["name"].lower()).suffix != pathlib.Path(
                 file.name.lower()).suffix:
             return get_json_result(
                 data=False,
-                message="The extension of file can't be changed",
+                message="文件扩展名不能改变",
                 code=settings.RetCode.ARGUMENT_ERROR)
         for file in FileService.query(name=req["name"], pf_id=file.parent_id):
             if file.name == req["name"]:
                 return get_data_error_result(
-                    message="Duplicated file name in the same folder.")
+                    message="文件夹中存在重复的文件名!")
 
         if not FileService.update_by_id(
                 req["file_id"], {"name": req["name"]}):
             return get_data_error_result(
-                message="Database error (File rename)!")
+                message="数据库错误(文件重命名)!")
 
         informs = File2DocumentService.get_by_file_id(req["file_id"])
         if informs:
             if not DocumentService.update_by_id(
                     informs[0].document_id, {"name": req["name"]}):
                 return get_data_error_result(
-                    message="Database error (Document rename)!")
+                    message="数据库错误(文档重命名)!")
 
         return get_json_result(data=True)
     except Exception as e:
@@ -325,7 +325,7 @@ def get(file_id):
     try:
         e, file = FileService.get_by_id(file_id)
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="找不到这个文档!")
 
         blob = STORAGE_IMPL.get(file.parent_id, file.location)
         if not blob:
@@ -363,12 +363,12 @@ def move():
         for file_id in file_ids:
             file = files_dict[file_id]
             if not file:
-                return get_data_error_result(message="File or Folder not found!")
+                return get_data_error_result(message="找不到这个文件或文件夹!")
             if not file.tenant_id:
-                return get_data_error_result(message="Tenant not found!")
+                return get_data_error_result(message="找不到租户!")
         fe, _ = FileService.get_by_id(parent_id)
         if not fe:
-            return get_data_error_result(message="Parent Folder not found!")
+            return get_data_error_result(message="找不到这个文件夹!")
         FileService.move_file(file_ids, parent_id)
         return get_json_result(data=True)
     except Exception as e:

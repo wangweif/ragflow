@@ -43,12 +43,12 @@ def create():
     req = request.json
     dataset_name = req["name"]
     if not isinstance(dataset_name, str):
-        return get_data_error_result(message="Dataset name must be string.")
+        return get_data_error_result(message="知识库名称必须是字符串.")
     if dataset_name == "":
-        return get_data_error_result(message="Dataset name can't be empty.")
+        return get_data_error_result(message="知识库名称不能为空.")
     if len(dataset_name) >= DATASET_NAME_LIMIT:
         return get_data_error_result(
-            message=f"Dataset name length is {len(dataset_name)} which is large than {DATASET_NAME_LIMIT}")
+            message=f"知识库名称长度为 {len(dataset_name)} 大于 {DATASET_NAME_LIMIT}")
 
     dataset_name = dataset_name.strip()
     dataset_name = duplicate_name(
@@ -62,7 +62,7 @@ def create():
         req["created_by"] = current_user.id
         e, t = TenantService.get_by_id(current_user.id)
         if not e:
-            return get_data_error_result(message="Tenant not found.")
+            return get_data_error_result(message="未找到租户.")
         req["embd_id"] = t.embd_id
         if not KnowledgebaseService.save(**req):
             return get_data_error_result()
@@ -81,25 +81,25 @@ def update():
     if not KnowledgebaseService.accessible4deletion(req["kb_id"], current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='无授权.',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
     try:
         if not KnowledgebaseService.query(
                 created_by=current_user.id, id=req["kb_id"]):
             return get_json_result(
-                data=False, message='Only owner of knowledgebase authorized for this operation.',
+                data=False, message='只有知识库的所有者有权进行此操作.',
                 code=settings.RetCode.OPERATING_ERROR)
 
         e, kb = KnowledgebaseService.get_by_id(req["kb_id"])
         if not e:
             return get_data_error_result(
-                message="Can't find this knowledgebase!")
+                message="找不到此知识库!")
 
         if req.get("parser_id", "") == "tag" and os.environ.get('DOC_ENGINE', "elasticsearch") == "infinity":
             return get_json_result(
                 data=False,
-                message='The chunk method Tag has not been supported by Infinity yet.',
+                message='Infinity尚不支持块方法Tag.',
                 code=settings.RetCode.OPERATING_ERROR
             )
 
@@ -107,7 +107,7 @@ def update():
                 and len(
             KnowledgebaseService.query(name=req["name"], tenant_id=current_user.id, status=StatusEnum.VALID.value)) > 1:
             return get_data_error_result(
-                message="Duplicated knowledgebase name.")
+                message="知识库名称重复.")
 
         del req["kb_id"]
         if not KnowledgebaseService.update_by_id(kb.id, req):
@@ -125,7 +125,7 @@ def update():
         e, kb = KnowledgebaseService.get_by_id(kb.id)
         if not e:
             return get_data_error_result(
-                message="Database error (Knowledgebase rename)!")
+                message="数据库错误（知识库重命名）!")
         kb = kb.to_dict()
         kb.update(req)
 
@@ -146,12 +146,12 @@ def detail():
                 break
         else:
             return get_json_result(
-                data=False, message='Only owner of knowledgebase authorized for this operation.',
+                data=False, message='只有知识库的所有者有权进行此操作.',
                 code=settings.RetCode.OPERATING_ERROR)
         kb = KnowledgebaseService.get_detail(kb_id)
         if not kb:
             return get_data_error_result(
-                message="Can't find this knowledgebase!")
+                message="找不到此知识库!")
         return get_json_result(data=kb)
     except Exception as e:
         return server_error_response(e)
@@ -184,7 +184,7 @@ def rm():
     if not KnowledgebaseService.accessible4deletion(req["kb_id"], current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='无授权.',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
     try:
@@ -192,13 +192,13 @@ def rm():
             created_by=current_user.id, id=req["kb_id"])
         if not kbs:
             return get_json_result(
-                data=False, message='Only owner of knowledgebase authorized for this operation.',
+                data=False, message='只有知识库的所有者有权进行此操作.',
                 code=settings.RetCode.OPERATING_ERROR)
 
         for doc in DocumentService.query(kb_id=req["kb_id"]):
             if not DocumentService.remove_document(doc, kbs[0].tenant_id):
                 return get_data_error_result(
-                    message="Database error (Document removal)!")
+                    message="数据库错误（文档删除）!")
             f2d = File2DocumentService.get_by_document_id(doc.id)
             if f2d:
                 FileService.filter_delete([File.source_type == FileSource.KNOWLEDGEBASE, File.id == f2d[0].file_id])
@@ -207,7 +207,7 @@ def rm():
             [File.source_type == FileSource.KNOWLEDGEBASE, File.type == "folder", File.name == kbs[0].name])
         if not KnowledgebaseService.delete_by_id(req["kb_id"]):
             return get_data_error_result(
-                message="Database error (Knowledgebase removal)!")
+                message="数据库错误（知识库删除）！")
         for kb in kbs:
             settings.docStoreConn.delete({"kb_id": kb.id}, search.index_name(kb.tenant_id), kb.id)
             settings.docStoreConn.deleteIdx(search.index_name(kb.tenant_id), kb.id)
@@ -222,7 +222,7 @@ def list_tags(kb_id):
     if not KnowledgebaseService.accessible(kb_id, current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='无授权.',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
 
@@ -238,7 +238,7 @@ def list_tags_from_kbs():
         if not KnowledgebaseService.accessible(kb_id, current_user.id):
             return get_json_result(
                 data=False,
-                message='No authorization.',
+                message='无授权.',
                 code=settings.RetCode.AUTHENTICATION_ERROR
             )
 
@@ -253,7 +253,7 @@ def rm_tags(kb_id):
     if not KnowledgebaseService.accessible(kb_id, current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='无授权.',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
     e, kb = KnowledgebaseService.get_by_id(kb_id)
@@ -273,7 +273,7 @@ def rename_tags(kb_id):
     if not KnowledgebaseService.accessible(kb_id, current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='无授权.',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
     e, kb = KnowledgebaseService.get_by_id(kb_id)
@@ -291,7 +291,7 @@ def knowledge_graph(kb_id):
     if not KnowledgebaseService.accessible(kb_id, current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='无授权.',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
     _, kb = KnowledgebaseService.get_by_id(kb_id)
@@ -330,7 +330,7 @@ def delete_knowledge_graph(kb_id):
     if not KnowledgebaseService.accessible(kb_id, current_user.id):
         return get_json_result(
             data=False,
-            message='No authorization.',
+            message='无授权.',
             code=settings.RetCode.AUTHENTICATION_ERROR
         )
     _, kb = KnowledgebaseService.get_by_id(kb_id)

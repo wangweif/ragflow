@@ -490,14 +490,14 @@ def list_docs(dataset_id, tenant_id):
                     description: Processing status.
     """
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}. ")
+        return get_error_data_result(message=f"您不拥有数据集 {dataset_id}。 ")
     id = request.args.get("id")
     name = request.args.get("name")
 
     if id and not DocumentService.query(id=id, kb_id=dataset_id):
-        return get_error_data_result(message=f"You don't own the document {id}.")
+        return get_error_data_result(message=f"您不拥有文档 {id}。")
     if name and not DocumentService.query(name=name, kb_id=dataset_id):
-        return get_error_data_result(message=f"You don't own the document {name}.")
+        return get_error_data_result(message=f"您不拥有文档 {name}。")
 
     page = int(request.args.get("page", 1))
     keywords = request.args.get("keywords", "")
@@ -579,7 +579,7 @@ def delete(tenant_id, dataset_id):
           type: object
     """
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}. ")
+        return get_error_data_result(message=f"您不拥有数据集 {dataset_id}。 ")
     req = request.json
     if not req:
         doc_ids = None
@@ -688,7 +688,7 @@ def parse(tenant_id, dataset_id):
           type: object
     """
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}.")
+        return get_error_data_result(message=f"您不拥有数据集 {dataset_id}。")
     req = request.json
     if not req.get("document_ids"):
         return get_error_data_result("`document_ids` is required")
@@ -704,7 +704,7 @@ def parse(tenant_id, dataset_id):
             not_found.append(id)
             continue
         if not doc:
-            return get_error_data_result(message=f"You don't own the document {id}.")
+            return get_error_data_result(message=f"您不拥有文档 {id}。")
         if 0.0 < doc[0].progress < 1.0:
             return get_error_data_result(
                 "Can't parse document that is currently being processed"
@@ -770,7 +770,7 @@ def stop_parsing(tenant_id, dataset_id):
           type: object
     """
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}.")
+        return get_error_data_result(message=f"您不拥有数据集 {dataset_id}。")
     req = request.json
 
     if not req.get("document_ids"):
@@ -783,7 +783,7 @@ def stop_parsing(tenant_id, dataset_id):
     for id in doc_list:
         doc = DocumentService.query(id=id, kb_id=dataset_id)
         if not doc:
-            return get_error_data_result(message=f"You don't own the document {id}.")
+            return get_error_data_result(message=f"您不拥有文档 {id}。")
         if int(doc[0].progress) == 1 or doc[0].progress == 0:
             return get_error_data_result(
                 "Can't stop parsing document with progress at 0 or 1"
@@ -874,11 +874,11 @@ def list_chunks(tenant_id, dataset_id, document_id):
               description: Document details.
     """
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}.")
+        return get_error_data_result(message=f"您不拥有数据集 {dataset_id}。")
     doc = DocumentService.query(id=document_id, kb_id=dataset_id)
     if not doc:
         return get_error_data_result(
-            message=f"You don't own the document {document_id}."
+            message=f"找不到文档 {document_id}"
         )
     doc = doc[0]
     req = request.args
@@ -1038,11 +1038,11 @@ def add_chunk(tenant_id, dataset_id, document_id):
                   description: Important keywords.
     """
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}.")
+        return get_error_data_result(message=f"您不拥有数据集 {dataset_id}。")
     doc = DocumentService.query(id=document_id, kb_id=dataset_id)
     if not doc:
         return get_error_data_result(
-            message=f"You don't own the document {document_id}."
+            message=f"您不拥有文档 {document_id}。"
         )
     doc = doc[0]
     req = request.json
@@ -1157,7 +1157,7 @@ def rm_chunk(tenant_id, dataset_id, document_id):
           type: object
     """
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}.")
+        return get_error_data_result(message=f"您不拥有数据集 {dataset_id}。")
     docs = DocumentService.get_by_ids([document_id])
     if not docs:
         raise LookupError(f"Can't find the document with ID {document_id}!")
@@ -1171,11 +1171,11 @@ def rm_chunk(tenant_id, dataset_id, document_id):
         DocumentService.decrement_chunk_num(document_id, dataset_id, 1, chunk_number, 0)
     if "chunk_ids" in req and chunk_number != len(unique_chunk_ids):
         if len(unique_chunk_ids) == 0:
-            return get_result(message=f"deleted {chunk_number} chunks")
-        return get_error_data_result(message=f"rm_chunk deleted chunks {chunk_number}, expect {len(unique_chunk_ids)}")
+            return get_result(message=f"删除了 {chunk_number} 个分块")
+        return get_error_data_result(message=f"删除分块 {chunk_number} 个，期望 {len(unique_chunk_ids)} 个")
     if duplicate_messages:
-        return get_result(message=f"Partially deleted {chunk_number} chunks with {len(duplicate_messages)} errors", data={"success_count": chunk_number, "errors": duplicate_messages},)
-    return get_result(message=f"deleted {chunk_number} chunks")
+        return get_result(message=f"已部分删除 {chunk_number} 个分块，有 {len(duplicate_messages)} 个错误", data={"success_count": chunk_number, "errors": duplicate_messages},)
+    return get_result(message=f"删除了 {chunk_number} 个分块")
 
 
 @manager.route(  # noqa: F821
@@ -1239,11 +1239,11 @@ def update_chunk(tenant_id, dataset_id, document_id, chunk_id):
     if chunk is None:
         return get_error_data_result(f"Can't find this chunk {chunk_id}")
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}.")
+        return get_error_data_result(message=f"您不拥有数据集 {dataset_id}。")
     doc = DocumentService.query(id=document_id, kb_id=dataset_id)
     if not doc:
         return get_error_data_result(
-            message=f"You don't own the document {document_id}."
+            message=f"您不拥有文档 {document_id}。"
         )
     doc = doc[0]
     req = request.json
@@ -1376,7 +1376,7 @@ def retrieval_test(tenant_id):
         return get_error_data_result("`dataset_ids` should be a list")
     for id in kb_ids:
         if not KnowledgebaseService.accessible(kb_id=id, user_id=tenant_id):
-            return get_error_data_result(f"You don't own the dataset {id}.")
+            return get_error_data_result(f"您不拥有数据集 {id}。")
     kbs = KnowledgebaseService.get_by_ids(kb_ids)
     embd_nms = list(set([TenantLLMService.split_model_name_and_factory(kb.embd_id)[0] for kb in kbs]))  # remove vendor suffix for comparison
     if len(embd_nms) != 1:

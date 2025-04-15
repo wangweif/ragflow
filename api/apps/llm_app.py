@@ -216,7 +216,7 @@ def add_llm():
             if len(arr[0]) == 0:
                 raise Exception("Fail")
         except Exception as e:
-            msg += f"\nFail to access embedding model({mdl_nm})." + str(e)
+            msg += f"\n无法访问嵌入模型({mdl_nm})." + str(e)
     elif llm["model_type"] == LLMType.CHAT.value:
         assert factory in ChatModel, f"Chat model from {factory} is not supported yet."
         mdl = ChatModel[factory](
@@ -230,7 +230,7 @@ def add_llm():
             if not tc and m.find("**ERROR**:") >= 0:
                 raise Exception(m)
         except Exception as e:
-            msg += f"\nFail to access model({mdl_nm})." + str(
+            msg += f"\n无法访问模型({mdl_nm})." + str(
                 e)
     elif llm["model_type"] == LLMType.RERANK:
         assert factory in RerankModel, f"RE-rank model from {factory} is not supported yet."
@@ -244,9 +244,9 @@ def add_llm():
             if len(arr) == 0:
                 raise Exception("Not known.")
         except KeyError:
-            msg += f"{factory} dose not support this model({mdl_nm})"
+            msg += f"{factory} 不支持模型({mdl_nm})"
         except Exception as e:
-            msg += f"\nFail to access model({mdl_nm})." + str(
+            msg += f"\n无法访问模型({mdl_nm})." + str(
                 e)
     elif llm["model_type"] == LLMType.IMAGE2TEXT.value:
         assert factory in CvModel, f"Image to text model from {factory} is not supported yet."
@@ -261,7 +261,7 @@ def add_llm():
                 if not m and not tc:
                     raise Exception(m)
         except Exception as e:
-            msg += f"\nFail to access model({mdl_nm})." + str(e)
+            msg += f"\n无法访问模型({mdl_nm})." + str(e)
     elif llm["model_type"] == LLMType.TTS:
         assert factory in TTSModel, f"TTS model from {factory} is not supported yet."
         mdl = TTSModel[factory](
@@ -271,7 +271,7 @@ def add_llm():
             for resp in mdl.tts("Hello~ Ragflower!"):
                 pass
         except RuntimeError as e:
-            msg += f"\nFail to access model({mdl_nm})." + str(e)
+            msg += f"\n无法访问模型({mdl_nm})." + str(e)
     else:
         # TODO: check other type of models
         pass

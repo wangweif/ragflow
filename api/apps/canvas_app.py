@@ -50,7 +50,7 @@ def rm():
     for i in request.json["canvas_ids"]:
         if not UserCanvasService.query(user_id=current_user.id,id=i):
             return get_json_result(
-                data=False, message='Only owner of canvas authorized for this operation.',
+                data=False, message='只有画布所有者有权进行此操作。',
                 code=RetCode.OPERATING_ERROR)
         UserCanvasService.delete_by_id(i)
     return get_json_result(data=True)
@@ -67,14 +67,14 @@ def save():
     req["dsl"] = json.loads(req["dsl"])
     if "id" not in req:
         if UserCanvasService.query(user_id=current_user.id, title=req["title"].strip()):
-            return get_data_error_result(message=f"{req['title'].strip()} already exists.")
+            return get_data_error_result(message=f"{req['title'].strip()} 已存在。")
         req["id"] = get_uuid()
         if not UserCanvasService.save(**req):
-            return get_data_error_result(message="Fail to save canvas.")
+            return get_data_error_result(message="保存画布失败。")
     else:
         if not UserCanvasService.query(user_id=current_user.id, id=req["id"]):
             return get_json_result(
-                data=False, message='Only owner of canvas authorized for this operation.',
+                data=False, message='只有画布所有者有权进行此操作。',
                 code=RetCode.OPERATING_ERROR)
         UserCanvasService.update_by_id(req["id"], req)
     # save version    
@@ -91,21 +91,21 @@ def get(canvas_id):
     e, c = UserCanvasService.get_by_tenant_id(canvas_id)
     logging.info(f"get canvas_id: {canvas_id} c: {c}")
     if not e:
-        return get_data_error_result(message="canvas not found.")
+        return get_data_error_result(message="未找到画布。")
     return get_json_result(data=c)
 
 @manager.route('/getsse/<canvas_id>', methods=['GET'])  # type: ignore # noqa: F821
 def getsse(canvas_id):
     token = request.headers.get('Authorization').split()
     if len(token) != 2:
-        return get_data_error_result(message='Authorization is not valid!"')
+        return get_data_error_result(message='授权无效！"')
     token = token[1]
     objs = APIToken.query(beta=token)
     if not objs:
-        return get_data_error_result(message='Authentication error: API key is invalid!"')
+        return get_data_error_result(message='身份验证错误：API密钥无效！"')
     e, c = UserCanvasService.get_by_id(canvas_id)
     if not e:
-        return get_data_error_result(message="canvas not found.")
+        return get_data_error_result(message="未找到画布。")
     return get_json_result(data=c.to_dict())
 
 
@@ -117,10 +117,10 @@ def run():
     stream = req.get("stream", True)
     e, cvs = UserCanvasService.get_by_id(req["id"])
     if not e:
-        return get_data_error_result(message="canvas not found.")
+        return get_data_error_result(message="未找到画布。")
     if not UserCanvasService.query(user_id=current_user.id, id=req["id"]):
         return get_json_result(
-            data=False, message='Only owner of canvas authorized for this operation.',
+            data=False, message='只有画布所有者有权进行此操作。',
             code=RetCode.OPERATING_ERROR)
 
     if not isinstance(cvs.dsl, str):
@@ -167,7 +167,7 @@ def run():
                 UserCanvasService.update_by_id(req["id"], cvs.to_dict())
                 traceback.print_exc()
                 yield "data:" + json.dumps({"code": 500, "message": str(e),
-                                            "data": {"answer": "**ERROR**: " + str(e), "reference": []}},
+                                            "data": {"answer": "**错误**: " + str(e), "reference": []}},
                                            ensure_ascii=False) + "\n\n"
             yield "data:" + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False) + "\n\n"
 
@@ -198,10 +198,10 @@ def reset():
     try:
         e, user_canvas = UserCanvasService.get_by_id(req["id"])
         if not e:
-            return get_data_error_result(message="canvas not found.")
+            return get_data_error_result(message="未找到画布。")
         if not UserCanvasService.query(user_id=current_user.id, id=req["id"]):
             return get_json_result(
-                data=False, message='Only owner of canvas authorized for this operation.',
+                data=False, message='只有画布所有者有权进行此操作。',
                 code=RetCode.OPERATING_ERROR)
 
         canvas = Canvas(json.dumps(user_canvas.dsl), current_user.id)
@@ -221,10 +221,10 @@ def input_elements():
     try:
         e, user_canvas = UserCanvasService.get_by_id(cvs_id)
         if not e:
-            return get_data_error_result(message="canvas not found.")
+            return get_data_error_result(message="未找到画布。")
         if not UserCanvasService.query(user_id=current_user.id, id=cvs_id):
             return get_json_result(
-                data=False, message='Only owner of canvas authorized for this operation.',
+                data=False, message='只有画布所有者有权进行此操作。',
                 code=RetCode.OPERATING_ERROR)
 
         canvas = Canvas(json.dumps(user_canvas.dsl), current_user.id)
@@ -243,10 +243,10 @@ def debug():
     try:
         e, user_canvas = UserCanvasService.get_by_id(req["id"])
         if not e:
-            return get_data_error_result(message="canvas not found.")
+            return get_data_error_result(message="未找到画布。")
         if not UserCanvasService.query(user_id=current_user.id, id=req["id"]):
             return get_json_result(
-                data=False, message='Only owner of canvas authorized for this operation.',
+                data=False, message='只有画布所有者有权进行此操作。',
                 code=RetCode.OPERATING_ERROR)
 
         canvas = Canvas(json.dumps(user_canvas.dsl), current_user.id)
@@ -283,12 +283,12 @@ def test_db_connect():
             cursor.execute("SELECT 1")
             cursor.close()
         else:
-            return server_error_response("Unsupported database type.")
+            return server_error_response("不支持的数据库类型。")
         if req["db_type"] != 'mssql':
             db.connect()
         db.close()
         
-        return get_json_result(data="Database Connection Successful!")
+        return get_json_result(data="数据库连接成功！")
     except Exception as e:
         return server_error_response(e)
 #api get list version dsl of canvas
@@ -299,7 +299,7 @@ def getlistversion(canvas_id):
         list =sorted([c.to_dict() for c in UserCanvasVersionService.list_by_canvas_id(canvas_id)], key=lambda x: x["update_time"]*-1)
         return get_json_result(data=list)
     except Exception as e:
-        return get_data_error_result(message=f"Error getting history files: {e}")
+        return get_data_error_result(message=f"获取历史文件时出错：{e}")
 #api get version dsl of canvas
 @manager.route('/getversion/<version_id>', methods=['GET'])  # noqa: F821
 @login_required
@@ -310,7 +310,7 @@ def getversion( version_id):
         if version:
             return get_json_result(data=version.to_dict())
     except Exception as e:
-        return get_json_result(data=f"Error getting history file: {e}")
+        return get_json_result(data=f"获取历史文件时出错：{e}")
 @manager.route('/listteam', methods=['GET'])  # noqa: F821
 @login_required
 def list_kbs():
@@ -335,7 +335,7 @@ def setting():
     req["user_id"] = current_user.id
     e,flow = UserCanvasService.get_by_id(req["id"])
     if not e:
-        return get_data_error_result(message="canvas not found.")
+        return get_data_error_result(message="未找到画布。")
     flow = flow.to_dict()
     flow["title"] = req["title"]
     if req["description"]:
@@ -346,7 +346,7 @@ def setting():
         flow["avatar"] = req["avatar"]
     if not UserCanvasService.query(user_id=current_user.id, id=req["id"]):
         return get_json_result(
-            data=False, message='Only owner of canvas authorized for this operation.',
+            data=False, message='只有画布所有者有权进行此操作。',
             code=RetCode.OPERATING_ERROR)
     num= UserCanvasService.update_by_id(req["id"], flow)
     return get_json_result(data=num)

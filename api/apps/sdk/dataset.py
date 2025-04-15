@@ -87,7 +87,7 @@ def create(tenant_id):
     req = request.json
     for k in req.keys():
         if dataset_readonly_fields(k):
-            return get_result(code=settings.RetCode.ARGUMENT_ERROR, message=f"'{k}' is readonly.")
+            return get_result(code=settings.RetCode.ARGUMENT_ERROR, message=f"'{k}' 是只读的。")
     e, t = TenantService.get_by_id(tenant_id)
     permission = req.get("permission")
     chunk_method = req.get("chunk_method")
@@ -119,26 +119,26 @@ def create(tenant_id):
         return check_validation
     req["parser_config"] = get_parser_config(chunk_method, parser_config)
     if "tenant_id" in req:
-        return get_error_data_result(message="`tenant_id` must not be provided")
+        return get_error_data_result(message="`tenant_id` 不能提供")
     if "chunk_count" in req or "document_count" in req:
         return get_error_data_result(
-            message="`chunk_count` or `document_count` must not be provided"
+            message="`chunk_count` 或 `document_count` 不能提供"
         )
     if "name" not in req:
-        return get_error_data_result(message="`name` is not empty!")
+        return get_error_data_result(message="`name` 不能为空！")
     req["id"] = get_uuid()
     req["name"] = req["name"].strip()
     if req["name"] == "":
-        return get_error_data_result(message="`name` is not empty string!")
+        return get_error_data_result(message="`name` 不能为空字符串！")
     if len(req["name"]) >= 128:
         return get_error_data_result(
-            message="Dataset name should not be longer than 128 characters."
+            message="数据集名称不应超过128个字符。"
         )
     if KnowledgebaseService.query(
         name=req["name"], tenant_id=tenant_id, status=StatusEnum.VALID.value
     ):
         return get_error_data_result(
-            message="Duplicated dataset name in creating dataset."
+            message="创建数据集时数据集名称重复。"
         )
     req["tenant_id"] = tenant_id
     req["created_by"] = tenant_id
@@ -154,12 +154,12 @@ def create(tenant_id):
         )
         if embd_model:
             if req["embedding_model"] not in valid_embedding_models and not TenantLLMService.query(tenant_id=tenant_id,model_type="embedding",llm_name=req.get("embedding_model"),):
-                return get_error_data_result(f"`embedding_model` {req.get('embedding_model')} doesn't exist")
+                return get_error_data_result(f"嵌入模型 {req.get('embedding_model')} 不存在")
         if not embd_model:
             embd_model=TenantLLMService.query(tenant_id=tenant_id,model_type="embedding", llm_name=req.get("embedding_model"))
         if not embd_model:
             return get_error_data_result(
-                f"`embedding_model` {req.get('embedding_model')} doesn't exist"
+                f"嵌入模型 {req.get('embedding_model')} 不存在"
             )
     key_mapping = {
         "chunk_num": "chunk_count",
@@ -178,7 +178,7 @@ def create(tenant_id):
         if req[f] == "" and f in ["permission", "parser_id", "chunk_method"]:
             del req[f]
     if not KnowledgebaseService.save(**req):
-        return get_error_data_result(message="Create dataset error.(Database error)")
+        return get_error_data_result(message="创建数据集错误。(数据库错误)")
     renamed_data = {}
     e, k = KnowledgebaseService.get_by_id(req["id"])
     for key, value in k.to_dict().items():
@@ -241,7 +241,7 @@ def delete(tenant_id):
     for id in id_list:
         kbs = KnowledgebaseService.query(id=id, tenant_id=tenant_id)
         if not kbs:
-            errors.append(f"You don't own the dataset {id}")
+            errors.append(f"您不拥有数据集 {id}")
             continue
         for doc in DocumentService.query(kb_id=id):
             if not DocumentService.remove_document(doc, tenant_id):
@@ -265,13 +265,13 @@ def delete(tenant_id):
         if success_count > 0:
             return get_result(
                 data={"success_count": success_count, "errors": errors},
-                message=f"Partially deleted {success_count} datasets with {len(errors)} errors"
+                message=f"部分删除了 {success_count} 个数据集，有 {len(errors)} 个错误"
             )
         else:
             return get_error_data_result(message="; ".join(errors))
     if duplicate_messages:
         if success_count > 0:
-            return get_result(message=f"Partially deleted {success_count} datasets with {len(duplicate_messages)} errors", data={"success_count": success_count, "errors": duplicate_messages},)
+            return get_result(message=f"部分删除了 {success_count} 个数据集，有 {len(duplicate_messages)} 个错误", data={"success_count": success_count, "errors": duplicate_messages},)
         else:
             return get_error_data_result(message=";".join(duplicate_messages))
     return get_result(code=settings.RetCode.SUCCESS)
@@ -328,11 +328,11 @@ def update(tenant_id, dataset_id):
           type: object
     """
     if not KnowledgebaseService.query(id=dataset_id, tenant_id=tenant_id):
-        return get_error_data_result(message="You don't own the dataset")
+        return get_error_data_result(message="您不拥有数据集")
     req = request.json
     for k in req.keys():
         if dataset_readonly_fields(k):
-            return get_result(code=settings.RetCode.ARGUMENT_ERROR, message=f"'{k}' is readonly.")
+            return get_result(code=settings.RetCode.ARGUMENT_ERROR, message=f"'{k}' 是只读的。")
     e, t = TenantService.get_by_id(tenant_id)
     invalid_keys = {"id", "embd_id", "chunk_num", "doc_num", "parser_id", "create_date", "create_time", "created_by", "status","token_num","update_date","update_time"}
     if any(key in req for key in invalid_keys):
@@ -416,20 +416,20 @@ def update(tenant_id, dataset_id):
         )
         if embd_model:
             if req["embedding_model"] not in valid_embedding_models and not TenantLLMService.query(tenant_id=tenant_id,model_type="embedding",llm_name=req.get("embedding_model"),):
-                return get_error_data_result(f"`embedding_model` {req.get('embedding_model')} doesn't exist")
+                return get_error_data_result(f"嵌入模型 {req.get('embedding_model')} 不存在")
         if not embd_model:
             embd_model=TenantLLMService.query(tenant_id=tenant_id,model_type="embedding", llm_name=req.get("embedding_model"))
 
         if not embd_model:
             return get_error_data_result(
-                f"`embedding_model` {req.get('embedding_model')} doesn't exist"
+                f"嵌入模型 {req.get('embedding_model')} 不存在"
             )
         req["embd_id"] = req.pop("embedding_model")
     if "name" in req:
         req["name"] = req["name"].strip()
         if len(req["name"]) >= 128:
             return get_error_data_result(
-                message="Dataset name should not be longer than 128 characters."
+                message="数据集名称不应超过128个字符。"
             )
         if (
             req["name"].lower() != kb.name.lower()
@@ -441,7 +441,7 @@ def update(tenant_id, dataset_id):
             > 0
         ):
             return get_error_data_result(
-                message="Duplicated dataset name in updating dataset."
+                message="更新数据集时数据集名称重复。"
             )
     flds = list(req.keys())
     for f in flds:
@@ -512,14 +512,10 @@ def list_datasets(tenant_id):
     """
     id = request.args.get("id")
     name = request.args.get("name")
-    if id:
-        kbs = KnowledgebaseService.get_kb_by_id(id,tenant_id)
-        if not kbs:
-            return get_error_data_result(f"You don't own the dataset {id}")
-    if name:
-        kbs = KnowledgebaseService.get_kb_by_name(name,tenant_id)
-        if not kbs:
-            return get_error_data_result(f"You don't own the dataset {name}")
+    if id or name:
+        dataset = KnowledgebaseService.query(id=id, name=name, tenant_id=tenant_id, status=StatusEnum.VALID.value)
+        if not dataset:
+            return get_error_data_result(message="数据集不存在")
     page_number = int(request.args.get("page", 1))
     items_per_page = int(request.args.get("page_size", 30))
     orderby = request.args.get("orderby", "create_time")

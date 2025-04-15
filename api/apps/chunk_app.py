@@ -49,10 +49,10 @@ def list_chunk():
     try:
         tenant_id = DocumentService.get_tenant_id(req["doc_id"])
         if not tenant_id:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="未找到租户！")
         e, doc = DocumentService.get_by_id(doc_id)
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
         kb_ids = KnowledgebaseService.get_kb_ids(tenant_id)
         query = {
             "doc_ids": [doc_id], "page": page, "size": size, "question": question, "sort": True
@@ -81,7 +81,7 @@ def list_chunk():
         return get_json_result(data=res)
     except Exception as e:
         if str(e).find("not_found") > 0:
-            return get_json_result(data=False, message='No chunk found!',
+            return get_json_result(data=False, message='未找到分块！',
                                    code=settings.RetCode.DATA_ERROR)
         return server_error_response(e)
 
@@ -93,14 +93,14 @@ def get():
     try:
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="未找到租户！")
         for tenant in tenants:
             kb_ids = KnowledgebaseService.get_kb_ids(tenant.tenant_id)
             chunk = settings.docStoreConn.get(chunk_id, search.index_name(tenant.tenant_id), kb_ids)
             if chunk:
                 break
         if chunk is None:
-            return server_error_response(Exception("Chunk not found"))
+            return server_error_response(Exception("未找到分块"))
 
         k = []
         for n in chunk.keys():
@@ -112,7 +112,7 @@ def get():
         return get_json_result(data=chunk)
     except Exception as e:
         if str(e).find("NotFoundError") >= 0:
-            return get_json_result(data=False, message='Chunk not found!',
+            return get_json_result(data=False, message='未找到分块！',
                                    code=settings.RetCode.DATA_ERROR)
         return server_error_response(e)
 
@@ -143,14 +143,14 @@ def set():
     try:
         tenant_id = DocumentService.get_tenant_id(req["doc_id"])
         if not tenant_id:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="未找到租户！")
 
         embd_id = DocumentService.get_embd_id(req["doc_id"])
         embd_mdl = LLMBundle(tenant_id, LLMType.EMBEDDING, embd_id)
 
         e, doc = DocumentService.get_by_id(req["doc_id"])
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
 
         if doc.parser_id == ParserType.QA:
             arr = [
@@ -178,13 +178,13 @@ def switch():
     try:
         e, doc = DocumentService.get_by_id(req["doc_id"])
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
         for cid in req["chunk_ids"]:
             if not settings.docStoreConn.update({"id": cid},
                                                 {"available_int": int(req["available_int"])},
                                                 search.index_name(DocumentService.get_tenant_id(req["doc_id"])),
                                                 doc.kb_id):
-                return get_data_error_result(message="Index updating failure")
+                return get_data_error_result(message="索引更新失败")
         return get_json_result(data=True)
     except Exception as e:
         return server_error_response(e)
@@ -198,9 +198,9 @@ def rm():
     try:
         e, doc = DocumentService.get_by_id(req["doc_id"])
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
         if not settings.docStoreConn.delete({"id": req["chunk_ids"]}, search.index_name(current_user.id), doc.kb_id):
-            return get_data_error_result(message="Index updating failure")
+            return get_data_error_result(message="索引更新失败")
         deleted_chunk_ids = req["chunk_ids"]
         chunk_number = len(deleted_chunk_ids)
         DocumentService.decrement_chunk_num(doc.id, doc.kb_id, 1, chunk_number, 0)
@@ -228,7 +228,7 @@ def create():
     try:
         e, doc = DocumentService.get_by_id(req["doc_id"])
         if not e:
-            return get_data_error_result(message="Document not found!")
+            return get_data_error_result(message="未找到文档！")
         d["kb_id"] = [doc.kb_id]
         d["docnm_kwd"] = doc.name
         d["title_tks"] = rag_tokenizer.tokenize(doc.name)
@@ -236,11 +236,11 @@ def create():
 
         tenant_id = DocumentService.get_tenant_id(req["doc_id"])
         if not tenant_id:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="未找到租户！")
 
         e, kb = KnowledgebaseService.get_by_id(doc.kb_id)
         if not e:
-            return get_data_error_result(message="Knowledgebase not found!")
+            return get_data_error_result(message="未找到知识库！")
         if kb.pagerank:
             d[PAGERANK_FLD] = kb.pagerank
 
@@ -287,12 +287,12 @@ def retrieval_test():
                     break
             else:
                 return get_json_result(
-                    data=False, message='Only owner of knowledgebase authorized for this operation.',
+                    data=False, message='只有知识库所有者有权进行此操作。',
                     code=settings.RetCode.OPERATING_ERROR)
 
         e, kb = KnowledgebaseService.get_by_id(kb_ids[0])
         if not e:
-            return get_data_error_result(message="Knowledgebase not found!")
+            return get_data_error_result(message="未找到知识库！")
 
         embd_mdl = LLMBundle(kb.tenant_id, LLMType.EMBEDDING.value, llm_name=kb.embd_id)
 
@@ -326,7 +326,7 @@ def retrieval_test():
         return get_json_result(data=ranks)
     except Exception as e:
         if str(e).find("not_found") > 0:
-            return get_json_result(data=False, message='No chunk found! Check the chunk status please!',
+            return get_json_result(data=False, message='未找到分块！请检查分块状态！',
                                    code=settings.RetCode.DATA_ERROR)
         return server_error_response(e)
 

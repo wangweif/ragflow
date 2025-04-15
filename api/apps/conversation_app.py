@@ -46,10 +46,10 @@ def set_conversation():
         del req["conversation_id"]
         try:
             if not ConversationService.update_by_id(conv_id, req):
-                return get_data_error_result(message="Conversation not found!")
+                return get_data_error_result(message="未找到会话！")
             e, conv = ConversationService.get_by_id(conv_id)
             if not e:
-                return get_data_error_result(message="Fail to update a conversation!")
+                return get_data_error_result(message="更新会话失败！")
             conv = conv.to_dict()
             return get_json_result(data=conv)
         except Exception as e:
@@ -58,7 +58,7 @@ def set_conversation():
     try:
         e, dia = DialogService.get_by_id(req["dialog_id"])
         if not e:
-            return get_data_error_result(message="Dialog not found")
+            return get_data_error_result(message="未找到对话！")
         conv = {"id": conv_id, "dialog_id": req["dialog_id"], "name": req.get("name", "New conversation"), "message": [{"role": "assistant", "content": dia.prompt_config["prologue"]}]}
         ConversationService.save(**conv)
         return get_json_result(data=conv)
@@ -73,7 +73,7 @@ def get():
     try:
         e, conv = ConversationService.get_by_id(conv_id)
         if not e:
-            return get_data_error_result(message="Conversation not found!")
+            return get_data_error_result(message="未找到会话！")
         # tenants = UserTenantService.query(user_id=current_user.id)
         avatar = None
         # for tenant in tenants:
@@ -85,7 +85,7 @@ def get():
         if dialog and len(dialog) > 0:
                 avatar = dialog[0].icon
         # else:
-            # return get_json_result(data=False, message="Only owner of conversation authorized for this operation.", code=settings.RetCode.OPERATING_ERROR)
+            # return get_json_result(data=False, message="只有会话所有者有权进行此操作。", code=settings.RetCode.OPERATING_ERROR)
 
         def get_value(d, k1, k2):
             return d.get(k1, d.get(k2))
@@ -117,15 +117,15 @@ def get():
 def getsse(dialog_id):
     token = request.headers.get("Authorization").split()
     if len(token) != 2:
-        return get_data_error_result(message='Authorization is not valid!"')
+        return get_data_error_result(message='授权无效！"')
     token = token[1]
     objs = APIToken.query(beta=token)
     if not objs:
-        return get_data_error_result(message='Authentication error: API key is invalid!"')
+        return get_data_error_result(message='身份验证错误：API密钥无效！"')
     try:
         e, conv = DialogService.get_by_id(dialog_id)
         if not e:
-            return get_data_error_result(message="Dialog not found!")
+            return get_data_error_result(message="未找到对话！")
         conv = conv.to_dict()
         conv["avatar"] = conv["icon"]
         del conv["icon"]
@@ -142,13 +142,13 @@ def rm():
         for cid in conv_ids:
             exist, conv = ConversationService.get_by_id(cid)
             if not exist:
-                return get_data_error_result(message="Conversation not found!")
+                return get_data_error_result(message="未找到会话！")
             tenants = UserTenantService.query(user_id=current_user.id)
             for tenant in tenants:
                 if DialogService.query(tenant_id=tenant.tenant_id, id=conv.dialog_id):
                     break
             else:
-                return get_json_result(data=False, message="Only owner of conversation authorized for this operation.", code=settings.RetCode.OPERATING_ERROR)
+                return get_json_result(data=False, message="只有会话所有者有权进行此操作。", code=settings.RetCode.OPERATING_ERROR)
             ConversationService.delete_by_id(cid)
         return get_json_result(data=True)
     except Exception as e:
@@ -161,7 +161,7 @@ def list_convsersation():
     dialog_id = request.args["dialog_id"]
     try:
         if not DialogService.query(tenant_id=current_user.tenant_id, user_id=current_user.id, id=dialog_id):
-            return get_json_result(data=False, message="Only owner of dialog authorized for this operation.", code=settings.RetCode.OPERATING_ERROR)
+            return get_json_result(data=False, message="只有对话所有者有权进行此操作。", code=settings.RetCode.OPERATING_ERROR)
         convs = ConversationService.query(dialog_id=dialog_id, order_by=ConversationService.model.create_time, reverse=True)
 
         convs = [d.to_dict() for d in convs]
@@ -186,11 +186,11 @@ def completion():
     try:
         e, conv = ConversationService.get_by_id(req["conversation_id"])
         if not e:
-            return get_data_error_result(message="Conversation not found!")
+            return get_data_error_result(message="未找到会话！")
         conv.message = deepcopy(req["messages"])
         e, dia = DialogService.get_by_id(conv.dialog_id)
         if not e:
-            return get_data_error_result(message="Dialog not found!")
+            return get_data_error_result(message="未找到对话！")
         del req["conversation_id"]
         del req["messages"]
 
@@ -260,11 +260,11 @@ def tts():
 
     tenants = TenantService.get_info_by(current_user.id)
     if not tenants:
-        return get_data_error_result(message="Tenant not found!")
+        return get_data_error_result(message="未找到租户！")
 
     tts_id = tenants[0]["tts_id"]
     if not tts_id:
-        return get_data_error_result(message="No default TTS model is set")
+        return get_data_error_result(message="未设置默认TTS模型")
 
     tts_mdl = LLMBundle(tenants[0]["tenant_id"], LLMType.TTS, tts_id)
 
@@ -291,7 +291,7 @@ def delete_msg():
     req = request.json
     e, conv = ConversationService.get_by_id(req["conversation_id"])
     if not e:
-        return get_data_error_result(message="Conversation not found!")
+        return get_data_error_result(message="未找到会话！")
 
     conv = conv.to_dict()
     for i, msg in enumerate(conv["message"]):
@@ -314,7 +314,7 @@ def thumbup():
     req = request.json
     e, conv = ConversationService.get_by_id(req["conversation_id"])
     if not e:
-        return get_data_error_result(message="Conversation not found!")
+        return get_data_error_result(message="未找到会话！")
     up_down = req.get("thumbup")
     feedback = req.get("feedback", "")
     conv = conv.to_dict()
@@ -366,7 +366,7 @@ def mindmap():
     kb_ids = req["kb_ids"]
     e, kb = KnowledgebaseService.get_by_id(kb_ids[0])
     if not e:
-        return get_data_error_result(message="Knowledgebase not found!")
+        return get_data_error_result(message="未找到知识库！")
 
     embd_mdl = LLMBundle(kb.tenant_id, LLMType.EMBEDDING, llm_name=kb.embd_id)
     chat_mdl = LLMBundle(current_user.id, LLMType.CHAT)

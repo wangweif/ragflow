@@ -43,7 +43,7 @@ def create(tenant_id, chat_id):
     req["dialog_id"] = chat_id
     dia = DialogService.query(tenant_id=tenant_id, id=req["dialog_id"], status=StatusEnum.VALID.value)
     if not dia:
-        return get_error_data_result(message="You do not own the assistant.")
+        return get_error_data_result(message="您不拥有此助手。")
     conv = {
         "id": get_uuid(),
         "dialog_id": req["dialog_id"],
@@ -52,11 +52,11 @@ def create(tenant_id, chat_id):
         "user_id": req.get("user_id", ""),
     }
     if not conv.get("name"):
-        return get_error_data_result(message="`name` can not be empty.")
+        return get_error_data_result(message="名称不能为空。")
     ConversationService.save(**conv)
     e, conv = ConversationService.get_by_id(conv["id"])
     if not e:
-        return get_error_data_result(message="Fail to create a session!")
+        return get_error_data_result(message="创建会话失败！")
     conv = conv.to_dict()
     conv["messages"] = conv.pop("message")
     conv["chat_id"] = conv.pop("dialog_id")
@@ -74,9 +74,9 @@ def create_agent_session(tenant_id, agent_id):
     user_id = request.args.get("user_id", "")
     e, cvs = UserCanvasService.get_by_id(agent_id)
     if not e:
-        return get_error_data_result("Agent not found.")
+        return get_error_data_result("未找到代理。")
     if not UserCanvasService.query(user_id=tenant_id, id=agent_id):
-        return get_error_data_result("You cannot access the agent.")
+        return get_error_data_result("您无法访问此代理。")
     if not isinstance(cvs.dsl, str):
         cvs.dsl = json.dumps(cvs.dsl, ensure_ascii=False)
 
@@ -88,14 +88,14 @@ def create_agent_session(tenant_id, agent_id):
             if not ele["optional"]:
                 if ele["type"] == "file":
                     if files is None or not files.get(ele["key"]):
-                        return get_error_data_result(f"`{ele['key']}` with type `{ele['type']}` is required")
+                        return get_error_data_result(f"`{ele['key']}` 类型为 `{ele['type']}` 是必需的")
                     upload_file = files.get(ele["key"])
                     file_content = FileService.parse_docs([upload_file], user_id)
                     file_name = upload_file.filename
                     ele["value"] = file_name + "\n" + file_content
                 else:
                     if req is None or not req.get(ele["key"]):
-                        return get_error_data_result(f"`{ele['key']}` with type `{ele['type']}` is required")
+                        return get_error_data_result(f"`{ele['key']}` 类型为 `{ele['type']}` 是必需的")
                     ele["value"] = req[ele["key"]]
             else:
                 if ele["type"] == "file":
@@ -132,17 +132,17 @@ def update(tenant_id, chat_id, session_id):
     conv_id = session_id
     conv = ConversationService.query(id=conv_id, dialog_id=chat_id)
     if not conv:
-        return get_error_data_result(message="Session does not exist")
+        return get_error_data_result(message="会话不存在")
     if not DialogService.query(id=chat_id, tenant_id=tenant_id, status=StatusEnum.VALID.value):
-        return get_error_data_result(message="You do not own the session")
+        return get_error_data_result(message="您不拥有此会话")
     if "message" in req or "messages" in req:
-        return get_error_data_result(message="`message` can not be change")
+        return get_error_data_result(message="消息不能更改")
     if "reference" in req:
-        return get_error_data_result(message="`reference` can not be change")
+        return get_error_data_result(message="参考不能更改")
     if "name" in req and not req.get("name"):
-        return get_error_data_result(message="`name` can not be empty.")
+        return get_error_data_result(message="名称不能为空。")
     if not ConversationService.update_by_id(conv_id, req):
-        return get_error_data_result(message="Session updates error")
+        return get_error_data_result(message="会话更新错误")
     return get_result()
 
 
@@ -155,10 +155,10 @@ def chat_completion(tenant_id, chat_id):
     if not req.get("session_id"):
         req["question"] = ""
     if not DialogService.query(tenant_id=tenant_id, id=chat_id, status=StatusEnum.VALID.value):
-        return get_error_data_result(f"You don't own the chat {chat_id}")
+        return get_error_data_result(f"您不拥有聊天 {chat_id}")
     if req.get("session_id"):
         if not ConversationService.query(id=req["session_id"], dialog_id=chat_id):
-            return get_error_data_result(f"You don't own the session {req['session_id']}")
+            return get_error_data_result(f"您不拥有会话 {req['session_id']}")
     if req.get("stream", True):
         resp = Response(rag_completion(tenant_id, chat_id, **req), mimetype="text/event-stream")
         resp.headers.add_header("Cache-control", "no-cache")
@@ -226,9 +226,9 @@ def chat_completion_openai_like(tenant_id, chat_id):
     messages = req.get("messages", [])
     # To prevent empty [] input
     if len(messages) < 1:
-        return get_error_data_result("You have to provide messages.")
+        return get_error_data_result("您必须提供消息。")
     if messages[-1]["role"] != "user":
-        return get_error_data_result("The last content of this conversation is not from user.")
+        return get_error_data_result("此对话的最后内容不是来自用户的。")
 
     prompt = messages[-1]["content"]
     # Treat context tokens as reasoning tokens
@@ -236,7 +236,7 @@ def chat_completion_openai_like(tenant_id, chat_id):
 
     dia = DialogService.query(tenant_id=tenant_id, id=chat_id, status=StatusEnum.VALID.value)
     if not dia:
-        return get_error_data_result(f"You don't own the chat {chat_id}")
+        return get_error_data_result(f"您不拥有聊天 {chat_id}")
     dia = dia[0]
 
     # Filter system and non-sense assistant messages
@@ -316,7 +316,7 @@ def chat_completion_openai_like(tenant_id, chat_id):
 
                     yield f"data:{json.dumps(response, ensure_ascii=False)}\n\n"
             except Exception as e:
-                response["choices"][0]["delta"]["content"] = "**ERROR**: " + str(e)
+                response["choices"][0]["delta"]["content"] = "**错误**: " + str(e)
                 yield f"data:{json.dumps(response, ensure_ascii=False)}\n\n"
 
             # The last chunk
@@ -368,19 +368,19 @@ def agents_completion_openai_compatibility (tenant_id, agent_id):
     tiktokenenc = tiktoken.get_encoding("cl100k_base")
     messages = req.get("messages", [])
     if not messages:
-        return get_error_data_result("You must provide at least one message.")
+        return get_error_data_result("您必须提供至少一条消息。")
     if not UserCanvasService.query(user_id=tenant_id, id=agent_id):
-        return get_error_data_result(f"You don't own the agent {agent_id}")
+        return get_error_data_result(f"您不拥有代理 {agent_id}")
   
     filtered_messages = [m for m in messages if m["role"] in ["user", "assistant"]]
     prompt_tokens = sum(len(tiktokenenc.encode(m["content"])) for m in filtered_messages)
     if not filtered_messages:
         return jsonify(get_data_openai( 
             id=agent_id,
-            content="No valid messages found (user or assistant).",
+            content="未找到有效消息 (用户或助手)。",
             finish_reason="stop",
             model=req.get("model", ""), 
-            completion_tokens=len(tiktokenenc.encode("No valid messages found (user or assistant).")),
+            completion_tokens=len(tiktokenenc.encode("未找到有效消息 (用户或助手)。")),
             prompt_tokens=prompt_tokens, 
         ))
     
@@ -401,7 +401,7 @@ def agent_completions(tenant_id, agent_id):
     req = request.json
     cvs = UserCanvasService.query(user_id=tenant_id, id=agent_id)
     if not cvs:
-        return get_error_data_result(f"You don't own the agent {agent_id}")
+        return get_error_data_result(f"您不拥有代理 {agent_id}")
     if req.get("session_id"):
         dsl = cvs[0].dsl
         if not isinstance(dsl, str):
@@ -409,7 +409,7 @@ def agent_completions(tenant_id, agent_id):
 
         conv = API4ConversationService.query(id=req["session_id"], dialog_id=agent_id)
         if not conv:
-            return get_error_data_result(f"You don't own the session {req['session_id']}")
+            return get_error_data_result(f"您不拥有会话 {req['session_id']}")
         # If an update to UserCanvas is detected, update the API4Conversation.dsl
         sync_dsl = req.get("sync_dsl", False)
         if sync_dsl is True and cvs[0].update_time > conv[0].update_time:
@@ -440,7 +440,7 @@ def agent_completions(tenant_id, agent_id):
 @token_required
 def list_session(tenant_id, chat_id):
     if not DialogService.query(tenant_id=tenant_id, id=chat_id, status=StatusEnum.VALID.value):
-        return get_error_data_result(message=f"You don't own the assistant {chat_id}.")
+        return get_error_data_result(message=f"您不拥有助手 {chat_id}。")
     id = request.args.get("id")
     name = request.args.get("name")
     page_number = int(request.args.get("page", 1))
@@ -493,7 +493,7 @@ def list_session(tenant_id, chat_id):
 @token_required
 def list_agent_session(tenant_id, agent_id):
     if not UserCanvasService.query(user_id=tenant_id, id=agent_id):
-        return get_error_data_result(message=f"You don't own the agent {agent_id}.")
+        return get_error_data_result(message=f"您不拥有代理 {agent_id}。")
     id = request.args.get("id")
     user_id = request.args.get("user_id")
     page_number = int(request.args.get("page", 1))
@@ -546,7 +546,7 @@ def list_agent_session(tenant_id, agent_id):
 @token_required
 def delete(tenant_id, chat_id):
     if not DialogService.query(id=chat_id, tenant_id=tenant_id, status=StatusEnum.VALID.value):
-        return get_error_data_result(message="You don't own the chat")
+        return get_error_data_result(message="您不拥有聊天")
     
     errors = []
     success_count = 0
@@ -570,7 +570,7 @@ def delete(tenant_id, chat_id):
     for id in conv_list:
         conv = ConversationService.query(id=id, dialog_id=chat_id)
         if not conv:
-            errors.append(f"The chat doesn't own the session {id}")
+            errors.append(f"聊天不拥有会话 {id}")
             continue
         ConversationService.delete_by_id(id)
         success_count += 1
@@ -579,7 +579,7 @@ def delete(tenant_id, chat_id):
         if success_count > 0:
             return get_result(
                 data={"success_count": success_count, "errors": errors},
-                message=f"Partially deleted {success_count} sessions with {len(errors)} errors"
+                message=f"部分删除 {success_count} 会话，错误数 {len(errors)}"
             )
         else:
             return get_error_data_result(message="; ".join(errors))
@@ -587,7 +587,7 @@ def delete(tenant_id, chat_id):
     if duplicate_messages:
         if success_count > 0:
             return get_result(
-                message=f"Partially deleted {success_count} sessions with {len(duplicate_messages)} errors", 
+                message=f"部分删除 {success_count} 会话，错误数 {len(duplicate_messages)}", 
                 data={"success_count": success_count, "errors": duplicate_messages}
             )
         else:
@@ -604,11 +604,11 @@ def delete_agent_session(tenant_id, agent_id):
     req = request.json
     cvs = UserCanvasService.query(user_id=tenant_id, id=agent_id)
     if not cvs:
-        return get_error_data_result(f"You don't own the agent {agent_id}")
+        return get_error_data_result(f"您不拥有代理 {agent_id}")
 
     convs = API4ConversationService.query(dialog_id=agent_id)
     if not convs:
-        return get_error_data_result(f"Agent {agent_id} has no sessions")
+        return get_error_data_result(f"代理 {agent_id} 没有会话")
 
     if not req:
         ids = None
@@ -628,7 +628,7 @@ def delete_agent_session(tenant_id, agent_id):
     for session_id in conv_list:
         conv = API4ConversationService.query(id=session_id, dialog_id=agent_id)
         if not conv:
-            errors.append(f"The agent doesn't own the session {session_id}")
+            errors.append(f"代理不拥有会话 {session_id}")
             continue
         API4ConversationService.delete_by_id(session_id)
         success_count += 1
@@ -637,7 +637,7 @@ def delete_agent_session(tenant_id, agent_id):
         if success_count > 0:
             return get_result(
                 data={"success_count": success_count, "errors": errors},
-                message=f"Partially deleted {success_count} sessions with {len(errors)} errors"
+                message=f"部分删除 {success_count} 会话，错误数 {len(errors)}"
             )
         else:
             return get_error_data_result(message="; ".join(errors))
@@ -645,7 +645,7 @@ def delete_agent_session(tenant_id, agent_id):
     if duplicate_messages:
         if success_count > 0:
             return get_result(
-                message=f"Partially deleted {success_count} sessions with {len(duplicate_messages)} errors", 
+                message=f"部分删除 {success_count} 会话，错误数 {len(duplicate_messages)}", 
                 data={"success_count": success_count, "errors": duplicate_messages}
             )
         else:
@@ -659,19 +659,19 @@ def delete_agent_session(tenant_id, agent_id):
 def ask_about(tenant_id):
     req = request.json
     if not req.get("question"):
-        return get_error_data_result("`question` is required.")
+        return get_error_data_result("问题是必需的。")
     if not req.get("dataset_ids"):
-        return get_error_data_result("`dataset_ids` is required.")
+        return get_error_data_result("数据集ID是必需的。")
     if not isinstance(req.get("dataset_ids"), list):
-        return get_error_data_result("`dataset_ids` should be a list.")
+        return get_error_data_result("数据集ID应为列表。")
     req["kb_ids"] = req.pop("dataset_ids")
     for kb_id in req["kb_ids"]:
         if not KnowledgebaseService.accessible(kb_id, tenant_id):
-            return get_error_data_result(f"You don't own the dataset {kb_id}.")
+            return get_error_data_result(f"您不拥有数据集 {kb_id}。")
         kbs = KnowledgebaseService.query(id=kb_id)
         kb = kbs[0]
         if kb.chunk_num == 0:
-            return get_error_data_result(f"The dataset {kb_id} doesn't own parsed file")
+            return get_error_data_result(f"数据集 {kb_id} 没有已解析的文件")
     uid = tenant_id
 
     def stream():
@@ -680,7 +680,7 @@ def ask_about(tenant_id):
             for ans in ask(req["question"], req["kb_ids"], uid):
                 yield "data:" + json.dumps({"code": 0, "message": "", "data": ans}, ensure_ascii=False) + "\n\n"
         except Exception as e:
-            yield "data:" + json.dumps({"code": 500, "message": str(e), "data": {"answer": "**ERROR**: " + str(e), "reference": []}}, ensure_ascii=False) + "\n\n"
+            yield "data:" + json.dumps({"code": 500, "message": str(e), "data": {"answer": "**错误**: " + str(e), "reference": []}}, ensure_ascii=False) + "\n\n"
         yield "data:" + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False) + "\n\n"
 
     resp = Response(stream(), mimetype="text/event-stream")
@@ -696,7 +696,7 @@ def ask_about(tenant_id):
 def related_questions(tenant_id):
     req = request.json
     if not req.get("question"):
-        return get_error_data_result("`question` is required.")
+        return get_error_data_result("问题是必需的。")
     question = req["question"]
     chat_mdl = LLMBundle(tenant_id, LLMType.CHAT)
     prompt = """

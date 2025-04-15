@@ -198,7 +198,7 @@ def new_token():
     try:
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="未找到租户!")
 
         tenant_id = [tenant for tenant in tenants if tenant.role == 'owner'][0].tenant_id
         obj = {
@@ -212,7 +212,7 @@ def new_token():
         }
 
         if not APITokenService.save(**obj):
-            return get_data_error_result(message="Fail to new a dialog!")
+            return get_data_error_result(message="新建对话失败!")
 
         return get_json_result(data=obj)
     except Exception as e:
@@ -253,7 +253,7 @@ def token_list():
     try:
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="未找到租户!")
 
         tenant_id = [tenant for tenant in tenants if tenant.role == 'owner'][0].tenant_id
         objs = APITokenService.query(tenant_id=tenant_id)

@@ -54,7 +54,7 @@ def new_token():
     try:
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="租户未找到！")
 
         tenant_id = tenants[0].tenant_id
         obj = {"tenant_id": tenant_id, "token": generate_confirmation_token(tenant_id),
@@ -70,7 +70,7 @@ def new_token():
             obj["dialog_id"] = req["dialog_id"]
 
         if not APITokenService.save(**obj):
-            return get_data_error_result(message="Fail to new a dialog!")
+            return get_data_error_result(message="创建对话失败！")
 
         return get_json_result(data=obj)
     except Exception as e:
@@ -83,7 +83,7 @@ def token_list():
     try:
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="租户未找到！")
 
         id = request.args["dialog_id"] if "dialog_id" in request.args else request.args["canvas_id"]
         objs = APITokenService.query(tenant_id=tenants[0].tenant_id, dialog_id=id)
@@ -112,7 +112,7 @@ def stats():
     try:
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="租户未找到！")
         objs = API4ConversationService.stats(
             tenants[0].tenant_id,
             request.args.get(
@@ -143,12 +143,12 @@ def set_conversation():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
     try:
         if objs[0].source == "agent":
             e, cvs = UserCanvasService.get_by_id(objs[0].dialog_id)
             if not e:
-                return server_error_response("canvas not found.")
+                return server_error_response("未找到画布。")
             if not isinstance(cvs.dsl, str):
                 cvs.dsl = json.dumps(cvs.dsl, ensure_ascii=False)
             canvas = Canvas(cvs.dsl, objs[0].tenant_id)
@@ -164,7 +164,7 @@ def set_conversation():
         else:
             e, dia = DialogService.get_by_id(objs[0].dialog_id)
             if not e:
-                return get_data_error_result(message="Dialog not found")
+                return get_data_error_result(message="对话未找到！")
             conv = {
                 "id": get_uuid(),
                 "dialog_id": dia.id,
@@ -184,11 +184,11 @@ def completion():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
     req = request.json
     e, conv = API4ConversationService.get_by_id(req["conversation_id"])
     if not e:
-        return get_data_error_result(message="Conversation not found!")
+        return get_data_error_result(message="对话未找到！")
     if "quote" not in req:
         req["quote"] = False
 
@@ -227,7 +227,7 @@ def completion():
             conv.message.append(msg[-1])
             e, cvs = UserCanvasService.get_by_id(conv.dialog_id)
             if not e:
-                return server_error_response("canvas not found.")
+                return server_error_response("未找到画布。")
             del req["conversation_id"]
             del req["messages"]
 
@@ -271,7 +271,7 @@ def completion():
                         API4ConversationService.append_message(conv.id, conv.to_dict())
                     except Exception as e:
                         yield "data:" + json.dumps({"code": 500, "message": str(e),
-                                                    "data": {"answer": "**ERROR**: " + str(e), "reference": []}},
+                                                    "data": {"answer": "**错误**: " + str(e), "reference": []}},
                                                    ensure_ascii=False) + "\n\n"
                     yield "data:" + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False) + "\n\n"
 
@@ -298,7 +298,7 @@ def completion():
         conv.message.append(msg[-1])
         e, dia = DialogService.get_by_id(conv.dialog_id)
         if not e:
-            return get_data_error_result(message="Dialog not found!")
+            return get_data_error_result(message="对话未找到！")
         del req["conversation_id"]
         del req["messages"]
 
@@ -318,7 +318,7 @@ def completion():
                 API4ConversationService.append_message(conv.id, conv.to_dict())
             except Exception as e:
                 yield "data:" + json.dumps({"code": 500, "message": str(e),
-                                            "data": {"answer": "**ERROR**: " + str(e), "reference": []}},
+                                            "data": {"answer": "**错误**: " + str(e), "reference": []}},
                                            ensure_ascii=False) + "\n\n"
             yield "data:" + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False) + "\n\n"
 
@@ -350,16 +350,16 @@ def get(conversation_id):
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
 
     try:
         e, conv = API4ConversationService.get_by_id(conversation_id)
         if not e:
-            return get_data_error_result(message="Conversation not found!")
+            return get_data_error_result(message="对话未找到！")
 
         conv = conv.to_dict()
         if token != APIToken.query(dialog_id=conv['dialog_id'])[0].token:
-            return get_json_result(data=False, message='Authentication error: API key is invalid for this conversation_id!"',
+            return get_json_result(data=False, message='身份验证错误：此对话ID的API密钥无效！"',
                                    code=settings.RetCode.AUTHENTICATION_ERROR)
 
         for referenct_i in conv['reference']:
@@ -381,7 +381,7 @@ def upload():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
 
     kb_name = request.form.get("kb_name").strip()
     tenant_id = objs[0].tenant_id
@@ -390,19 +390,19 @@ def upload():
         e, kb = KnowledgebaseService.get_by_name(kb_name, tenant_id)
         if not e:
             return get_data_error_result(
-                message="Can't find this knowledgebase!")
+                message="找不到此知识库！")
         kb_id = kb.id
     except Exception as e:
         return server_error_response(e)
 
     if 'file' not in request.files:
         return get_json_result(
-            data=False, message='No file part!', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='没有文件部分！', code=settings.RetCode.ARGUMENT_ERROR)
 
     file = request.files['file']
     if file.filename == '':
         return get_json_result(
-            data=False, message='No file selected!', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='未选择文件！', code=settings.RetCode.ARGUMENT_ERROR)
 
     root_folder = FileService.get_root_folder(tenant_id)
     pf_id = root_folder["id"]
@@ -413,7 +413,7 @@ def upload():
     try:
         if DocumentService.get_doc_count(kb.tenant_id) >= int(os.environ.get('MAX_FILE_NUM_PER_USER', 8192)):
             return get_data_error_result(
-                message="Exceed the maximum file number of a free user!")
+                message="超出免费用户的最大文件数量！")
 
         filename = duplicate_name(
             DocumentService.query,
@@ -422,7 +422,7 @@ def upload():
         filetype = filename_type(filename)
         if not filetype:
             return get_data_error_result(
-                message="This type of file has not been supported yet!")
+                message="此类型的文件尚未支持！")
 
         location = filename
         while STORAGE_IMPL.obj_exist(kb_id, location):
@@ -471,7 +471,7 @@ def upload():
                 # if str(req["run"]) == TaskStatus.CANCEL.value:
                 tenant_id = DocumentService.get_tenant_id(doc["id"])
                 if not tenant_id:
-                    return get_data_error_result(message="Tenant not found!")
+                    return get_data_error_result(message="租户未找到！")
 
                 # e, doc = DocumentService.get_by_id(doc["id"])
                 TaskService.filter_delete([Task.doc_id == doc["id"]])
@@ -493,17 +493,17 @@ def upload_parse():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
 
     if 'file' not in request.files:
         return get_json_result(
-            data=False, message='No file part!', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False, message='没有文件部分！', code=settings.RetCode.ARGUMENT_ERROR)
 
     file_objs = request.files.getlist('file')
     for file_obj in file_objs:
         if file_obj.filename == '':
             return get_json_result(
-                data=False, message='No file selected!', code=settings.RetCode.ARGUMENT_ERROR)
+                data=False, message='未选择文件！', code=settings.RetCode.ARGUMENT_ERROR)
 
     doc_ids = doc_upload_and_parse(request.form.get("conversation_id"), file_objs, objs[0].tenant_id)
     return get_json_result(data=doc_ids)
@@ -516,7 +516,7 @@ def list_chunks():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
 
     req = request.json
 
@@ -556,7 +556,7 @@ def list_kb_docs():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
 
     req = request.json
     tenant_id = objs[0].tenant_id
@@ -566,7 +566,7 @@ def list_kb_docs():
         e, kb = KnowledgebaseService.get_by_name(kb_name, tenant_id)
         if not e:
             return get_data_error_result(
-                message="Can't find this knowledgebase!")
+                message="找不到此知识库！")
         kb_id = kb.id
 
     except Exception as e:
@@ -596,7 +596,7 @@ def docinfos():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
     req = request.json
     doc_ids = req["doc_ids"]
     docs = DocumentService.get_by_ids(doc_ids)
@@ -610,7 +610,7 @@ def document_rm():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
 
     tenant_id = objs[0].tenant_id
     req = request.json
@@ -622,7 +622,7 @@ def document_rm():
 
         if not doc_ids:
             return get_json_result(
-                data=False, message="Can't find doc_names or doc_ids"
+                data=False, message="找不到文档名称或文档ID"
             )
 
     except Exception as e:
@@ -637,16 +637,16 @@ def document_rm():
         try:
             e, doc = DocumentService.get_by_id(doc_id)
             if not e:
-                return get_data_error_result(message="Document not found!")
+                return get_data_error_result(message="文档未找到！")
             tenant_id = DocumentService.get_tenant_id(doc_id)
             if not tenant_id:
-                return get_data_error_result(message="Tenant not found!")
+                return get_data_error_result(message="租户未找到！")
 
             b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
 
             if not DocumentService.remove_document(doc, tenant_id):
                 return get_data_error_result(
-                    message="Database error (Document removal)!")
+                    message="数据库错误（文档删除）！")
 
             f2d = File2DocumentService.get_by_document_id(doc_id)
             FileService.filter_delete([File.source_type == FileSource.KNOWLEDGEBASE, File.id == f2d[0].file_id])
@@ -672,11 +672,11 @@ def completion_faq():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
 
     e, conv = API4ConversationService.get_by_id(req["conversation_id"])
     if not e:
-        return get_data_error_result(message="Conversation not found!")
+        return get_data_error_result(message="对话未找到！")
     if "quote" not in req:
         req["quote"] = True
 
@@ -700,7 +700,7 @@ def completion_faq():
             conv.message.append(msg[-1])
             e, cvs = UserCanvasService.get_by_id(conv.dialog_id)
             if not e:
-                return server_error_response("canvas not found.")
+                return server_error_response("未找到画布。")
 
             if not isinstance(cvs.dsl, str):
                 cvs.dsl = json.dumps(cvs.dsl, ensure_ascii=False)
@@ -759,7 +759,7 @@ def completion_faq():
         conv.message.append(msg[-1])
         e, dia = DialogService.get_by_id(conv.dialog_id)
         if not e:
-            return get_data_error_result(message="Dialog not found!")
+            return get_data_error_result(message="对话未找到！")
         del req["conversation_id"]
 
         if not conv.reference:
@@ -811,7 +811,7 @@ def retrieval():
     objs = APIToken.query(token=token)
     if not objs:
         return get_json_result(
-            data=False, message='Authentication error: API key is invalid!"', code=settings.RetCode.AUTHENTICATION_ERROR)
+            data=False, message='身份验证错误：API密钥无效！"', code=settings.RetCode.AUTHENTICATION_ERROR)
 
     req = request.json
     kb_ids = req.get("kb_id", [])
@@ -828,7 +828,7 @@ def retrieval():
         embd_nms = list(set([kb.embd_id for kb in kbs]))
         if len(embd_nms) != 1:
             return get_json_result(
-                data=False, message='Knowledge bases use different embedding models or does not exist."',
+                data=False, message='知识库使用不同的嵌入模型或者不存在。"',
                 code=settings.RetCode.AUTHENTICATION_ERROR)
 
         embd_mdl = TenantLLMService.model_instance(
@@ -849,6 +849,6 @@ def retrieval():
         return get_json_result(data=ranks)
     except Exception as e:
         if str(e).find("not_found") > 0:
-            return get_json_result(data=False, message='No chunk found! Check the chunk status please!',
+            return get_json_result(data=False, message='未找到分块！请检查分块状态！',
                                    code=settings.RetCode.DATA_ERROR)
         return server_error_response(e)

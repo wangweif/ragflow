@@ -77,7 +77,7 @@ def login():
     """
     if not request.json:
         return get_json_result(
-            data=False, code=settings.RetCode.AUTHENTICATION_ERROR, message="Unauthorized!"
+            data=False, code=settings.RetCode.AUTHENTICATION_ERROR, message="未授权!"
         )
 
     email = request.json.get("email", "")
@@ -86,7 +86,7 @@ def login():
         return get_json_result(
             data=False,
             code=settings.RetCode.AUTHENTICATION_ERROR,
-            message=f"Email: {email} is not registered!",
+            message=f"邮箱: {email} 未注册!",
         )
 
     password = request.json.get("password")
@@ -94,7 +94,7 @@ def login():
         password = decrypt(password)
     except BaseException:
         return get_json_result(
-            data=False, code=settings.RetCode.SERVER_ERROR, message="Fail to crypt password"
+            data=False, code=settings.RetCode.SERVER_ERROR, message="加密密码失败"
         )
 
     user = UserService.query_user(email, password)
@@ -105,13 +105,13 @@ def login():
         user.update_time = (current_timestamp(),)
         user.update_date = (datetime_format(datetime.now()),)
         user.save()
-        msg = "Welcome back!"
+        msg = "欢迎回来!"
         return construct_response(data=response_data, auth=user.get_id(), message=msg)
     else:
         return get_json_result(
             data=False,
             code=settings.RetCode.AUTHENTICATION_ERROR,
-            message="Email and password do not match!",
+            message="邮箱和密码不匹配!",
         )
 
 
@@ -397,7 +397,7 @@ def setting_user():
             return get_json_result(
                 data=False,
                 code=settings.RetCode.AUTHENTICATION_ERROR,
-                message="Password error!",
+                message="密码错误!",
             )
 
         if new_password:
@@ -425,7 +425,7 @@ def setting_user():
     except Exception as e:
         logging.exception(e)
         return get_json_result(
-            data=False, message="Update failure!", code=settings.RetCode.EXCEPTION_ERROR
+            data=False, message="更新失败!", code=settings.RetCode.EXCEPTION_ERROR
         )
 
 
@@ -566,7 +566,7 @@ def user_add():
     if not settings.REGISTER_ENABLED:
         return get_json_result(
             data=False,
-            message="User registration is disabled!",
+            message="用户注册已禁用!",
             code=settings.RetCode.OPERATING_ERROR,
         )
 
@@ -577,7 +577,7 @@ def user_add():
     if not re.match(r"^[\w\._-]+@([\w_-]+\.)+[\w-]{2,}$", email_address):
         return get_json_result(
             data=False,
-            message=f"Invalid email address: {email_address}!",
+            message=f"无效的邮箱: {email_address}!",
             code=settings.RetCode.OPERATING_ERROR,
         )
 
@@ -585,7 +585,7 @@ def user_add():
     if UserService.query(email=email_address):
         return get_json_result(
             data=False,
-            message=f"Email: {email_address} has already registered!",
+            message=f"邮箱: {email_address} 已注册!",
             code=settings.RetCode.OPERATING_ERROR,
         )
 
@@ -613,14 +613,14 @@ def user_add():
         return construct_response(
             data=user.to_json(),
             auth=user.get_id(),
-            message=f"{nickname}, welcome aboard!",
+            message=f"{nickname}, 欢迎!",
         )
     except Exception as e:
         rollback_user_registration(user_id)
         logging.exception(e)
         return get_json_result(
             data=False,
-            message=f"User registration failure, error: {str(e)}",
+            message=f"用户注册失败, error: {str(e)}",
             code=settings.RetCode.EXCEPTION_ERROR,
         )
 
@@ -657,7 +657,7 @@ def tenant_info():
     try:
         tenants = TenantService.get_info_by(current_user.id)
         if not tenants:
-            return get_data_error_result(message="Tenant not found!")
+            return get_data_error_result(message="未找到租户!")
         return get_json_result(data=tenants[0])
     except Exception as e:
         return server_error_response(e)
