@@ -214,12 +214,13 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
     setSearchValue(e.target.value);
   };
 
-  // 初始化部门展开状态，默认全部展开
+  // 初始化部门展开状态，默认全部展开，但成员为0的部门默认折叠
   useEffect(() => {
     if (teams.length > 0) {
       const initialExpandState: Record<string, boolean> = {};
       teams.forEach((team) => {
-        initialExpandState[team.id] = true; // 默认展开
+        // 成员数量为0的部门默认折叠，其他部门默认展开
+        initialExpandState[team.id] = team.members.length > 0;
       });
       setExpandedTeams(initialExpandState);
     }
@@ -241,120 +242,127 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
 
     return (
       <div className={styles.teamsContainer}>
-        {teams.map((team) => (
-          <Card
-            key={`team-${team.id}`}
-            title={
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleTeamExpand(team.id);
-                }}
-              >
+        {teams.map((team) => {
+          const hasMember = team.members?.length > 0;
+
+          return (
+            <Card
+              key={`team-${team.id}`}
+              title={
                 <div
                   style={{
-                    marginRight: 8,
                     display: 'flex',
                     alignItems: 'center',
+                    cursor: hasMember ? 'pointer' : 'default',
+                  }}
+                  onClick={(e) => {
+                    if (!hasMember) return; // 如果没有成员，点击不触发展开/折叠
+                    e.stopPropagation();
+                    toggleTeamExpand(team.id);
                   }}
                 >
-                  {expandedTeams[team.id] ? (
-                    <DownOutlined />
-                  ) : (
-                    <RightOutlined />
-                  )}
-                </div>
-                <span>
-                  {team.name ||
-                    team.nickname ||
-                    `部门 ${team.tenant_id.slice(0, 6)}`}
-                </span>
-                <Text
-                  type="secondary"
-                  style={{ fontSize: '12px', marginLeft: 8 }}
-                >
-                  ({team.members?.length || 0}人)
-                </Text>
-              </div>
-            }
-            bodyStyle={{
-              padding: expandedTeams[team.id] ? '12px' : 0,
-              height: expandedTeams[team.id] ? 'auto' : 0,
-              overflow: 'hidden',
-            }}
-          >
-            {expandedTeams[team.id] && (
-              <div className={styles.membersContainer}>
-                {team.members.map((member: any) => {
-                  // 从本地状态获取当前权限值
-                  const permValue =
-                    memberPermValues[member.id] || `member-${member.id}-none`;
-
-                  return (
+                  {hasMember && (
                     <div
-                      key={`member-${member.id}`}
-                      className={styles.memberItem}
+                      style={{
+                        marginRight: 8,
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
                     >
-                      <div className={styles.memberInfo}>
-                        <span>{member.nickname || member.email}</span>
-                        {member.role === 'owner' && (
-                          <Text
-                            type="secondary"
-                            style={{ fontSize: '12px', marginLeft: '8px' }}
-                          >
-                            (部门拥有者)
-                          </Text>
-                        )}
-                      </div>
-                      <div className={styles.radioWrapper}>
-                        <div
-                          className={`${styles.radioItem} ${permValue === `member-${member.id}-read` ? styles.radioSelected : ''}`}
-                          onClick={() => handlePermChange(member.id, 'read')}
-                        >
-                          <div className={styles.radioCircle}>
-                            {permValue === `member-${member.id}-read` && (
-                              <div className={styles.radioInner} />
-                            )}
-                          </div>
-                          <span>只读</span>
-                        </div>
-
-                        <div
-                          className={`${styles.radioItem} ${permValue === `member-${member.id}-write` ? styles.radioSelected : ''}`}
-                          onClick={() => handlePermChange(member.id, 'write')}
-                        >
-                          <div className={styles.radioCircle}>
-                            {permValue === `member-${member.id}-write` && (
-                              <div className={styles.radioInner} />
-                            )}
-                          </div>
-                          <span>读写</span>
-                        </div>
-
-                        <div
-                          className={`${styles.radioItem} ${permValue === `member-${member.id}-none` ? styles.radioSelected : ''}`}
-                          onClick={() => handlePermChange(member.id, 'none')}
-                        >
-                          <div className={styles.radioCircle}>
-                            {permValue === `member-${member.id}-none` && (
-                              <div className={styles.radioInner} />
-                            )}
-                          </div>
-                          <span>无权限</span>
-                        </div>
-                      </div>
+                      {expandedTeams[team.id] ? (
+                        <DownOutlined />
+                      ) : (
+                        <RightOutlined />
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </Card>
-        ))}
+                  )}
+                  <span>{team.name}</span>
+                  <Text
+                    type="secondary"
+                    style={{ fontSize: '12px', marginLeft: 8 }}
+                  >
+                    ({team.members?.length || 0}人)
+                  </Text>
+                </div>
+              }
+              bodyStyle={{
+                padding: expandedTeams[team.id] ? '12px' : 0,
+                height: expandedTeams[team.id] ? 'auto' : 0,
+                overflow: 'hidden',
+              }}
+            >
+              {expandedTeams[team.id] && hasMember && (
+                <div className={styles.membersContainer}>
+                  {team.members.map((member: any) => {
+                    // 从本地状态获取当前权限值
+                    const permValue =
+                      memberPermValues[member.id] || `member-${member.id}-none`;
+
+                    return (
+                      <div
+                        key={`member-${member.id}`}
+                        className={styles.memberItem}
+                      >
+                        <div className={styles.memberInfo}>
+                          <span>{member.nickname}</span>
+                        </div>
+                        <div className={styles.radioWrapper}>
+                          <div
+                            className={`${styles.radioItem} ${
+                              permValue === `member-${member.id}-read`
+                                ? styles.radioSelected
+                                : ''
+                            }`}
+                            onClick={() => handlePermChange(member.id, 'read')}
+                          >
+                            <div className={styles.radioCircle}>
+                              {permValue === `member-${member.id}-read` && (
+                                <div className={styles.radioInner} />
+                              )}
+                            </div>
+                            <span>只读</span>
+                          </div>
+
+                          <div
+                            className={`${styles.radioItem} ${
+                              permValue === `member-${member.id}-write`
+                                ? styles.radioSelected
+                                : ''
+                            }`}
+                            onClick={() => handlePermChange(member.id, 'write')}
+                          >
+                            <div className={styles.radioCircle}>
+                              {permValue === `member-${member.id}-write` && (
+                                <div className={styles.radioInner} />
+                              )}
+                            </div>
+                            <span>读写</span>
+                          </div>
+
+                          <div
+                            className={`${styles.radioItem} ${
+                              permValue === `member-${member.id}-none`
+                                ? styles.radioSelected
+                                : ''
+                            }`}
+                            onClick={() => handlePermChange(member.id, 'none')}
+                          >
+                            <div className={styles.radioCircle}>
+                              {permValue === `member-${member.id}-none` && (
+                                <div className={styles.radioInner} />
+                              )}
+                            </div>
+                            <span>无权限</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
     );
   };
