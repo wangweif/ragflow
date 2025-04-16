@@ -5,11 +5,11 @@ import { normFile } from '@/utils/file-util';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   Button,
+  Card,
   Form,
   Input,
   Space,
   Spin,
-  Tree,
   Typography,
   Upload,
 } from 'antd';
@@ -121,6 +121,9 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   const parserId: DocumentParserType = Form.useWatch('parser_id', form);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState('');
+  const [memberPermValues, setMemberPermValues] = useState<
+    Record<string, string>
+  >({});
 
   const ConfigurationComponent = useMemo(() => {
     return finalParserId
@@ -139,96 +142,67 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   // 根据后端返回的权限数据设置初始选中状态
   useEffect(() => {
     if (checkedKeys && checkedKeys.length > 0) {
-      setSelectedMembers(checkedKeys);
-      form.setFieldsValue({ selectedMembers: checkedKeys });
+      // 处理权限互斥：对于每个用户，如果同时存在读和写权限，只保留写权限
+      const processedKeys = [...checkedKeys];
+      const userPermMap = new Map();
+      const newMemberPermValues: Record<string, string> = {};
+
+      // 找出所有用户的最高权限
+      processedKeys.forEach((key) => {
+        if (key.includes('-read') || key.includes('-write')) {
+          const [, userId, permType] = key.split('-');
+          const existingPerm = userPermMap.get(userId);
+
+          // 如果已经有写权限，或者当前是写权限，更新为写权限
+          if (existingPerm === 'write' || permType === 'write') {
+            userPermMap.set(userId, 'write');
+            newMemberPermValues[userId] = `member-${userId}-write`;
+          } else {
+            userPermMap.set(userId, 'read');
+            newMemberPermValues[userId] = `member-${userId}-read`;
+          }
+        }
+      });
+
+      // 根据最高权限重新构建选中键列表
+      const newSelectedKeys = processedKeys.filter((key) => {
+        if (!key.includes('-read') && !key.includes('-write')) {
+          return true; // 保留非权限键
+        }
+
+        const [, userId, permType] = key.split('-');
+        const highestPerm = userPermMap.get(userId);
+
+        // 只保留最高权限的键
+        return permType === highestPerm;
+      });
+
+      setSelectedMembers(newSelectedKeys);
+      setMemberPermValues(newMemberPermValues);
+      form.setFieldsValue({ selectedMembers: newSelectedKeys });
     }
   }, [checkedKeys, form]);
 
-  // 根据团队数据和权限信息生成树形结构数据
-  const treeData = useMemo(() => {
-    if (!teams.length) return [];
+  // 处理权限选择变更
+  const handlePermChange = (
+    memberId: string,
+    permType: 'none' | 'read' | 'write',
+  ) => {
+    // 更新本地状态
+    const newMemberPermValues = { ...memberPermValues };
 
-    return teams.map((team) => {
-      return {
-        title: (
-          <Space>
-            {/* <TeamOutlined /> */}
-            <span>
-              {team.name ||
-                team.nickname ||
-                `部门 ${team.tenant_id.slice(0, 6)}`}
-            </span>
-            <Text type="secondary" style={{ fontSize: '12px' }}>
-              ({team.members?.length || 0}人)
-            </Text>
-          </Space>
-        ),
-        key: `team-${team.id}`,
-        value: 'team',
-        children: team.members.map((member: any) => {
-          // 获取该成员的权限信息
-          const memberPermissions = permissions.filter(
-            (p: any) => p.user_id === member.id,
-          );
-          const hasReadPermission = memberPermissions.some(
-            (p: any) => p.permission_type === 'read',
-          );
-          const hasWritePermission = memberPermissions.some(
-            (p: any) => p.permission_type === 'write',
-          );
+    if (permType === 'none') {
+      delete newMemberPermValues[memberId];
+    } else {
+      newMemberPermValues[memberId] = `member-${memberId}-${permType}`;
+    }
 
-          return {
-            title: (
-              <Space>
-                {/* <UserOutlined /> */}
-                <span>{member.nickname || member.email}</span>
-                {member.role === 'owner' && (
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                    (部门拥有者)
-                  </Text>
-                )}
-              </Space>
-            ),
-            // 成员权限：可读、可写
-            children: [
-              {
-                title: '可读',
-                key: `member-${member.id}-read`,
-                value: 'read',
-                checked: hasReadPermission, // 如果已有读权限则禁用
-              },
-              {
-                title: '可写',
-                key: `member-${member.id}-write`,
-                value: 'write',
-                checked: hasWritePermission, // 如果已有写权限则禁用
-              },
-            ],
-            key: `member-${member.id}`,
-            value: member.id,
-            isLeaf: true,
-          };
-        }),
-      };
-    });
-  }, [teams, permissions]);
+    setMemberPermValues(newMemberPermValues);
 
-  // 处理权限选择变化
-  // const handlePermissionChange = (e: any) => {
-  //   const value = e.target.value;
-  //   form.setFieldsValue({ permission: value });
-
-  //   // 如果选择"me"，清空已选成员
-  //   if (value === 'me') {
-  //     setSelectedMembers([]);
-  //     form.setFieldsValue({ selectedMembers: [] });
-  //   }
-  // };
-
-  // 处理树选择变化
-  const handleTreeSelect = (selectedKeys: any) => {
-    setSelectedMembers(selectedKeys);
-    form.setFieldsValue({ selectedMembers: selectedKeys });
+    // 更新选中的权限列表
+    const newSelectedKeys = Object.values(newMemberPermValues);
+    setSelectedMembers(newSelectedKeys);
+    form.setFieldsValue({ selectedMembers: newSelectedKeys });
   };
 
   // 处理搜索变化
@@ -236,27 +210,101 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
     setSearchValue(e.target.value);
   };
 
-  // 处理树搜索过滤
-  const treeSearchFilter = (node: any) => {
-    if (!searchValue) return true;
-
-    const searchLower = searchValue.toLowerCase();
-    const titleContent =
-      node.title?.props?.children?.[1]?.props?.children?.toLowerCase() || '';
-
-    if (titleContent.includes(searchLower)) return true;
-
-    // 如果是团队节点，检查它的成员是否匹配
-    if (node.children) {
-      return node.children.some((child: any) => {
-        const childTitleContent =
-          child.title?.props?.children?.[1]?.props?.children?.toLowerCase() ||
-          '';
-        return childTitleContent.includes(searchLower);
-      });
+  // 自定义渲染成员和权限选择
+  const renderTeamMembers = () => {
+    if (!teams.length) {
+      return <Text type="secondary">{'没有可用的部门'}</Text>;
     }
 
-    return false;
+    return (
+      <div className={styles.teamsContainer}>
+        {teams.map((team) => (
+          <Card
+            key={`team-${team.id}`}
+            title={
+              <div>
+                <span>
+                  {team.name ||
+                    team.nickname ||
+                    `部门 ${team.tenant_id.slice(0, 6)}`}
+                </span>
+                <Text
+                  type="secondary"
+                  style={{ fontSize: '12px', marginLeft: 8 }}
+                >
+                  ({team.members?.length || 0}人)
+                </Text>
+              </div>
+            }
+            style={{ marginBottom: 16 }}
+          >
+            <div className={styles.membersContainer}>
+              {team.members.map((member: any) => {
+                // 从本地状态获取当前权限值
+                const permValue =
+                  memberPermValues[member.id] || `member-${member.id}-none`;
+
+                return (
+                  <div
+                    key={`member-${member.id}`}
+                    className={styles.memberItem}
+                  >
+                    <div className={styles.memberInfo}>
+                      <span>{member.nickname || member.email}</span>
+                      {member.role === 'owner' && (
+                        <Text
+                          type="secondary"
+                          style={{ fontSize: '12px', marginLeft: '8px' }}
+                        >
+                          (部门拥有者)
+                        </Text>
+                      )}
+                    </div>
+                    <div className={styles.radioWrapper}>
+                      <div
+                        className={`${styles.radioItem} ${permValue === `member-${member.id}-read` ? styles.radioSelected : ''}`}
+                        onClick={() => handlePermChange(member.id, 'read')}
+                      >
+                        <div className={styles.radioCircle}>
+                          {permValue === `member-${member.id}-read` && (
+                            <div className={styles.radioInner} />
+                          )}
+                        </div>
+                        <span>只读</span>
+                      </div>
+
+                      <div
+                        className={`${styles.radioItem} ${permValue === `member-${member.id}-write` ? styles.radioSelected : ''}`}
+                        onClick={() => handlePermChange(member.id, 'write')}
+                      >
+                        <div className={styles.radioCircle}>
+                          {permValue === `member-${member.id}-write` && (
+                            <div className={styles.radioInner} />
+                          )}
+                        </div>
+                        <span>读写</span>
+                      </div>
+
+                      <div
+                        className={`${styles.radioItem} ${permValue === `member-${member.id}-none` ? styles.radioSelected : ''}`}
+                        onClick={() => handlePermChange(member.id, 'none')}
+                      >
+                        <div className={styles.radioCircle}>
+                          {permValue === `member-${member.id}-none` && (
+                            <div className={styles.radioInner} />
+                          )}
+                        </div>
+                        <span>无权限</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -285,47 +333,13 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
       <Form.Item name="description" label={'知识库描述'}>
         <Input />
       </Form.Item>
-      {/* <Form.Item
-        name="permission"
-        label={'权限'}
-        tooltip={'设置知识库的权限'}
-        rules={[{ required: true }]}
-      >
-      </Form.Item> */}
 
-      {/* 团队成员选择树 */}
-      {/* {permission === 'team' && ( */}
+      {/* 团队成员选择 - 自定义渲染 */}
       <Form.Item name="selectedMembers" label={'选择部门成员'}>
         <Spin spinning={teamsLoading || permissionsLoading}>
-          {treeData.length > 0 ? (
-            <div>
-              {/* <div className={styles.searchWrapper}>
-                <Input
-                  placeholder="搜索部门或成员"
-                  value={searchValue}
-                  onChange={handleSearchChange}
-                  prefix={<SearchOutlined />}
-                  allowClear
-                  style={{ marginBottom: '8px' }}
-                />
-              </div> */}
-              <Tree
-                checkable
-                selectable={false}
-                treeData={treeData}
-                onCheck={handleTreeSelect}
-                checkedKeys={selectedMembers}
-                defaultExpandAll
-                className={styles.memberTree}
-                filterTreeNode={treeSearchFilter}
-              />
-            </div>
-          ) : (
-            <Text type="secondary">{'没有可用的部门'}</Text>
-          )}
+          {renderTeamMembers()}
         </Spin>
       </Form.Item>
-      {/* )} */}
 
       <ConfigurationComponent></ConfigurationComponent>
 

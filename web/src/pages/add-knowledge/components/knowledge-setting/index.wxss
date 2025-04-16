@@ -37,6 +37,70 @@
   padding: 8px;
   background-color: #fafafa;
 }
+.configurationWrapper .teamsContainer {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+.configurationWrapper .membersContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.configurationWrapper .memberItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #fafafa;
+  border-radius: 4px;
+}
+.configurationWrapper .memberItem:hover {
+  background-color: #f0f0f0;
+}
+.configurationWrapper .memberInfo {
+  display: flex;
+  align-items: center;
+}
+.configurationWrapper .radioWrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.configurationWrapper .radioItem {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+.configurationWrapper .radioItem:hover {
+  background-color: #f0f0f0;
+}
+.configurationWrapper .radioSelected {
+  color: #1890ff;
+}
+.configurationWrapper .radioCircle {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 50%;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.configurationWrapper .radioCircle .radioInner {
+  width: 8px;
+  height: 8px;
+  background-color: #1890ff;
+  border-radius: 50%;
+}
+.configurationWrapper .radioSelected .radioCircle {
+  border-color: #1890ff;
+}
 .configurationWrapper .searchWrapper {
   margin-bottom: 8px;
 }

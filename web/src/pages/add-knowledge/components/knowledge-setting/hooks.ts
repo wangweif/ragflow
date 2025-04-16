@@ -103,6 +103,9 @@ export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
           result[userId] = new Set();
         }
         if (permission) {
+          if (permission === 'write') {
+            result[userId].add('read');
+          }
           result[userId].add(permission);
         }
       });
