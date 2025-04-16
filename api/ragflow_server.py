@@ -14,6 +14,13 @@
 #  limitations under the License.
 #
 
+import faulthandler
+import threading
+from datetime import datetime
+
+# 启用崩溃堆栈追踪
+faulthandler.enable()
+
 # from beartype import BeartypeConf
 # from beartype.claw import beartype_all  # <-- you didn't sign up for this
 # beartype_all(conf=BeartypeConf(violation_type=UserWarning))    # <-- emit warnings from all code
@@ -122,6 +129,19 @@ if __name__ == '__main__':
 
     thread = ThreadPoolExecutor(max_workers=1)
     thread.submit(update_progress)
+
+    # 创建崩溃日志目录
+    crash_log_dir = os.path.join(utils.file_utils.get_project_base_directory(), 'logs', 'crashes')
+    os.makedirs(crash_log_dir, exist_ok=True)
+    crash_log_path = os.path.join(crash_log_dir, f'crash-{datetime.now().strftime("%Y%m%d-%H%M%S")}.log')
+    faulthandler.enable(file=open(crash_log_path, 'w'))
+
+    # 添加线程异常处理器
+    def thread_excepthook(args):
+        logging.critical(f"线程 {args.thread} 异常退出: {args.exc_value}")
+        logging.critical(''.join(traceback.format_tb(args.exc_traceback)))
+
+    threading.excepthook = thread_excepthook
 
     # start http server
     try:

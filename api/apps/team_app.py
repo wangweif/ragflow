@@ -116,7 +116,7 @@ def update_team(team_id):
         team = TeamService.update_team(
             team_id=team_id,
             name=name,
-            description=description
+            # description=description
         )
         
         return get_json_result(data=team)

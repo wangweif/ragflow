@@ -100,15 +100,16 @@ class TeamService:
             
         return result
     
+    # description: str = None
+    # description: 新的团队描述
     @classmethod
-    def update_team(cls, team_id: str, name: str = None, description: str = None) -> Dict[str, Any]:
+    def update_team(cls, team_id: str, name: str = None) -> Dict[str, Any]:
         """
         更新团队信息
         
         Args:
             team_id: 团队ID
             name: 新的团队名称
-            description: 新的团队描述
             
         Returns:
             更新后的团队信息字典
@@ -130,17 +131,17 @@ class TeamService:
                     raise ValueError(f"团队名称 '{name}' 已存在")
                 team.name = name
             
-            if description is not None:
-                team.description = description
+            # if description is not None:
+                # team.description = description
             
             team.save()
             
             result = team.to_dict()
-            # 解析成员JSON数据
-            if team.members:
-                result['members'] = json.loads(team.members)
-            else:
-                result['members'] = {}
+            # # 解析成员JSON数据
+            # if team.members:
+            #     result['members'] = json.loads(team.members)
+            # else:
+            #     result['members'] = {}
                 
             return result
         except Exception as e:

@@ -8,7 +8,7 @@ import {
   useDeleteTenantUser,
   useFetchUserInfo,
   useRemoveTeamUser,
-  useUpdateTenant,
+  useUpdateTeam,
 } from '@/hooks/user-setting-hooks';
 import { addUser } from '@/services/user-service';
 import { Modal, message } from 'antd';
@@ -213,7 +213,7 @@ export const useHandleDeleteTeam = () => {
 
 export const useEditTeam = () => {
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
-  const { updateTenant, loading: updateLoading } = useUpdateTenant();
+  const { updateTeam, loading: updateLoading } = useUpdateTeam();
   const {
     visible: editTeamModalVisible,
     hideModal: hideEditTeamModal,
@@ -222,7 +222,7 @@ export const useEditTeam = () => {
 
   const startEditTeam = useCallback(
     (teamId: string) => {
-      console.log('teamId', teamId);
+      // console.log('teamIdAAAA', teamId);
       setEditingTeamId(teamId);
       showEditTeamModal();
     },
@@ -233,7 +233,7 @@ export const useEditTeam = () => {
     async (payload?: { name?: string }) => {
       if (payload?.name && editingTeamId) {
         try {
-          await updateTenant({ tenantId: editingTeamId, name: payload.name });
+          await updateTeam({ teamId: editingTeamId, name: payload.name });
           hideEditTeamModal();
           setEditingTeamId(null);
         } catch (error) {
@@ -245,7 +245,7 @@ export const useEditTeam = () => {
         }
       }
     },
-    [editingTeamId, hideEditTeamModal, updateTenant],
+    [editingTeamId, hideEditTeamModal, updateTeam],
   );
 
   return {

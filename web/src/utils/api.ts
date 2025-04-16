@@ -23,7 +23,7 @@ export default {
   listTenant: `${api_host}/tenant/list`,
   agreeTenant: (tenantId: string) => `${api_host}/tenant/agree/${tenantId}`,
   createTenant: `${api_host}/tenant/create`,
-  updateTenant: (tenantId: string) => `${api_host}/tenant/${tenantId}/update`,
+  updateTeam: (teamId: string) => `${api_host}/team/${teamId}`,
   deleteTeam: (teamId: string) => `${api_host}/team/delete/${teamId}`,
   listTeam: (tenantId: string) => `${api_host}/team/list?tenant_id=${tenantId}`,
   createTeam: `${api_host}/team`,

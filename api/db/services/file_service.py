@@ -474,8 +474,10 @@ class FileService(CommonService):
                 FileService.add_file_from_kb(doc, kb_folder["id"], kb.tenant_id)
                 files.append((doc, blob))
             except Exception as e:
-                err.append(file.filename + ": " + str(e))
-
+                if "No /Root object" in str(e) and filename.lower().endswith('.pdf'):
+                    err.append(f"{file.filename}: 抱歉，暂不支持解析该文件")
+                else:
+                    err.append(file.filename + ": " + str(e))
         return err, files
 
     @staticmethod

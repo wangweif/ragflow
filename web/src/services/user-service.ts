@@ -157,8 +157,8 @@ export const agreeTenant = (tenantId: string) =>
 export const createTeam = (tenant_id: string, name: string) =>
   request.post(api.createTeam, { data: { tenant_id, name } });
 
-export const updateTenant = (tenantId: string, name: string) =>
-  request.post(api.updateTenant(tenantId), { name });
+export const updateTeam = (teamId: string, name: string) =>
+  request.post(api.updateTeam(teamId), { data: { name } });
 
 export const deleteTeam = (teamId: string) =>
   request.post(api.deleteTeam(teamId));
