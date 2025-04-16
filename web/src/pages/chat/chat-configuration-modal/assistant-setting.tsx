@@ -73,7 +73,11 @@ const AssistantSetting = ({
       >
         <Input placeholder={t('namePlaceholder')} />
       </Form.Item>
-      <Form.Item name={'description'} label={t('description')}>
+      <Form.Item
+        name={'description'}
+        label={t('description')}
+        rules={[{ required: true, message: t('descriptionMessage') }]}
+      >
         <Input placeholder={t('descriptionPlaceholder')} />
       </Form.Item>
       <Form.Item
@@ -149,7 +153,7 @@ const AssistantSetting = ({
       </Form.Item>
       <TavilyItem></TavilyItem> */}
       <KnowledgeBaseItem
-        required={false}
+        required={true}
         onChange={handleChange}
       ></KnowledgeBaseItem>
     </section>

@@ -527,6 +527,7 @@ General：实体和关系提取提示来自 GitHub - microsoft/graphrag：基于
       description: '助理描述',
       descriptionPlaceholder:
         '例如 你是一个专业的简历助手，只能回答简历的问题。',
+      descriptionMessage: '助理描述是必填项',
       useKnowledgeGraph: '使用知识图谱',
       useKnowledgeGraphTip:
         '是否检索与所选知识库对应的知识图谱相关文本块，以处理复杂的多跳问题？这一过程将涉及对实体、关系和社区报告文本块的多次检索，会显著延长检索时间。',
