@@ -9,9 +9,8 @@ import { useFetchModelId } from '@/hooks/logic-hooks';
 import { IDialog } from '@/interfaces/database/chat';
 import { getBase64FromUploadFileList } from '@/utils/file-util';
 import { removeUselessFieldsFromValues } from '@/utils/form';
-import { Divider, Flex, Form, Modal, Segmented, UploadFile } from 'antd';
+import { Divider, Flex, Form, Modal, UploadFile } from 'antd';
 import { SegmentedValue } from 'antd/es/segmented';
-import camelCase from 'lodash/camelCase';
 import { useEffect, useRef, useState } from 'react';
 import { IPromptConfigParameters } from '../interface';
 import AssistantSetting from './assistant-setting';
@@ -153,7 +152,7 @@ const ChatConfigurationModal = ({
       destroyOnClose
       afterClose={handleModalAfterClose}
     >
-      <Segmented
+      {/* <Segmented
         size={'large'}
         value={value}
         onChange={handleSegmentedChange}
@@ -172,7 +171,7 @@ const ChatConfigurationModal = ({
           // }
         ]}
         block
-      />
+      /> */}
       <Divider></Divider>
       <Form
         {...layout}
@@ -185,7 +184,8 @@ const ChatConfigurationModal = ({
         {Object.entries(segmentedMap).map(([key, Element]) => (
           <Element
             key={key}
-            show={key === value}
+            // 这里原本是根据segmented选中的value来设置的，现在隐藏segmented，并写死为AssistantSetting
+            show={key === ConfigurationSegmented.AssistantSetting}
             form={form}
             setHasError={setHasError}
             {...(key === ConfigurationSegmented.ModelSetting

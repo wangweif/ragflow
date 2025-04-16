@@ -6,7 +6,6 @@ import {
   Flex,
   Modal,
   Progress,
-  Segmented,
   Tabs,
   TabsProps,
   Upload,
@@ -160,7 +159,7 @@ const FileUploadModal = ({
         afterClose={afterClose}
       >
         <Flex gap={'large'} vertical>
-          <Segmented
+          {/* <Segmented
             options={[
               { label: t('local'), value: 'local' },
               // { label: t('s3'), value: 's3' },
@@ -168,8 +167,9 @@ const FileUploadModal = ({
             block
             value={value}
             onChange={setValue}
-          />
-          {value === 'local' ? (
+          /> */}
+          {/* 这里原本是根据value来设置的，现在隐藏segmented，并写死为local */}
+          {'local' === 'local' ? (
             <>
               <Checkbox
                 checked={parseOnCreation}
