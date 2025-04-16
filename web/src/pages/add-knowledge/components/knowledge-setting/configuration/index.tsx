@@ -2,7 +2,7 @@ import { DocumentParserType } from '@/constants/knowledge';
 import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { listTeamByTenant, listTeamUser } from '@/services/user-service';
 import { normFile } from '@/utils/file-util';
-import { PlusOutlined } from '@ant-design/icons';
+import { DownOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
 import {
   Button,
   Card,
@@ -124,6 +124,10 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   const [memberPermValues, setMemberPermValues] = useState<
     Record<string, string>
   >({});
+  // 用于追踪每个部门的展开/折叠状态
+  const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const ConfigurationComponent = useMemo(() => {
     return finalParserId
@@ -210,6 +214,25 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
     setSearchValue(e.target.value);
   };
 
+  // 初始化部门展开状态，默认全部展开
+  useEffect(() => {
+    if (teams.length > 0) {
+      const initialExpandState: Record<string, boolean> = {};
+      teams.forEach((team) => {
+        initialExpandState[team.id] = true; // 默认展开
+      });
+      setExpandedTeams(initialExpandState);
+    }
+  }, [teams]);
+
+  // 处理展开/折叠
+  const toggleTeamExpand = (teamId: string) => {
+    setExpandedTeams((prev) => ({
+      ...prev,
+      [teamId]: !prev[teamId],
+    }));
+  };
+
   // 自定义渲染成员和权限选择
   const renderTeamMembers = () => {
     if (!teams.length) {
@@ -222,7 +245,30 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
           <Card
             key={`team-${team.id}`}
             title={
-              <div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleTeamExpand(team.id);
+                }}
+              >
+                <div
+                  style={{
+                    marginRight: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  {expandedTeams[team.id] ? (
+                    <DownOutlined />
+                  ) : (
+                    <RightOutlined />
+                  )}
+                </div>
                 <span>
                   {team.name ||
                     team.nickname ||
@@ -236,71 +282,77 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
                 </Text>
               </div>
             }
-            style={{ marginBottom: 16 }}
+            bodyStyle={{
+              padding: expandedTeams[team.id] ? '12px' : 0,
+              height: expandedTeams[team.id] ? 'auto' : 0,
+              overflow: 'hidden',
+            }}
           >
-            <div className={styles.membersContainer}>
-              {team.members.map((member: any) => {
-                // 从本地状态获取当前权限值
-                const permValue =
-                  memberPermValues[member.id] || `member-${member.id}-none`;
+            {expandedTeams[team.id] && (
+              <div className={styles.membersContainer}>
+                {team.members.map((member: any) => {
+                  // 从本地状态获取当前权限值
+                  const permValue =
+                    memberPermValues[member.id] || `member-${member.id}-none`;
 
-                return (
-                  <div
-                    key={`member-${member.id}`}
-                    className={styles.memberItem}
-                  >
-                    <div className={styles.memberInfo}>
-                      <span>{member.nickname || member.email}</span>
-                      {member.role === 'owner' && (
-                        <Text
-                          type="secondary"
-                          style={{ fontSize: '12px', marginLeft: '8px' }}
+                  return (
+                    <div
+                      key={`member-${member.id}`}
+                      className={styles.memberItem}
+                    >
+                      <div className={styles.memberInfo}>
+                        <span>{member.nickname || member.email}</span>
+                        {member.role === 'owner' && (
+                          <Text
+                            type="secondary"
+                            style={{ fontSize: '12px', marginLeft: '8px' }}
+                          >
+                            (部门拥有者)
+                          </Text>
+                        )}
+                      </div>
+                      <div className={styles.radioWrapper}>
+                        <div
+                          className={`${styles.radioItem} ${permValue === `member-${member.id}-read` ? styles.radioSelected : ''}`}
+                          onClick={() => handlePermChange(member.id, 'read')}
                         >
-                          (部门拥有者)
-                        </Text>
-                      )}
-                    </div>
-                    <div className={styles.radioWrapper}>
-                      <div
-                        className={`${styles.radioItem} ${permValue === `member-${member.id}-read` ? styles.radioSelected : ''}`}
-                        onClick={() => handlePermChange(member.id, 'read')}
-                      >
-                        <div className={styles.radioCircle}>
-                          {permValue === `member-${member.id}-read` && (
-                            <div className={styles.radioInner} />
-                          )}
+                          <div className={styles.radioCircle}>
+                            {permValue === `member-${member.id}-read` && (
+                              <div className={styles.radioInner} />
+                            )}
+                          </div>
+                          <span>只读</span>
                         </div>
-                        <span>只读</span>
-                      </div>
 
-                      <div
-                        className={`${styles.radioItem} ${permValue === `member-${member.id}-write` ? styles.radioSelected : ''}`}
-                        onClick={() => handlePermChange(member.id, 'write')}
-                      >
-                        <div className={styles.radioCircle}>
-                          {permValue === `member-${member.id}-write` && (
-                            <div className={styles.radioInner} />
-                          )}
+                        <div
+                          className={`${styles.radioItem} ${permValue === `member-${member.id}-write` ? styles.radioSelected : ''}`}
+                          onClick={() => handlePermChange(member.id, 'write')}
+                        >
+                          <div className={styles.radioCircle}>
+                            {permValue === `member-${member.id}-write` && (
+                              <div className={styles.radioInner} />
+                            )}
+                          </div>
+                          <span>读写</span>
                         </div>
-                        <span>读写</span>
-                      </div>
 
-                      <div
-                        className={`${styles.radioItem} ${permValue === `member-${member.id}-none` ? styles.radioSelected : ''}`}
-                        onClick={() => handlePermChange(member.id, 'none')}
-                      >
-                        <div className={styles.radioCircle}>
-                          {permValue === `member-${member.id}-none` && (
-                            <div className={styles.radioInner} />
-                          )}
+                        <div
+                          className={`${styles.radioItem} ${permValue === `member-${member.id}-none` ? styles.radioSelected : ''}`}
+                          onClick={() => handlePermChange(member.id, 'none')}
+                        >
+                          <div className={styles.radioCircle}>
+                            {permValue === `member-${member.id}-none` && (
+                              <div className={styles.radioInner} />
+                            )}
+                          </div>
+                          <span>无权限</span>
                         </div>
-                        <span>无权限</span>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         ))}
       </div>
