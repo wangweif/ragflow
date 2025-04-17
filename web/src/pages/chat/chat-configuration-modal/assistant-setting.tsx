@@ -89,7 +89,17 @@ const AssistantSetting = ({
         <Upload
           listType="picture-card"
           maxCount={1}
-          beforeUpload={() => false}
+          accept=".jpg,.jpeg,.png"
+          beforeUpload={(file) => {
+            const isValidFormat = ['image/jpeg', 'image/png'].includes(
+              file.type,
+            );
+            if (!isValidFormat) {
+              message.error('只能上传 JPG/PNG 格式的图片！');
+              return Upload.LIST_IGNORE; // 阻止非法文件显示在预览中
+            }
+            return false; // 阻止自动上传
+          }}
           showUploadList={{ showPreviewIcon: false, showRemoveIcon: false }}
         >
           {show ? uploadButton : null}

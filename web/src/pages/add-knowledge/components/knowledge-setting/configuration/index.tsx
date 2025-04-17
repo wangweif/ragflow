@@ -12,6 +12,7 @@ import {
   Spin,
   Typography,
   Upload,
+  message,
 } from 'antd';
 import { FormInstance } from 'antd/lib';
 import { useEffect, useMemo, useState } from 'react';
@@ -381,7 +382,17 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
         <Upload
           listType="picture-card"
           maxCount={1}
-          beforeUpload={() => false}
+          accept=".jpg,.jpeg,.png"
+          beforeUpload={(file) => {
+            const isValidFormat = ['image/jpeg', 'image/png'].includes(
+              file.type,
+            );
+            if (!isValidFormat) {
+              message.error('只能上传 JPG/PNG 格式的图片！');
+              return Upload.LIST_IGNORE;
+            }
+            return false;
+          }}
           showUploadList={{ showPreviewIcon: false, showRemoveIcon: false }}
         >
           <button style={{ border: 0, background: 'none' }} type="button">
