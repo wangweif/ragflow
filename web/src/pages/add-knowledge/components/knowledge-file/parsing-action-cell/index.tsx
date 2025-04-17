@@ -22,6 +22,7 @@ interface IProps {
   showRenameModal: () => void;
   showChangeParserModal: () => void;
   showSetMetaModal: () => void;
+  hasWritePermission?: boolean;
 }
 
 const ParsingActionCell = ({
@@ -30,6 +31,7 @@ const ParsingActionCell = ({
   showRenameModal,
   showChangeParserModal,
   showSetMetaModal,
+  hasWritePermission = false,
 }: IProps) => {
   const documentId = record.id;
   const isRunning = isParserRunning(record.run);
@@ -105,7 +107,7 @@ const ParsingActionCell = ({
 
   return (
     <Space size={0}>
-      {isVirtualDocument || !isAdmin || (
+      {isVirtualDocument || !isAdmin || !hasWritePermission || (
         <Dropdown
           menu={{ items: chunkItems }}
           trigger={['click']}
@@ -116,26 +118,30 @@ const ParsingActionCell = ({
           </Button>
         </Dropdown>
       )}
-      <Tooltip title={t('rename', { keyPrefix: 'common' })}>
-        <Button
-          type="text"
-          disabled={isRunning}
-          onClick={onShowRenameModal}
-          className={styles.iconButton}
-        >
-          <EditOutlined size={20} />
-        </Button>
-      </Tooltip>
-      <Tooltip title={t('delete', { keyPrefix: 'common' })}>
-        <Button
-          type="text"
-          disabled={isRunning}
-          onClick={onRmDocument}
-          className={styles.iconButton}
-        >
-          <DeleteOutlined size={20} />
-        </Button>
-      </Tooltip>
+      {hasWritePermission && (
+        <Tooltip title={t('rename', { keyPrefix: 'common' })}>
+          <Button
+            type="text"
+            disabled={isRunning}
+            onClick={onShowRenameModal}
+            className={styles.iconButton}
+          >
+            <EditOutlined size={20} />
+          </Button>
+        </Tooltip>
+      )}
+      {hasWritePermission && (
+        <Tooltip title={t('delete', { keyPrefix: 'common' })}>
+          <Button
+            type="text"
+            disabled={isRunning}
+            onClick={onRmDocument}
+            className={styles.iconButton}
+          >
+            <DeleteOutlined size={20} />
+          </Button>
+        </Tooltip>
+      )}
       {isVirtualDocument || (
         <Tooltip title={t('download', { keyPrefix: 'common' })}>
           <Button

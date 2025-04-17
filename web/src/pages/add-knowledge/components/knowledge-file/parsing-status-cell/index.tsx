@@ -30,6 +30,7 @@ const iconMap = {
 
 interface IProps {
   record: IDocumentInfo;
+  hasWritePermission?: boolean;
 }
 
 const PopoverContent = ({ record }: IProps) => {
@@ -86,7 +87,10 @@ const PopoverContent = ({ record }: IProps) => {
   );
 };
 
-export const ParsingStatusCell = ({ record }: IProps) => {
+export const ParsingStatusCell = ({
+  record,
+  hasWritePermission = false,
+}: IProps) => {
   const text = record.run;
   const runningStatus = RunningStatusMap[text];
   const { t } = useTranslation();
@@ -121,25 +125,29 @@ export const ParsingStatusCell = ({ record }: IProps) => {
           )}
         </Tag>
       </Popover>
-      <Popconfirm
-        title={t(`knowledgeDetails.redo`, { chunkNum: record.chunk_num })}
-        onConfirm={handleOperationIconClick(true)}
-        onCancel={handleOperationIconClick(false)}
-        disabled={record.chunk_num === 0}
-        okText={t('common.ok')}
-        cancelText={t('common.cancel')}
-      >
-        <div
-          className={classNames(styles.operationIcon, {
-            [styles.operationIconSpin]: loading,
-          })}
-          onClick={
-            record.chunk_num === 0 ? handleOperationIconClick(false) : () => {}
-          }
+      {hasWritePermission && (
+        <Popconfirm
+          title={t(`knowledgeDetails.redo`, { chunkNum: record.chunk_num })}
+          onConfirm={handleOperationIconClick(true)}
+          onCancel={handleOperationIconClick(false)}
+          disabled={record.chunk_num === 0}
+          okText={t('common.ok')}
+          cancelText={t('common.cancel')}
         >
-          <OperationIcon />
-        </div>
-      </Popconfirm>
+          <div
+            className={classNames(styles.operationIcon, {
+              [styles.operationIconSpin]: loading,
+            })}
+            onClick={
+              record.chunk_num === 0
+                ? handleOperationIconClick(false)
+                : () => {}
+            }
+          >
+            <OperationIcon />
+          </div>
+        </Popconfirm>
+      )}
     </Flex>
   );
 };

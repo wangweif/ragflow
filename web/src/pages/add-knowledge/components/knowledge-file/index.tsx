@@ -1,11 +1,14 @@
 import ChunkMethodModal from '@/components/chunk-method-modal';
 import SvgIcon from '@/components/svg-icon';
+import { DocumentParserType } from '@/constants/knowledge';
 import {
   useFetchNextDocumentList,
   useSetNextDocumentStatus,
 } from '@/hooks/document-hooks';
+import { useCheckKnowledgePermission } from '@/hooks/knowledge-hooks';
 import { useSetSelectedRecord } from '@/hooks/logic-hooks';
 import { useSelectParserList } from '@/hooks/user-setting-hooks';
+import { IChangeParserConfigRequestBody } from '@/interfaces/request/document';
 import { getExtension } from '@/utils/document-util';
 import { Divider, Flex, Switch, Table, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -35,6 +38,46 @@ import { SetMetaModal } from './set-meta-modal';
 
 const { Text } = Typography;
 
+// 将字符串解析为DocumentParserType枚举类型
+const parseParserType = (
+  parserIdStr: string,
+): DocumentParserType | undefined => {
+  switch (parserIdStr) {
+    case 'naive':
+      return DocumentParserType.Naive;
+    case 'qa':
+      return DocumentParserType.Qa;
+    case 'resume':
+      return DocumentParserType.Resume;
+    case 'manual':
+      return DocumentParserType.Manual;
+    case 'table':
+      return DocumentParserType.Table;
+    case 'paper':
+      return DocumentParserType.Paper;
+    case 'book':
+      return DocumentParserType.Book;
+    case 'laws':
+      return DocumentParserType.Laws;
+    case 'presentation':
+      return DocumentParserType.Presentation;
+    case 'picture':
+      return DocumentParserType.Picture;
+    case 'one':
+      return DocumentParserType.One;
+    case 'audio':
+      return DocumentParserType.Audio;
+    case 'email':
+      return DocumentParserType.Email;
+    case 'tag':
+      return DocumentParserType.Tag;
+    case 'knowledge_graph':
+      return DocumentParserType.KnowledgeGraph;
+    default:
+      return undefined;
+  }
+};
+
 const KnowledgeFile = () => {
   const { searchString, documents, pagination, handleInputChange } =
     useFetchNextDocumentList();
@@ -42,6 +85,8 @@ const KnowledgeFile = () => {
   const { setDocumentStatus } = useSetNextDocumentStatus();
   const { toChunk } = useNavigateToOtherPage();
   const { currentRecord, setRecord } = useSetSelectedRecord<IDocumentInfo>();
+  const { hasWritePermission } = useCheckKnowledgePermission();
+
   const {
     renameLoading,
     onRenameOk,
@@ -151,6 +196,7 @@ const KnowledgeFile = () => {
             onChange={(e) => {
               setDocumentStatus({ status: e, documentId: id });
             }}
+            disabled={!hasWritePermission}
           />
         </>
       ),
@@ -160,7 +206,12 @@ const KnowledgeFile = () => {
       dataIndex: 'run',
       key: 'run',
       render: (text, record) => {
-        return <ParsingStatusCell record={record}></ParsingStatusCell>;
+        return (
+          <ParsingStatusCell
+            record={record}
+            hasWritePermission={hasWritePermission}
+          ></ParsingStatusCell>
+        );
       },
     },
     {
@@ -173,6 +224,7 @@ const KnowledgeFile = () => {
           showChangeParserModal={showChangeParserModal}
           showSetMetaModal={showSetMetaModal}
           record={record}
+          hasWritePermission={hasWritePermission}
         ></ParsingActionCell>
       ),
     },
@@ -182,6 +234,20 @@ const KnowledgeFile = () => {
     ...x,
     className: `${styles.column}`,
   }));
+
+  // 当前记录的解析器类型转换为枚举
+  const parserId =
+    parseParserType(currentRecord.parser_id) || DocumentParserType.Naive;
+
+  // 修改解析器处理函数的包装
+  const handleChangeParserOk = (
+    parserId: DocumentParserType | undefined,
+    parserConfig: IChangeParserConfigRequestBody,
+  ) => {
+    if (parserId) {
+      onChangeParserOk(parserId.toString(), parserConfig);
+    }
+  };
 
   return (
     <div className={styles.datasetWrapper}>
@@ -195,13 +261,14 @@ const KnowledgeFile = () => {
         showDocumentUploadModal={showDocumentUploadModal}
         searchString={searchString}
         handleInputChange={handleInputChange}
+        hasWritePermission={hasWritePermission}
       ></DocumentToolbar>
       <Table
         rowKey="id"
         columns={finalColumns}
         dataSource={documents}
         pagination={pagination}
-        rowSelection={rowSelection}
+        rowSelection={hasWritePermission ? rowSelection : undefined}
         className={styles.documentTable}
         scroll={{ scrollToFirstRowOnChange: true, x: 1300 }}
       />
@@ -213,10 +280,10 @@ const KnowledgeFile = () => {
       />
       <ChunkMethodModal
         documentId={currentRecord.id}
-        parserId={currentRecord.parser_id}
+        parserId={parserId}
         parserConfig={currentRecord.parser_config}
         documentExtension={getExtension(currentRecord.name)}
-        onOk={onChangeParserOk}
+        onOk={handleChangeParserOk}
         visible={changeParserVisible}
         hideModal={hideChangeParserModal}
         loading={changeParserLoading}

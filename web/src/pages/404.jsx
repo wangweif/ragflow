@@ -6,10 +6,10 @@ const NoFoundPage = () => {
     <Result
       status="404"
       title="404"
-      subTitle="Page not found, please enter a correct address."
+      subTitle="找不到页面，请输入正确的地址."
       extra={
         <Button type="primary" onClick={() => history.push('/')}>
-          Business
+          返回首页
         </Button>
       }
     />

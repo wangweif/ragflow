@@ -1,3 +1,4 @@
+import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { ResponsePostType } from '@/interfaces/database/base';
 import {
   IKnowledge,
@@ -76,7 +77,9 @@ export const useFetchKnowledgeList = (
 };
 
 export const useSelectKnowledgeOptions = () => {
-  const { list } = useFetchKnowledgeList();
+  const { data: userInfo } = useFetchUserInfo();
+  const tenant_id = userInfo?.tenant_id || userInfo?.id || '';
+  const { list } = useFetchKnowledgeList(tenant_id);
 
   const options = list?.map((item) => ({
     label: item.name,
@@ -104,8 +107,8 @@ export const useInfiniteFetchKnowledgeList = (tenant_id: string) => {
     queryFn: async ({ pageParam }) => {
       const { data } = await getKnowledgeList(tenant_id);
       let list = data?.data ?? [];
-      // 只保留write权限
-      list = list.filter((x: IKnowledge) => x.permission_type === 'write');
+      // read/write权限用户均可访问
+      list = list.filter((x: IKnowledge) => x.permission_type === 'read');
       return list;
     },
     initialPageParam: 1,
@@ -418,4 +421,39 @@ export const useRemoveKnowledgeGraph = () => {
   });
 
   return { data, loading, removeKnowledgeGraph: mutateAsync };
+};
+
+export const useCheckKnowledgePermission = () => {
+  const knowledgeBaseId = useKnowledgeBaseId();
+  const { data: userInfo } = useFetchUserInfo();
+  const tenant_id = userInfo?.tenant_id || userInfo?.id || '';
+  console.log(tenant_id);
+
+  const { data, isFetching: loading } = useQuery({
+    queryKey: ['checkKnowledgePermission', knowledgeBaseId, tenant_id],
+    initialData: { hasWritePermission: false },
+    enabled: !!knowledgeBaseId && !!tenant_id,
+    gcTime: 0,
+    queryFn: async () => {
+      if (!tenant_id) return { hasWritePermission: false };
+
+      const { data } = await getKnowledgeList(tenant_id);
+      const knowledgeList = data?.data ?? [];
+      console.log(knowledgeList);
+
+      // 查找当前知识库
+      const currentKnowledge = knowledgeList.find(
+        (kb: IKnowledge) =>
+          kb.kb_id === knowledgeBaseId && kb.permission_type === 'write',
+      );
+      console.log(knowledgeBaseId);
+      console.log(currentKnowledge);
+
+      const hasWritePermission = currentKnowledge !== undefined;
+
+      return { hasWritePermission };
+    },
+  });
+
+  return { hasWritePermission: data.hasWritePermission, loading };
 };

@@ -22,6 +22,7 @@ interface IProps {
   showDocumentUploadModal(): void;
   searchString: string;
   handleInputChange: React.ChangeEventHandler<HTMLInputElement>;
+  hasWritePermission?: boolean;
 }
 
 const DocumentToolbar = ({
@@ -30,6 +31,7 @@ const DocumentToolbar = ({
   showCreateModal,
   showDocumentUploadModal,
   handleInputChange,
+  hasWritePermission = false,
 }: IProps) => {
   const { t } = useTranslate('knowledgeDetails');
   const { removeDocument } = useRemoveNextDocument();
@@ -183,19 +185,21 @@ const DocumentToolbar = ({
 
   return (
     <div className={styles.filter}>
-      <Dropdown
-        menu={{ items }}
-        placement="bottom"
-        arrow={false}
-        disabled={disabled}
-      >
-        <Button>
-          <Space>
-            <b> {t('bulk')}</b>
-            <DownOutlined />
-          </Space>
-        </Button>
-      </Dropdown>
+      {hasWritePermission && (
+        <Dropdown
+          menu={{ items }}
+          placement="bottom"
+          arrow={false}
+          disabled={disabled}
+        >
+          <Button>
+            <Space>
+              <b> {t('bulk')}</b>
+              <DownOutlined />
+            </Space>
+          </Button>
+        </Dropdown>
+      )}
       <Space>
         <Input
           placeholder={t('searchFiles')}
@@ -206,13 +210,15 @@ const DocumentToolbar = ({
           prefix={<SearchOutlined />}
         />
 
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={showDocumentUploadModal}
-        >
-          {t('addFile')}
-        </Button>
+        {hasWritePermission && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={showDocumentUploadModal}
+          >
+            {t('addFile')}
+          </Button>
+        )}
       </Space>
     </div>
   );
