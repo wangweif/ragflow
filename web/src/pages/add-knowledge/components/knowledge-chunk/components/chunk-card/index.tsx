@@ -18,6 +18,7 @@ interface IProps {
   selected: boolean;
   clickChunkCard: (chunkId: string) => void;
   textMode: ChunkTextMode;
+  hasWritePermission?: boolean;
 }
 
 const ChunkCard = ({
@@ -29,6 +30,7 @@ const ChunkCard = ({
   selected,
   clickChunkCard,
   textMode,
+  hasWritePermission = false,
 }: IProps) => {
   const available = Number(item.available_int);
   const [enabled, setEnabled] = useState(false);
@@ -63,7 +65,9 @@ const ChunkCard = ({
       })}
     >
       <Flex gap={'middle'} justify={'space-between'}>
-        <Checkbox onChange={handleCheck} checked={checked}></Checkbox>
+        {hasWritePermission && (
+          <Checkbox onChange={handleCheck} checked={checked}></Checkbox>
+        )}
         {item.img_id && (
           <Popover
             placement="right"
@@ -91,7 +95,11 @@ const ChunkCard = ({
         </section>
 
         <div>
-          <Switch checked={enabled} onChange={onChange} />
+          <Switch
+            checked={enabled}
+            onChange={onChange}
+            disabled={!hasWritePermission}
+          />
         </div>
       </Flex>
     </Card>

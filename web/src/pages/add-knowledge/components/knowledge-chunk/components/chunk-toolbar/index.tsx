@@ -45,6 +45,7 @@ interface IProps
   removeChunk: () => void;
   switchChunk: (available: number) => void;
   changeChunkTextMode(mode: ChunkTextMode): void;
+  hasWritePermission?: boolean;
 }
 
 const ChunkToolBar = ({
@@ -58,6 +59,7 @@ const ChunkToolBar = ({
   handleSetAvailable,
   searchString,
   handleInputChange,
+  hasWritePermission = false,
 }: IProps) => {
   const data = useSelectChunkList();
   const documentInfo = data?.documentInfo;
@@ -185,12 +187,14 @@ const ChunkToolBar = ({
           ]}
           onChange={changeChunkTextMode as SegmentedProps['onChange']}
         />
-        <Popover content={content} placement="bottom" arrow={false}>
-          <Button>
-            {t('bulk')}
-            <DownOutlined />
-          </Button>
-        </Popover>
+        {hasWritePermission && (
+          <Popover content={content} placement="bottom" arrow={false}>
+            <Button>
+              {t('bulk')}
+              <DownOutlined />
+            </Button>
+          </Popover>
+        )}
         {isShowSearchBox ? (
           <Input
             size="middle"
@@ -208,11 +212,14 @@ const ChunkToolBar = ({
         <Popover content={filterContent} placement="bottom" arrow={false}>
           <Button icon={<FilterIcon />} />
         </Popover>
-        <Button
-          icon={<PlusOutlined />}
-          type="primary"
-          onClick={() => createChunk()}
-        />
+
+        {hasWritePermission && (
+          <Button
+            icon={<PlusOutlined />}
+            type="primary"
+            onClick={() => createChunk()}
+          />
+        )}
       </Space>
     </Flex>
   );

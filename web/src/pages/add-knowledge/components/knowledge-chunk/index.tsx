@@ -1,4 +1,5 @@
 import { useFetchNextChunkList, useSwitchChunk } from '@/hooks/chunk-hooks';
+import { useCheckKnowledgePermission } from '@/hooks/knowledge-hooks';
 import type { PaginationProps } from 'antd';
 import { Divider, Flex, Pagination, Space, Spin, message } from 'antd';
 import classNames from 'classnames';
@@ -30,6 +31,7 @@ const Chunk = () => {
     available,
     handleSetAvailable,
   } = useFetchNextChunkList();
+  const { hasWritePermission } = useCheckKnowledgePermission();
   const { handleChunkCardClick, selectedChunkId } = useHandleChunkCardClick();
   const isPdf = documentInfo?.type === 'pdf';
 
@@ -131,6 +133,7 @@ const Chunk = () => {
           handleInputChange={handleInputChange}
           available={available}
           handleSetAvailable={handleSetAvailable}
+          hasWritePermission={hasWritePermission}
         ></ChunkToolBar>
         <Divider></Divider>
         <Flex flex={1} gap={'middle'}>
@@ -160,6 +163,7 @@ const Chunk = () => {
                       clickChunkCard={handleChunkCardClick}
                       selected={item.chunk_id === selectedChunkId}
                       textMode={textMode}
+                      hasWritePermission={hasWritePermission}
                     ></ChunkCard>
                   ))}
                 </Space>
