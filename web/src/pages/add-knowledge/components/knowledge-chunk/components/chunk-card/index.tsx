@@ -46,7 +46,9 @@ const ChunkCard = ({
   };
 
   const handleContentDoubleClick = () => {
-    editChunk(item.chunk_id);
+    if (hasWritePermission) {
+      editChunk(item.chunk_id);
+    }
   };
 
   const handleContentClick = () => {

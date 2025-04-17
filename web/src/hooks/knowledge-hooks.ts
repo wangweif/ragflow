@@ -427,7 +427,6 @@ export const useCheckKnowledgePermission = () => {
   const knowledgeBaseId = useKnowledgeBaseId();
   const { data: userInfo } = useFetchUserInfo();
   const tenant_id = userInfo?.tenant_id || userInfo?.id || '';
-  console.log(tenant_id);
 
   const { data, isFetching: loading } = useQuery({
     queryKey: ['checkKnowledgePermission', knowledgeBaseId, tenant_id],
@@ -439,15 +438,12 @@ export const useCheckKnowledgePermission = () => {
 
       const { data } = await getKnowledgeList(tenant_id);
       const knowledgeList = data?.data ?? [];
-      console.log(knowledgeList);
 
       // 查找当前知识库
       const currentKnowledge = knowledgeList.find(
         (kb: IKnowledge) =>
           kb.kb_id === knowledgeBaseId && kb.permission_type === 'write',
       );
-      console.log(knowledgeBaseId);
-      console.log(currentKnowledge);
 
       const hasWritePermission = currentKnowledge !== undefined;
 
