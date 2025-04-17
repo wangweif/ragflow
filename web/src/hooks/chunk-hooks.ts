@@ -153,6 +153,9 @@ export const useSwitchChunk = () => {
       const { data } = await kbService.switch_chunk(params);
       if (data.code === 0) {
         message.success(t('message.modified'));
+        // 随机等待1000-1500ms
+        const randomTime = Math.floor(Math.random() * 500) + 1000;
+        await new Promise((resolve) => setTimeout(resolve, randomTime));
         queryClient.invalidateQueries({ queryKey: ['fetchChunkList'] });
       }
       return data?.code;

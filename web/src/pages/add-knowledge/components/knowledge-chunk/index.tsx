@@ -25,7 +25,7 @@ const Chunk = () => {
   const {
     data: { documentInfo, data = [], total },
     pagination,
-    loading,
+    loading: fetchLoading,
     searchString,
     handleInputChange,
     available,
@@ -37,7 +37,7 @@ const Chunk = () => {
 
   const { t } = useTranslation();
   const { changeChunkTextMode, textMode } = useChangeChunkTextMode();
-  const { switchChunk } = useSwitchChunk();
+  const { switchChunk, loading: switchLoading } = useSwitchChunk();
   const {
     chunkUpdatingLoading,
     onChunkUpdatingOk,
@@ -47,6 +47,9 @@ const Chunk = () => {
     chunkUpdatingVisible,
     documentId,
   } = useUpdateChunk();
+
+  // 组合加载状态
+  const loading = fetchLoading || switchLoading;
 
   const onPaginationChange: PaginationProps['onShowSizeChange'] = (
     page,
@@ -134,6 +137,7 @@ const Chunk = () => {
           available={available}
           handleSetAvailable={handleSetAvailable}
           hasWritePermission={hasWritePermission}
+          loading={switchLoading}
         ></ChunkToolBar>
         <Divider></Divider>
         <Flex flex={1} gap={'middle'}>

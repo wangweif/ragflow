@@ -46,6 +46,7 @@ interface IProps
   switchChunk: (available: number) => void;
   changeChunkTextMode(mode: ChunkTextMode): void;
   hasWritePermission?: boolean;
+  loading?: boolean;
 }
 
 const ChunkToolBar = ({
@@ -60,6 +61,7 @@ const ChunkToolBar = ({
   searchString,
   handleInputChange,
   hasWritePermission = false,
+  loading = false,
 }: IProps) => {
   const data = useSelectChunkList();
   const documentInfo = data?.documentInfo;
@@ -102,7 +104,11 @@ const ChunkToolBar = ({
         key: '1',
         label: (
           <>
-            <Checkbox onChange={handleSelectAllCheck} checked={checked}>
+            <Checkbox
+              onChange={handleSelectAllCheck}
+              checked={checked}
+              disabled={loading}
+            >
               <b>{t('selectAll')}</b>
             </Checkbox>
           </>
@@ -117,6 +123,7 @@ const ChunkToolBar = ({
             <b>{t('enabledSelected')}</b>
           </Space>
         ),
+        disabled: loading,
       },
       {
         key: '3',
@@ -126,6 +133,7 @@ const ChunkToolBar = ({
             <b>{t('disabledSelected')}</b>
           </Space>
         ),
+        disabled: loading,
       },
       { type: 'divider' },
       {
@@ -136,6 +144,7 @@ const ChunkToolBar = ({
             <b>{t('deleteSelected')}</b>
           </Space>
         ),
+        disabled: loading,
       },
     ];
   }, [
@@ -145,6 +154,7 @@ const ChunkToolBar = ({
     handleEnabledClick,
     handleDisabledClick,
     t,
+    loading,
   ]);
 
   const content = (
@@ -157,7 +167,11 @@ const ChunkToolBar = ({
   };
 
   const filterContent = (
-    <Radio.Group onChange={handleFilterChange} value={available}>
+    <Radio.Group
+      onChange={handleFilterChange}
+      value={available}
+      disabled={loading}
+    >
       <Space direction="vertical">
         <Radio value={undefined}>{t('all')}</Radio>
         <Radio value={1}>{t('enabled')}</Radio>
@@ -186,10 +200,16 @@ const ChunkToolBar = ({
             { label: t(ChunkTextMode.Ellipse), value: ChunkTextMode.Ellipse },
           ]}
           onChange={changeChunkTextMode as SegmentedProps['onChange']}
+          disabled={loading}
         />
         {hasWritePermission && (
-          <Popover content={content} placement="bottom" arrow={false}>
-            <Button>
+          <Popover
+            content={loading ? null : content}
+            placement="bottom"
+            arrow={false}
+            open={loading ? false : undefined}
+          >
+            <Button loading={loading}>
               {t('bulk')}
               <DownOutlined />
             </Button>
@@ -204,13 +224,23 @@ const ChunkToolBar = ({
             onChange={handleInputChange}
             onBlur={handleSearchBlur}
             value={searchString}
+            disabled={loading}
           />
         ) : (
-          <Button icon={<SearchOutlined />} onClick={handleSearchIconClick} />
+          <Button
+            icon={<SearchOutlined />}
+            onClick={handleSearchIconClick}
+            disabled={loading}
+          />
         )}
 
-        <Popover content={filterContent} placement="bottom" arrow={false}>
-          <Button icon={<FilterIcon />} />
+        <Popover
+          content={loading ? null : filterContent}
+          placement="bottom"
+          arrow={false}
+          open={loading ? false : undefined}
+        >
+          <Button icon={<FilterIcon />} disabled={loading} />
         </Popover>
 
         {hasWritePermission && (
@@ -218,6 +248,7 @@ const ChunkToolBar = ({
             icon={<PlusOutlined />}
             type="primary"
             onClick={() => createChunk()}
+            disabled={loading}
           />
         )}
       </Space>
