@@ -23,7 +23,7 @@ const FileIcon = ({ name, id }: IProps) => {
     }
   }, [id, setDocumentIds]);
 
-  return fileThumbnail ? (
+  return false ? (
     <img src={fileThumbnail} className={styles.thumbnailImg}></img>
   ) : (
     <SvgIcon name={`file-icon/${fileExtension}`} width={24}></SvgIcon>
