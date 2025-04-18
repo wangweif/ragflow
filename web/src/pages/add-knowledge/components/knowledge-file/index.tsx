@@ -10,7 +10,7 @@ import { useSetSelectedRecord } from '@/hooks/logic-hooks';
 import { useSelectParserList } from '@/hooks/user-setting-hooks';
 import { IChangeParserConfigRequestBody } from '@/interfaces/request/document';
 import { getExtension } from '@/utils/document-util';
-import { Divider, Flex, Switch, Table, Typography } from 'antd';
+import { Divider, Switch, Table, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import CreateFileModal from './create-file-modal';
@@ -148,19 +148,20 @@ const KnowledgeFile = () => {
       fixed: 'left',
       render: (text: any, { id, thumbnail, name }) => (
         <div className={styles.toChunks} onClick={() => toChunk(id)}>
-          <Flex gap={10} align="center">
-            {thumbnail ? (
-              <img className={styles.img} src={thumbnail} alt="" />
+          <div className={styles.nameCell}>
+            {false ? (
+              <img className={styles.fileIcon} src={thumbnail} alt="" />
             ) : (
               <SvgIcon
                 name={`file-icon/${getExtension(name)}`}
-                width={24}
+                width={16}
+                className={styles.fileIcon}
               ></SvgIcon>
             )}
-            <Text ellipsis={{ tooltip: text }} className={styles.nameText}>
+            <span className={styles.nameText} title={text}>
               {text}
-            </Text>
-          </Flex>
+            </span>
+          </div>
         </div>
       ),
     },
