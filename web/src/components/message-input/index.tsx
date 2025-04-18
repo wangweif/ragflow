@@ -91,7 +91,7 @@ const MessageInput = ({
   sendLoading,
   onInputChange,
   conversationId,
-  showUploadIcon = true,
+  showUploadIcon = false, // 隐藏上传文件按钮
   createConversationBeforeUploadDocument,
   uploadMethod = 'upload_and_parse',
   stopOutputMessage,
