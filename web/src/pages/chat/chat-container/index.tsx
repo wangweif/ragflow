@@ -19,14 +19,15 @@ import {
 } from '@/hooks/chat-hooks';
 import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { buildMessageUuidWithRole } from '@/utils/chat';
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import styles from './index.less';
 
 interface IProps {
   controller: AbortController;
+  resetController: () => void;
 }
 
-const ChatContainer = ({ controller }: IProps) => {
+const ChatContainer = ({ controller, resetController }: IProps) => {
   const { conversationId } = useGetChatSearchParams();
   const { data: conversation } = useFetchNextConversation();
 
@@ -42,6 +43,11 @@ const ChatContainer = ({ controller }: IProps) => {
     removeMessageById,
     stopOutputMessage,
   } = useSendNextMessage(controller);
+
+  const handleStopOutputMessage = useCallback(() => {
+    stopOutputMessage();
+    resetController();
+  }, [stopOutputMessage, resetController]);
 
   const { visible, hideModal, documentId, selectedChunk, clickDocumentButton } =
     useClickDrawer();
@@ -101,7 +107,7 @@ const ChatContainer = ({ controller }: IProps) => {
           createConversationBeforeUploadDocument={
             createConversationBeforeUploadDocument
           }
-          stopOutputMessage={stopOutputMessage}
+          stopOutputMessage={handleStopOutputMessage}
         ></MessageInput>
       </Flex>
       <PdfDrawer

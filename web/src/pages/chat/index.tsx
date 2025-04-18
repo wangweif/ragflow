@@ -157,6 +157,13 @@ const Chat = () => {
     [handleClickConversation],
   );
 
+  const resetController = useCallback(() => {
+    setController((pre) => {
+      pre.abort();
+      return new AbortController();
+    });
+  }, []);
+
   const handleCreateTemporaryConversation = useCallback(() => {
     addTemporaryConversation();
   }, [addTemporaryConversation]);
@@ -356,7 +363,10 @@ const Chat = () => {
         </Flex>
       </Flex>
       <Divider type={'vertical'} className={styles.divider}></Divider>
-      <ChatContainer controller={controller}></ChatContainer>
+      <ChatContainer
+        controller={controller}
+        resetController={resetController}
+      ></ChatContainer>
       {dialogEditVisible && (
         <ChatConfigurationModal
           visible={dialogEditVisible}

@@ -12,7 +12,7 @@ import {
   InfoCircleOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
-import type { GetProp, UploadFile } from 'antd';
+import type { UploadFile, UploadProps } from 'antd';
 import {
   Button,
   Card,
@@ -24,7 +24,6 @@ import {
   Spin,
   Typography,
   Upload,
-  UploadProps,
 } from 'antd';
 import get from 'lodash/get';
 import { CircleStop, Paperclip, SendHorizontal } from 'lucide-react';
@@ -39,7 +38,7 @@ import {
 import FileIcon from '../file-icon';
 import styles from './index.less';
 
-type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
+type FileType = File;
 const { Text } = Typography;
 
 const { TextArea } = Input;
