@@ -27,6 +27,9 @@ sleep 2
 echo "激活Python虚拟环境..."
 source .venv/bin/activate
 export PYTHONPATH=$(pwd)
+# 设置ONNX Runtime在CUDA环境下的内存设置
+export ORT_CUDA_PROVIDER_OPTIONS="arena_extend_strategy=kNextPowerOfTwo"
+export ORT_CUDA_PROVIDER_OPTIONS="$ORT_CUDA_PROVIDER_OPTIONS;cuda_mem_limit=2147483648"
 
 echo "正在启动后端服务..."
 nohup bash docker/launch_backend_service.sh > logs/backend.log 2>&1 &
