@@ -32,6 +32,9 @@ const KnowledgeCard = ({ item }: IProps) => {
     });
   };
 
+  // 检查当前用户是否有权删除此知识库
+  const canDelete = userInfo?.role === 'owner' || userInfo?.role === 'admin';
+
   return (
     // <Badge.Ribbon
     //   text={item?.nickname}
@@ -44,7 +47,9 @@ const KnowledgeCard = ({ item }: IProps) => {
         <div className={styles.container}>
           <div className={styles.content}>
             <Avatar size={34} icon={<UserOutlined />} src={item.avatar} />
-            <OperateDropdown deleteItem={removeKnowledge}></OperateDropdown>
+            {canDelete && (
+              <OperateDropdown deleteItem={removeKnowledge}></OperateDropdown>
+            )}
           </div>
           <div className={styles.titleWrapper}>
             <span
