@@ -10,7 +10,7 @@ import { useSetSelectedRecord } from '@/hooks/logic-hooks';
 import { useSelectParserList } from '@/hooks/user-setting-hooks';
 import { IChangeParserConfigRequestBody } from '@/interfaces/request/document';
 import { getExtension } from '@/utils/document-util';
-import { Divider, Switch, Table, Typography } from 'antd';
+import { Divider, Switch, Table, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import CreateFileModal from './create-file-modal';
@@ -158,9 +158,9 @@ const KnowledgeFile = () => {
                 className={styles.fileIcon}
               ></SvgIcon>
             )}
-            <span className={styles.nameText} title={text}>
-              {text}
-            </span>
+            <Tooltip title={text} placement="topLeft" mouseEnterDelay={0.5}>
+              <span className={styles.nameText}>{text}</span>
+            </Tooltip>
           </div>
         </div>
       ),

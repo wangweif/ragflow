@@ -27,6 +27,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  max-width: 300px;
 }
 
 .fileIcon {
@@ -60,4 +61,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 280px;
+  display: inline-block;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #4096ff;
+    text-decoration: underline;
+  }
 }
