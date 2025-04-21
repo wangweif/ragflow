@@ -416,7 +416,7 @@ General：实体和关系提取提示来自 GitHub - microsoft/graphrag：基于
       chat: '聊天',
       newChat: '新建聊天',
       send: '发送',
-      sendPlaceholder: '消息概要助手...',
+      sendPlaceholder: 'Enter 发送，Shift + Enter 换行',
       chatConfiguration: '聊天配置',
       chatConfigurationDescription: '为你的知识库配置专属聊天助手！ 💕',
       assistantName: '助理姓名',
