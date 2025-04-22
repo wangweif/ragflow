@@ -432,4 +432,31 @@ def get_tenant_team_tree(tenant_id):
         return get_json_result(data=tree)
     except Exception as e:
         logger.exception(f"获取租户团队树失败: {str(e)}")
+        return server_error_response(e)
+
+
+@manager.route('/<parent_id>/sub-teams', methods=['GET'])
+@login_required
+def list_sub_teams(parent_id):
+    """获取子团队列表"""
+    try:
+        # 验证父团队是否存在
+        parent_team = TeamService.get_team(parent_id)
+        if not parent_team:
+            return get_data_error_result(message="父团队不存在")
+        
+        # 验证权限，只有租户管理员或团队成员才能查看子团队
+        if parent_team['tenant_id'] != current_user.id and not TeamService.is_team_member(parent_id, current_user.id):
+            return get_json_result(
+                data=False,
+                message='没有查看子团队的权限',
+                code=settings.RetCode.AUTHENTICATION_ERROR
+            )
+        
+        # 获取子团队列表
+        sub_teams = TeamService.list_teams_by_parent_id(parent_id)
+        return get_json_result(data=sub_teams)
+        
+    except Exception as e:
+        logger.exception(f"获取子团队列表失败: {str(e)}")
         return server_error_response(e) 

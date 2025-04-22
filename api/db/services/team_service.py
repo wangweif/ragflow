@@ -244,6 +244,35 @@ class TeamService:
         
         return teams
     
+    @classmethod
+    def list_teams_by_parent_id(cls, parent_id: str) -> List[Dict[str, Any]]:
+        """
+        获取指定父团队下的所有子团队
+        
+        Args:
+            parent_id: 父团队ID
+            
+        Returns:
+            子团队信息列表
+        """
+        teams = Team.select().where(
+            Team.parent_id == parent_id,
+            Team.status == StatusEnum.VALID.value
+        )
+        
+        result = []
+        for team in teams:
+            team_dict = {
+                "id": team.id,
+                "name": team.name,
+                "tenant_id": team.tenant_id,
+                "parent_id": team.parent_id,
+                "description": team.description
+            }
+            result.append(team_dict)
+        
+        return result
+    
     # ========== 团队成员管理方法 ==========
     
     @classmethod
