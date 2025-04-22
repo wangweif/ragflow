@@ -9,7 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 import styles from './index.less';
 
-const { Content } = Layout;
+const { Content, Footer } = Layout;
 
 const App: React.FC = () => {
   const {
@@ -32,6 +32,12 @@ const App: React.FC = () => {
         >
           <Outlet />
         </Content>
+        <Footer
+          style={{ textAlign: 'center', padding: '12px 0' }}
+          className={styles.footer}
+        >
+          技术支持：北京市农林科学院数据科学与农业经济研究所
+        </Footer>
         <Toaster />
         <Sonner position={'top-right'} expand richColors closeButton></Sonner>
       </Layout>

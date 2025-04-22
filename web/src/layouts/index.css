@@ -1,31 +1,23 @@
-.navs {
-  ul {
-    padding: 0;
-    list-style: none;
-    display: flex;
-  }
-
-  li {
-    margin-right: 1em;
-  }
+.navs ul {
+  padding: 0;
+  list-style: none;
+  display: flex;
 }
-
+.navs li {
+  margin-right: 1em;
+}
 .layout {
   height: 100vh;
 }
-
 body {
   margin: 0;
 }
-
 .divider {
   margin: 0;
 }
-
 .clickAvailable {
   cursor: pointer;
 }
-
 .footer {
   background-color: #f0f2f5;
   border-top: 1px solid #e8e8e8;
