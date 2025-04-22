@@ -38,6 +38,7 @@ class DataBaseModelExtension(BaseModelExtension):
 
 class Team(DataBaseModelExtension):
     """团队模型"""
+    id = CharField(max_length=64, primary_key=True)  # 使用 UUID 字符串作为主键
     tenant_id = CharField(max_length=64, null=False, help_text="租户ID", index=True)
     name = CharField(max_length=64, null=False, help_text="团队名称", index=True)
     description = TextField(null=True, help_text="团队描述")
