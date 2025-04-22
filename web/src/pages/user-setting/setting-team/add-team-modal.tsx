@@ -3,24 +3,34 @@ import { Form, Input, Modal } from 'antd';
 
 type FieldType = {
   name?: string;
+  parentId?: string;
 };
+
+interface AddTeamModalProps extends IModalProps<FieldType> {
+  parentId?: string | null;
+}
 
 const AddTeamModal = ({
   visible,
   hideModal,
   loading,
   onOk,
-}: IModalProps<FieldType>) => {
+  parentId,
+}: AddTeamModalProps) => {
   const [form] = Form.useForm();
 
   const handleOk = async () => {
     const ret = await form.validateFields();
+    // 如果存在父团队ID，则添加到表单数据中，确保是字符串类型
+    if (parentId) {
+      ret.parentId = String(parentId);
+    }
     return onOk?.(ret);
   };
 
   return (
     <Modal
-      title={'创建部门'}
+      title={parentId ? '创建子部门' : '创建部门'}
       open={visible}
       onOk={handleOk}
       onCancel={hideModal}

@@ -16,6 +16,7 @@ import userService, {
   createTeam,
   deleteTeam,
   deleteTenantUser,
+  listSubTeams,
   listTeamByTenant,
   listTeamUser,
   listTenantUser,
@@ -369,6 +370,7 @@ export const useDeleteTeam = () => {
       if (data.code === 0) {
         message.success(t('message.deleted'));
         queryClient.invalidateQueries({ queryKey: ['listTeamByTenant'] });
+        queryClient.invalidateQueries({ queryKey: ['listSubTeams'] });
       }
       return data?.code;
     },
@@ -424,7 +426,13 @@ export const useListTenant = () => {
     queryFn: async () => {
       const { data } = await listTeamByTenant(tenantId);
 
-      return data?.data ?? [];
+      // 返回结构化的团队数据，包含children属性来存储子团队
+      const teamData = data?.data ?? [];
+
+      // 由于后端已经返回了结构化数据，这里直接返回
+      // 如果需要转换数据结构，可以在这里进行处理
+
+      return teamData;
     },
   });
 
@@ -518,12 +526,21 @@ export const useCreateTenant = () => {
     mutateAsync,
   } = useMutation({
     mutationKey: ['createTenant'],
-    mutationFn: async (params: { name: string; tenantId?: string }) => {
+    mutationFn: async (params: {
+      name: string;
+      tenantId?: string;
+      parentId?: string;
+    }) => {
       console.log(params);
-      const { data } = await createTeam(params.tenantId ?? '', params.name);
+      const { data } = await createTeam(
+        params.tenantId ?? '',
+        params.name,
+        params.parentId,
+      );
       if (data.code === 0) {
         message.success(t('message.created'));
         queryClient.invalidateQueries({ queryKey: ['listTeamByTenant'] });
+        queryClient.invalidateQueries({ queryKey: ['listSubTeams'] });
       }
       return data?.data ?? {};
     },
@@ -547,10 +564,31 @@ export const useUpdateTeam = () => {
       if (data.code === 0) {
         message.success(t('message.updated'));
         queryClient.invalidateQueries({ queryKey: ['listTeamByTenant'] });
+        queryClient.invalidateQueries({ queryKey: ['listSubTeams'] });
       }
       return data?.code;
     },
   });
 
   return { data, loading, updateTeam: mutateAsync };
+};
+
+export const useListSubTeams = (parentId: string | null) => {
+  const {
+    data,
+    isFetching: loading,
+    refetch,
+  } = useQuery<ITeam[]>({
+    queryKey: ['listSubTeams', parentId],
+    initialData: [],
+    gcTime: 0,
+    enabled: !!parentId,
+    queryFn: async () => {
+      if (!parentId) return [];
+      const { data } = await listSubTeams(parentId);
+      return data?.data ?? [];
+    },
+  });
+
+  return { data, loading, refetch };
 };

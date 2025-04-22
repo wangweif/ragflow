@@ -157,11 +157,12 @@ export const useCreateTeam = () => {
   } = useSetModalState();
 
   const handleCreateTeamOk = useCallback(
-    async (payload?: { name?: string }) => {
+    async (payload?: { name?: string; parentId?: string }) => {
       if (payload?.name) {
         await createTenant({
           name: payload.name,
           tenantId: userInfo.id,
+          parentId: payload.parentId || undefined,
         });
         hideCreateTeamModal();
       }

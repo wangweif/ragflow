@@ -1,13 +1,12 @@
 import { useTranslate } from '@/hooks/common-hooks';
 import { MenuProps, Space } from 'antd';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import User from '../user';
 
 import { useTheme } from '@/components/theme-provider';
 import { LanguageList, LanguageMap } from '@/constants/common';
 import { useChangeLanguage } from '@/hooks/logic-hooks';
 import { useFetchUserInfo, useListTenant } from '@/hooks/user-setting-hooks';
-import { TenantRole } from '@/pages/user-setting/constants';
 import { useNavigate } from 'umi';
 import styled from './index.less';
 
@@ -43,9 +42,9 @@ const RightToolBar = () => {
 
   const { data } = useListTenant();
 
-  const showBell = useMemo(() => {
-    return data.some((x) => x.role === TenantRole.Invite);
-  }, [data]);
+  // const showBell = useMemo(() => {
+  //   return data.some((x) => x.role === TenantRole.Invite);
+  // }, [data]);
 
   const items: MenuProps['items'] = LanguageList.map((x) => ({
     key: x,

@@ -151,11 +151,20 @@ export const removeTeamUser = ({
 export const listTeamByTenant = (tenantId: string) =>
   request.get(api.listTeam(tenantId));
 
+export const listSubTeams = (parentId: string) =>
+  request.get(api.listSubTeams(parentId));
+
 export const agreeTenant = (tenantId: string) =>
   request.post(api.agreeTenant(tenantId));
 
-export const createTeam = (tenant_id: string, name: string) =>
-  request.post(api.createTeam, { data: { tenant_id, name } });
+export const createTeam = (
+  tenant_id: string,
+  name: string,
+  parentId?: string,
+) =>
+  request.post(api.createTeam, {
+    data: { tenant_id, name, parent_id: parentId },
+  });
 
 export const updateTeam = (teamId: string, name: string) =>
   request.post(api.updateTeam(teamId), { data: { name } });

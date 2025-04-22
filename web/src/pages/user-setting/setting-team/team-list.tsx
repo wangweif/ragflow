@@ -1,4 +1,4 @@
-import { useListTenant } from '@/hooks/user-setting-hooks';
+import { useListSubTeams, useListTenant } from '@/hooks/user-setting-hooks';
 import { ITeam } from '@/interfaces/database/user-setting';
 
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
@@ -17,26 +17,11 @@ const TeamList = ({
   onSelectTeam,
   startEditTeam,
 }: TeamListProps) => {
-  const { data, loading } = useListTenant();
-  // console.log('teamlist: ', data);
+  // 如果有selectedTeamId，获取子团队，否则获取所有顶级团队
+  const { data: subTeams, loading: subTeamsLoading } =
+    useListSubTeams(selectedTeamId);
+  const { data: allTeams, loading: allTeamsLoading } = useListTenant();
   const { handleDeleteTeam } = useHandleDeleteTeam();
-  // const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
-
-  // useEffect(() => {
-  //   const fetchMemberCounts = async () => {
-  //     if (data) {
-  //       const counts: Record<string, number> = {};
-  //       for (const team of data) {
-  //         console.log(Object.keys(team.members).length);
-  //         counts[team.id] = Object.keys(team.members).length;
-  //         console.log(counts[team.id]);
-  //       }
-  //       setMemberCounts(counts);
-  //     }
-  //   };
-
-  //   fetchMemberCounts();
-  // }, [data]);
 
   const columns: TableProps<ITeam>['columns'] = [
     {
@@ -47,22 +32,6 @@ const TeamList = ({
         <a onClick={() => onSelectTeam(record.id)}>{value}</a>
       ),
     },
-    // {
-    //   title: '部门成员',
-    //   key: 'memberCount',
-    //   render: (_, record) => (
-    //     <Space>
-    //       <TeamOutlined />
-    //       {memberCounts[record.id] || 0}
-    //     </Space>
-    //   ),
-    // },
-    // {
-    //   title: '更新日期',
-    //   dataIndex: 'update_date',
-    //   key: 'update_date',
-    //   render: (value) => formatDate(value),
-    // },
     {
       title: '操作',
       key: 'action',
@@ -92,11 +61,15 @@ const TeamList = ({
     },
   ];
 
+  // 根据是否有selectedTeamId决定显示子团队还是所有顶级团队
+  const tableData = selectedTeamId ? subTeams : allTeams;
+  const loading = selectedTeamId ? subTeamsLoading : allTeamsLoading;
+
   return (
     <Table<ITeam>
       rowKey={'id'}
       columns={columns}
-      dataSource={data}
+      dataSource={tableData}
       loading={loading}
       pagination={false}
       rowClassName={(record) =>

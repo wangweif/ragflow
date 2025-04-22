@@ -1,12 +1,12 @@
 import { useFetchUserInfo, useListTenant } from '@/hooks/user-setting-hooks';
-import { Button, Card, Empty, Space, Typography } from 'antd';
+import { Breadcrumb, Button, Card, Empty, Space, Typography } from 'antd';
 
 import {
   ArrowLeftOutlined,
   PlusOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import AddTeamModal from './add-team-modal';
 import AddingUserModal from './add-user-modal';
 import EditTeamModal from './edit-team-modal';
@@ -23,17 +23,39 @@ import UserTable from './user-table';
 const { Text } = Typography;
 const iconStyle = { fontSize: 20, color: '#1677ff' };
 
+// 团队导航路径接口
+interface TeamPath {
+  id: string;
+  name: string;
+}
+
 const UserSettingTeam = () => {
   const { data: userInfo } = useFetchUserInfo();
   const { selectedTeamId, selectTeam } = useTeamSelection();
   const { data: teams } = useListTenant();
   const userTableRefreshRef = useRef<() => void | undefined>();
 
+  // 团队导航路径
+  const [teamPath, setTeamPath] = useState<TeamPath[]>([]);
+
+  // 递归查找团队
+  const findTeamById = (teamList: any[], teamId: string): any => {
+    for (const team of teamList) {
+      if (team.id === teamId) {
+        return team;
+      }
+      if (team.children && team.children.length > 0) {
+        const found = findTeamById(team.children, teamId);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
   // 获取当前选中团队
   const getCurrentTeam = () => {
     if (!selectedTeamId || !teams) return '';
-    const currentTeam = teams.find((team) => team.id === selectedTeamId);
-    return currentTeam;
+    return findTeamById(teams, selectedTeamId);
   };
 
   // 添加用户相关
@@ -68,9 +90,42 @@ const UserSettingTeam = () => {
     startEditTeam,
   } = useEditTeam();
 
-  // 返回团队列表
-  const handleBackToTeamList = () => {
-    selectTeam('');
+  // 团队导航 - 处理选择团队
+  const handleSelectTeam = (teamId: string) => {
+    // 在团队列表中查找团队
+    const selectedTeam = findTeamById(teams, teamId);
+    if (selectedTeam) {
+      // 更新导航路径
+      const newPath = [...teamPath, { id: teamId, name: selectedTeam.name }];
+      setTeamPath(newPath);
+      selectTeam(teamId);
+    }
+  };
+
+  // 导航到特定层级的团队
+  const navigateToTeam = (index: number) => {
+    if (index === -1) {
+      // 返回根级别
+      selectTeam('');
+      setTeamPath([]);
+    } else {
+      // 返回到指定层级
+      const newPath = teamPath.slice(0, index + 1);
+      const targetTeamId = newPath[newPath.length - 1].id;
+      setTeamPath(newPath);
+      selectTeam(targetTeamId);
+    }
+  };
+
+  // 返回上一级
+  const handleBackToParent = () => {
+    if (teamPath.length <= 1) {
+      // 如果只有一级，返回根目录
+      navigateToTeam(-1);
+    } else {
+      // 返回上一级
+      navigateToTeam(teamPath.length - 2);
+    }
   };
 
   const currentTeam = getCurrentTeam();
@@ -79,91 +134,94 @@ const UserSettingTeam = () => {
 
   return (
     <div className={styles.teamWrapper}>
-      {!selectedTeamId ? (
-        // 团队列表视图
+      {/* 导航面包屑 */}
+      <Card className={styles.teamHeaderCard} bordered={false}>
+        <Breadcrumb
+          items={[
+            {
+              title: '部门列表',
+              onClick: () => navigateToTeam(-1),
+            },
+            ...teamPath.map((item, index) => ({
+              title: item.name,
+              onClick: () => navigateToTeam(index),
+            })),
+          ]}
+        />
+        {selectedTeamId && (
+          <Space style={{ marginTop: 16 }}>
+            <Button
+              type="primary"
+              onClick={handleBackToParent}
+              icon={<ArrowLeftOutlined />}
+            >
+              {'返回上级部门'}
+            </Button>
+          </Space>
+        )}
+      </Card>
+
+      {/* 子团队列表卡片 */}
+      <Card
+        title={
+          <Space>
+            <TeamOutlined style={iconStyle} />
+            {selectedTeamId ? `${currentTeamName} - 子部门` : '部门列表'}
+          </Space>
+        }
+        extra={
+          <Button
+            type="primary"
+            onClick={showCreateTeamModal}
+            icon={<PlusOutlined />}
+          >
+            {selectedTeamId ? '创建子部门' : '创建部门'}
+          </Button>
+        }
+        bordered={false}
+      >
+        <TeamList
+          selectedTeamId={selectedTeamId}
+          onSelectTeam={handleSelectTeam}
+          startEditTeam={startEditTeam}
+        />
+      </Card>
+
+      {/* 团队成员列表卡片 */}
+      {selectedTeamId && (
         <Card
           title={
             <Space>
-              <TeamOutlined style={iconStyle} /> {'部门列表'}
+              <TeamOutlined style={iconStyle} />
+              <Text strong className={styles.teamTitle}>
+                {currentTeamName && `${currentTeamName} - `}
+                {'部门成员'}
+              </Text>
             </Space>
           }
           extra={
             <Button
               type="primary"
-              onClick={showCreateTeamModal}
+              onClick={showAddingTenantModal}
               icon={<PlusOutlined />}
             >
-              {'创建部门'}
+              {'添加用户'}
             </Button>
           }
           bordered={false}
         >
-          <TeamList
-            selectedTeamId={selectedTeamId}
-            onSelectTeam={selectTeam}
-            startEditTeam={startEditTeam}
-          />
+          {selectedTeamId ? (
+            <UserTable
+              team={currentTeam}
+              onRefresh={(refreshFunc: () => void) => {
+                userTableRefreshRef.current = refreshFunc;
+              }}
+            />
+          ) : (
+            <Empty description={'请选择一个部门查看成员'} />
+          )}
         </Card>
-      ) : (
-        // 部门成员视图
-        <>
-          <Card className={styles.teamHeaderCard}>
-            <Space>
-              <Button
-                type="primary"
-                onClick={handleBackToTeamList}
-                icon={<ArrowLeftOutlined />}
-              >
-                {'返回部门列表'}
-              </Button>
-            </Space>
-          </Card>
-          <Card
-            title={
-              <Space>
-                <TeamOutlined style={iconStyle} />
-                <Text strong className={styles.teamTitle}>
-                  {currentTeamName && `${currentTeamName} - `}
-                  {'部门成员'}
-                </Text>
-              </Space>
-            }
-            extra={
-              <Button
-                type="primary"
-                onClick={showAddingTenantModal}
-                icon={<PlusOutlined />}
-              >
-                {'添加用户'}
-              </Button>
-            }
-            bordered={false}
-          >
-            {selectedTeamId ? (
-              <UserTable
-                team={currentTeam}
-                onRefresh={(refreshFunc: () => void) => {
-                  userTableRefreshRef.current = refreshFunc;
-                }}
-              />
-            ) : (
-              <Empty description={'请选择一个部门查看成员'} />
-            )}
-          </Card>
-        </>
       )}
-
-      {/* 已加入的团队表格，不显示 */}
-      {/* <Card
-        title={
-          <Space>
-            <TeamOutlined style={iconStyle} /> {'已加入的团队'}
-          </Space>
-        }
-        bordered={false}
-      >
-        <TenantTable />
-      </Card>
 
       {/* 添加用户模态框 */}
       {addingTenantModalVisible && (
@@ -182,6 +240,7 @@ const UserSettingTeam = () => {
           hideModal={hideCreateTeamModal}
           onOk={handleCreateTeamOk}
           loading={createTeamLoading}
+          parentId={selectedTeamId}
         />
       )}
 

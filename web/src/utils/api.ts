@@ -29,6 +29,7 @@ export default {
   createTeam: `${api_host}/team`,
   addUser: (teamId: string) => `${api_host}/team/${teamId}/member`,
   listTeamUser: (teamId: string) => `${api_host}/team/${teamId}/member/list`,
+  listSubTeams: (parentId: string) => `${api_host}/team/${parentId}/sub-teams`,
 
   // llm model
   factories_list: `${api_host}/llm/factories`,
