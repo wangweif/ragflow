@@ -67,6 +67,15 @@
 .configurationWrapper .teamsContainer :global(.ant-card-body:empty) {
   padding: 0;
 }
+.configurationWrapper .subTeamsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.configurationWrapper .subTeamsContainer :global(.ant-card) {
+  margin-left: 16px;
+  border-left: 2px solid #1890ff;
+}
 .configurationWrapper .membersContainer {
   display: flex;
   flex-direction: column;

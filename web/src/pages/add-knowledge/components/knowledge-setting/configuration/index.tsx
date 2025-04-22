@@ -64,37 +64,82 @@ function EmptyComponent() {
   return <div></div>;
 }
 
-// 自定义Hook用于获取部门成员数据
-const useTeamMembers = () => {
+// 定义部门的数据类型
+interface TeamMember {
+  id: string;
+  nickname: string;
+  email?: string;
+  avatar?: string;
+  // 其他成员属性...
+}
+
+interface Team {
+  id: string;
+  name: string;
+  tenant_id: string;
+  parent_id: string | null;
+  description?: string;
+  members: TeamMember[];
+  subTeams: Team[];
+}
+
+// 自定义Hook用于获取部门层级结构
+const useTeamHierarchy = () => {
   const { data: userInfo } = useFetchUserInfo();
   const [loading, setLoading] = useState(false);
-  const [teams, setTeams] = useState<any[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
 
   useEffect(() => {
     const fetchTeamData = async () => {
       setLoading(true);
       try {
-        // 获取部门列表
+        // 获取所有部门列表
         const teamsResponse = await listTeamByTenant(userInfo.id);
         const teamsData = teamsResponse.data?.data || [];
 
-        // 为每个部门获取成员
-        const teamsWithMembers = await Promise.all(
-          teamsData.map(async (team: any) => {
-            // 根据部门id获取成员
-            const membersResponse = await listTeamUser(team.id);
-            const members = membersResponse.data?.data || [];
+        // 构建部门层级结构
+        const teamsMap: Record<string, Team> = {};
 
-            return {
-              ...team,
-              members,
-            };
+        // 首先初始化每个部门对象
+        for (const team of teamsData) {
+          teamsMap[team.id] = {
+            ...team,
+            members: [],
+            subTeams: [],
+          };
+        }
+
+        // 为每个部门添加成员
+        await Promise.all(
+          Object.values(teamsMap).map(async (team) => {
+            try {
+              const membersResponse = await listTeamUser(team.id);
+              team.members = membersResponse.data?.data || [];
+            } catch (err) {
+              console.error(`获取部门[${team.id}]成员失败:`, err);
+              team.members = [];
+            }
           }),
         );
 
-        setTeams(teamsWithMembers);
+        // 构建层级结构
+        const rootTeams: Team[] = [];
+        for (const team of Object.values(teamsMap)) {
+          if (!team.parent_id) {
+            // 顶级部门
+            rootTeams.push(team);
+          } else if (teamsMap[team.parent_id]) {
+            // 添加到父部门的子部门列表
+            teamsMap[team.parent_id].subTeams.push(team);
+          } else {
+            // 如果找不到父部门，作为顶级部门处理
+            rootTeams.push(team);
+          }
+        }
+
+        setTeams(rootTeams);
       } catch (error) {
-        console.error('获取部门成员数据失败:', error);
+        console.error('获取部门结构数据失败:', error);
       } finally {
         setLoading(false);
       }
@@ -109,7 +154,7 @@ const useTeamMembers = () => {
 export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   const { submitKnowledgeConfiguration, submitLoading, navigateToDataset } =
     useSubmitKnowledgeConfiguration(form);
-  const { teams, loading: teamsLoading } = useTeamMembers();
+  const { teams, loading: teamsLoading } = useTeamHierarchy();
   const knowledgeBaseId = useKnowledgeBaseId();
   const {
     permissions,
@@ -121,11 +166,10 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   const knowledgeDetails = useFetchKnowledgeConfigurationOnMount(form);
   const parserId: DocumentParserType = Form.useWatch('parser_id', form);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [searchValue, setSearchValue] = useState('');
   const [memberPermValues, setMemberPermValues] = useState<
     Record<string, string>
   >({});
-  // 用于追踪每个部门的展开/折叠状态
+  // 用于追踪部门的展开/折叠状态
   const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>(
     {},
   );
@@ -210,19 +254,22 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
     form.setFieldsValue({ selectedMembers: newSelectedKeys });
   };
 
-  // 处理搜索变化
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-  };
-
-  // 初始化部门展开状态，默认全部展开，但成员为0的部门默认折叠
+  // 初始化部门展开状态，默认全部折叠
   useEffect(() => {
     if (teams.length > 0) {
       const initialExpandState: Record<string, boolean> = {};
-      teams.forEach((team) => {
-        // 成员数量为0的部门默认折叠，其他部门默认展开
-        initialExpandState[team.id] = team.members.length > 0;
-      });
+      const initTeamExpandState = (teamList: Team[]) => {
+        for (const team of teamList) {
+          // 所有部门默认折叠
+          initialExpandState[team.id] = false;
+          // 递归处理子部门
+          if (team.subTeams && team.subTeams.length > 0) {
+            initTeamExpandState(team.subTeams);
+          }
+        }
+      };
+
+      initTeamExpandState(teams);
       setExpandedTeams(initialExpandState);
     }
   }, [teams]);
@@ -235,7 +282,148 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
     }));
   };
 
-  // 自定义渲染成员和权限选择
+  // 递归渲染部门、子部门和成员
+  const renderTeamAndMembers = (team: Team, level = 0) => {
+    const hasMember = team.members?.length > 0;
+    const hasSubTeams = team.subTeams?.length > 0;
+    const hasContent = hasMember || hasSubTeams;
+    const isExpanded = expandedTeams[team.id] || false;
+
+    return (
+      <Card
+        key={`team-${team.id}`}
+        title={
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              cursor: hasContent ? 'pointer' : 'default',
+              paddingLeft: level * 16, // 根据层级缩进
+            }}
+            onClick={(e) => {
+              if (!hasContent) return; // 如果没有内容，点击不触发展开/折叠
+              e.stopPropagation();
+              toggleTeamExpand(team.id);
+            }}
+          >
+            {hasContent && (
+              <div
+                style={{
+                  marginRight: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {isExpanded ? <DownOutlined /> : <RightOutlined />}
+              </div>
+            )}
+            <span>{team.name}</span>
+            <Text type="secondary" style={{ fontSize: '12px', marginLeft: 8 }}>
+              {hasSubTeams && hasMember
+                ? `(${team.subTeams.length}个子部门, ${team.members.length}人)`
+                : hasSubTeams
+                  ? `(${team.subTeams.length}个子部门)`
+                  : hasMember
+                    ? `(${team.members.length}人)`
+                    : '(无内容)'}
+            </Text>
+          </div>
+        }
+        bodyStyle={{
+          padding: isExpanded ? '12px' : 0,
+          height: isExpanded ? 'auto' : 0,
+          overflow: 'hidden',
+        }}
+      >
+        {isExpanded && (
+          <div>
+            {/* 先渲染子部门 */}
+            {hasSubTeams && (
+              <div className={styles.subTeamsContainer}>
+                {team.subTeams.map((subTeam) =>
+                  renderTeamAndMembers(subTeam, level + 1),
+                )}
+              </div>
+            )}
+
+            {/* 再渲染成员 */}
+            {hasMember && (
+              <div className={styles.membersContainer}>
+                {team.members.map((member) => {
+                  // 从本地状态获取当前权限值
+                  const permValue =
+                    memberPermValues[member.id] || `member-${member.id}-none`;
+
+                  return (
+                    <div
+                      key={`member-${member.id}`}
+                      className={styles.memberItem}
+                      style={{ marginLeft: 16 }} // 成员相对于部门标题有缩进
+                    >
+                      <div className={styles.memberInfo}>
+                        <span>{member.nickname}</span>
+                      </div>
+                      <div className={styles.radioWrapper}>
+                        <div
+                          className={`${styles.radioItem} ${
+                            permValue === `member-${member.id}-read`
+                              ? styles.radioSelected
+                              : ''
+                          }`}
+                          onClick={() => handlePermChange(member.id, 'read')}
+                        >
+                          <div className={styles.radioCircle}>
+                            {permValue === `member-${member.id}-read` && (
+                              <div className={styles.radioInner} />
+                            )}
+                          </div>
+                          <span>只读</span>
+                        </div>
+
+                        <div
+                          className={`${styles.radioItem} ${
+                            permValue === `member-${member.id}-write`
+                              ? styles.radioSelected
+                              : ''
+                          }`}
+                          onClick={() => handlePermChange(member.id, 'write')}
+                        >
+                          <div className={styles.radioCircle}>
+                            {permValue === `member-${member.id}-write` && (
+                              <div className={styles.radioInner} />
+                            )}
+                          </div>
+                          <span>读写</span>
+                        </div>
+
+                        <div
+                          className={`${styles.radioItem} ${
+                            permValue === `member-${member.id}-none`
+                              ? styles.radioSelected
+                              : ''
+                          }`}
+                          onClick={() => handlePermChange(member.id, 'none')}
+                        >
+                          <div className={styles.radioCircle}>
+                            {permValue === `member-${member.id}-none` && (
+                              <div className={styles.radioInner} />
+                            )}
+                          </div>
+                          <span>无权限</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
+    );
+  };
+
+  // 自定义渲染部门和成员
   const renderTeamMembers = () => {
     if (!teams.length) {
       return <Text type="secondary">{'没有可用的部门'}</Text>;
@@ -243,127 +431,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
 
     return (
       <div className={styles.teamsContainer}>
-        {teams.map((team) => {
-          const hasMember = team.members?.length > 0;
-
-          return (
-            <Card
-              key={`team-${team.id}`}
-              title={
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: hasMember ? 'pointer' : 'default',
-                  }}
-                  onClick={(e) => {
-                    if (!hasMember) return; // 如果没有成员，点击不触发展开/折叠
-                    e.stopPropagation();
-                    toggleTeamExpand(team.id);
-                  }}
-                >
-                  {hasMember && (
-                    <div
-                      style={{
-                        marginRight: 8,
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      {expandedTeams[team.id] ? (
-                        <DownOutlined />
-                      ) : (
-                        <RightOutlined />
-                      )}
-                    </div>
-                  )}
-                  <span>{team.name}</span>
-                  <Text
-                    type="secondary"
-                    style={{ fontSize: '12px', marginLeft: 8 }}
-                  >
-                    ({team.members?.length || 0}人)
-                  </Text>
-                </div>
-              }
-              bodyStyle={{
-                padding: expandedTeams[team.id] ? '12px' : 0,
-                height: expandedTeams[team.id] ? 'auto' : 0,
-                overflow: 'hidden',
-              }}
-            >
-              {expandedTeams[team.id] && hasMember && (
-                <div className={styles.membersContainer}>
-                  {team.members.map((member: any) => {
-                    // 从本地状态获取当前权限值
-                    const permValue =
-                      memberPermValues[member.id] || `member-${member.id}-none`;
-
-                    return (
-                      <div
-                        key={`member-${member.id}`}
-                        className={styles.memberItem}
-                      >
-                        <div className={styles.memberInfo}>
-                          <span>{member.nickname}</span>
-                        </div>
-                        <div className={styles.radioWrapper}>
-                          <div
-                            className={`${styles.radioItem} ${
-                              permValue === `member-${member.id}-read`
-                                ? styles.radioSelected
-                                : ''
-                            }`}
-                            onClick={() => handlePermChange(member.id, 'read')}
-                          >
-                            <div className={styles.radioCircle}>
-                              {permValue === `member-${member.id}-read` && (
-                                <div className={styles.radioInner} />
-                              )}
-                            </div>
-                            <span>只读</span>
-                          </div>
-
-                          <div
-                            className={`${styles.radioItem} ${
-                              permValue === `member-${member.id}-write`
-                                ? styles.radioSelected
-                                : ''
-                            }`}
-                            onClick={() => handlePermChange(member.id, 'write')}
-                          >
-                            <div className={styles.radioCircle}>
-                              {permValue === `member-${member.id}-write` && (
-                                <div className={styles.radioInner} />
-                              )}
-                            </div>
-                            <span>读写</span>
-                          </div>
-
-                          <div
-                            className={`${styles.radioItem} ${
-                              permValue === `member-${member.id}-none`
-                                ? styles.radioSelected
-                                : ''
-                            }`}
-                            onClick={() => handlePermChange(member.id, 'none')}
-                          >
-                            <div className={styles.radioCircle}>
-                              {permValue === `member-${member.id}-none` && (
-                                <div className={styles.radioInner} />
-                              )}
-                            </div>
-                            <span>无权限</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </Card>
-          );
-        })}
+        {teams.map((team) => renderTeamAndMembers(team))}
       </div>
     );
   };
