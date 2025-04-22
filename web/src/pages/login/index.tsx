@@ -2,11 +2,13 @@ import { Domain } from '@/constants/common';
 import { useLogin, useRegister } from '@/hooks/login-hooks';
 import { useSystemConfig } from '@/hooks/system-hooks';
 import { rsaPsw } from '@/utils';
-import { Button, Checkbox, Form, Input } from 'antd';
+import { Button, Checkbox, Form, Input, Layout } from 'antd';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, useNavigate } from 'umi';
 import styles from './index.less';
+
+const { Footer } = Layout;
 
 const Login = () => {
   const [title, setTitle] = useState('login');
@@ -156,6 +158,12 @@ const Login = () => {
           </Form>
         </div>
       </div>
+      <Footer
+        style={{ textAlign: 'center', padding: '12px 0' }}
+        className={styles.footer}
+      >
+        技术支持：北京市农林科学院数据科学与农业经济研究所
+      </Footer>
     </div>
   );
 };
