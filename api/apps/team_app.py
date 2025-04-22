@@ -136,7 +136,7 @@ def update_team(team_id):
 @manager.route('/delete/<team_id>', methods=['POST'])
 @login_required
 def delete_team(team_id):
-    """删除团队"""
+    """删除团队（递归删除子团队及其成员）"""
     try:
         # 获取团队信息
         team_info = TeamService.get_team(team_id)
@@ -151,27 +151,61 @@ def delete_team(team_id):
                 code=settings.RetCode.AUTHENTICATION_ERROR
             )
         
-        success = TeamService.delete_team(team_id)
-        logging.info(f"删除团队成功: {success}")
-        # 如果删除团队成功, 需要继续删除team_id是这个的所有用户
+        # 递归删除子团队及其成员
+        success = delete_team_recursively(team_id)
+        
+        if success:
+            return get_json_result(data=True, message="团队及其子团队已成功删除")
+        else:
+            return get_json_result(data=False, message="删除团队失败，请稍后重试")
+    except Exception as e:
+        logger.exception(f"删除团队失败: {str(e)}")
+        return server_error_response(e)
+
+def delete_team_recursively(team_id):
+    """递归删除团队及其子团队、成员
+    
+    Args:
+        team_id: 团队ID
+    """
+    try:
+        # 获取团队信息用于日志记录
+        team_info = TeamService.get_team(team_id)
+        team_name = team_info.get('name', '未知') if team_info else '未知'
+        logger.info(f"开始删除团队: ID={team_id}, 名称={team_name}")
+        
+        # 先获取所有子团队
+        sub_teams = TeamService.list_teams_by_parent_id(team_id)
+        logger.info(f"团队 {team_id} 有 {len(sub_teams)} 个子团队需要删除")
+        
+        # 递归删除每个子团队
+        for sub_team in sub_teams:
+            delete_team_recursively(sub_team['id'])
+        
+        # 获取当前团队的所有成员并删除
         users = UserService.get_users_by_team_id(team_id)
-        logging.info(f"users:  {users}")
-        user_ids = [user.id for user in users]
-        logging.info(f"user_ids:  {user_ids}")
-        for user_id in user_ids:
+        user_count = len(users)
+        logger.info(f"团队 {team_id} 有 {user_count} 个成员需要删除")
+        
+        # 删除每个成员
+        for i, user in enumerate(users, 1):
+            logger.debug(f"删除团队 {team_id} 的成员 ({i}/{user_count}): ID={user.id}, 邮箱={user.email}")
             UserService.update_user(
-                user_id,
+                user.id,
                 {
                     "status": StatusEnum.INVALID.value,
                     "update_time": current_timestamp(),
                     "update_date": datetime_format(datetime.now())
                 }
             )
-
-        return get_json_result(data=success)
+        
+        # 删除当前团队
+        success = TeamService.delete_team(team_id)
+        logger.info(f"成功删除团队 {team_id}（{team_name}）及其所有子团队和成员")
+        return success
     except Exception as e:
-        logger.exception(f"删除团队失败: {str(e)}")
-        return server_error_response(e)
+        logger.error(f"删除团队 {team_id} 过程中发生错误: {str(e)}")
+        raise
 
 
 @manager.route('/<team_id>/member/list', methods=['GET'])
