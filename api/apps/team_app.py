@@ -303,6 +303,11 @@ def add_team_member(team_id):
                 code=settings.RetCode.AUTHENTICATION_ERROR
             )
         
+        # 验证邮箱是否重复
+        member = UserService.get_by_email(email)
+        if member:
+            return get_data_error_result(message="邮箱已存在")
+        
         # 使用邮箱添加成员
         member = TeamService.add_member_by_email(
             team_id=team_id, 
