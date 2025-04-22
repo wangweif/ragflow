@@ -21,6 +21,8 @@ const TeamList = ({
   const { data: subTeams, loading: subTeamsLoading } =
     useListSubTeams(selectedTeamId);
   const { data: allTeams, loading: allTeamsLoading } = useListTenant();
+  // 从allTeams中获取所有顶级团队
+  const topTeams = allTeams?.filter((team) => team.parent_id === null);
   const { handleDeleteTeam } = useHandleDeleteTeam();
 
   const columns: TableProps<ITeam>['columns'] = [
@@ -62,7 +64,7 @@ const TeamList = ({
   ];
 
   // 根据是否有selectedTeamId决定显示子团队还是所有顶级团队
-  const tableData = selectedTeamId ? subTeams : allTeams;
+  const tableData = selectedTeamId ? subTeams : topTeams;
   const loading = selectedTeamId ? subTeamsLoading : allTeamsLoading;
 
   return (

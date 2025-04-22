@@ -206,6 +206,7 @@ class TeamService:
                 "id": team.id,
                 "name": team.name,
                 "tenant_id": team.tenant_id,
+                "parent_id": team.parent_id
             }
             result.append(team_dict)
         

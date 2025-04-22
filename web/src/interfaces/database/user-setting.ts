@@ -104,4 +104,5 @@ export interface ITeam {
   id: string;
   name: string;
   tenant_id: string;
+  parent_id: string;
 }
