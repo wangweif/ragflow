@@ -43,6 +43,7 @@ class Team(DataBaseModelExtension):
     description = TextField(null=True, help_text="团队描述")
     created_by = CharField(max_length=64, null=False, help_text="创建者ID", index=True)
     members = TextField(null=True, help_text="团队成员JSON，存储格式：{user_id: {role: 'owner|admin|member', joined_at: timestamp}}")
+    parent_id = CharField(max_length=64, null=True, help_text="父团队ID", index=True)
     status = CharField(max_length=1, null=True, help_text="状态(0: 已删除, 1: 有效)", default="1", index=True)
     
     class Meta:

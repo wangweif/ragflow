@@ -63,6 +63,7 @@ def create_team():
         tenant_id = data.get('tenant_id')
         name = data.get('name')
         description = data.get('description', None)  # 使用get方法设置默认值为None
+        parent_id = data.get('parent_id', None)  # 父团队ID，可选
         
         # 验证权限，只有租户管理员才能创建团队
         if tenant_id != current_user.id:
@@ -76,7 +77,8 @@ def create_team():
             tenant_id=tenant_id,
             name=name,
             created_by=current_user.id,
-            description=description
+            description=description,
+            parent_id=parent_id
         )
         
         return get_json_result(data=team)

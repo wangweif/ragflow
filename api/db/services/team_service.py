@@ -36,7 +36,7 @@ class TeamService:
     VALID_ROLES = ['owner', 'admin', 'member']
     
     @classmethod
-    def create_team(cls, tenant_id: str, name: str, created_by: str, description: Optional[str] = None) -> Dict[str, Any]:
+    def create_team(cls, tenant_id: str, name: str, created_by: str, description: Optional[str] = None, parent_id: Optional[str] = None) -> Dict[str, Any]:
         """
         创建新团队
         
@@ -45,6 +45,7 @@ class TeamService:
             name: 团队名称
             created_by: 创建者ID
             description: 团队描述
+            parent_id: 父团队ID，用于创建子团队
             
         Returns:
             团队信息字典
@@ -59,6 +60,15 @@ class TeamService:
             if existing_team:
                 raise ValueError(f"团队名称 '{name}' 已存在")
             
+            # 如果指定了父团队，检查父团队是否存在
+            if parent_id:
+                parent_team = Team.get_or_none(
+                    Team.id == parent_id,
+                    Team.status == StatusEnum.VALID.value
+                )
+                if not parent_team:
+                    raise ValueError(f"父团队 {parent_id} 不存在")
+            
             # 创建团队
             team_id = str(uuid.uuid4())
             
@@ -68,6 +78,7 @@ class TeamService:
                 name=name,
                 description=description,
                 created_by=created_by,
+                parent_id=parent_id,
                 status=StatusEnum.VALID.value
             )
             
@@ -191,14 +202,13 @@ class TeamService:
         
         result = []
         for team in teams:
-            # 只返回需要的字段
             team_dict = {
                 "id": team.id,
                 "name": team.name,
-                "tenant_id": team.tenant_id
+                "tenant_id": team.tenant_id,
             }
             result.append(team_dict)
-            
+        
         return result
     
     @classmethod
