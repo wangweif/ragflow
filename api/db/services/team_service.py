@@ -197,7 +197,8 @@ class TeamService:
         """
         teams = Team.select().where(
             Team.tenant_id == tenant_id,
-            Team.status == StatusEnum.VALID.value
+            Team.status == StatusEnum.VALID.value,
+            Team.parent_id == None
         )
         
         result = []
