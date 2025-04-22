@@ -24,7 +24,7 @@ from api.db import StatusEnum, UserTenantRole
 from api.db.db_models_extension import Team
 from api.db.init_data import encode_to_base64
 from api.db.services.user_service import UserService, UserTenantService
-from api.utils import current_timestamp, datetime_format
+from api.utils import current_timestamp, datetime_format, get_uuid
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class TeamService:
                     raise ValueError(f"父团队 {parent_id} 不存在")
             
             # 创建团队
-            team_id = str(uuid.uuid4())
+            team_id = get_uuid()
             
             team = Team.create(
                 id=team_id,
