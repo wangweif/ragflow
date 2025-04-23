@@ -118,6 +118,10 @@ const routes = [
             component: '@/pages/user-setting/setting-system',
           },
           {
+            path: '/user-setting/feedback',
+            component: '@/pages/user-setting/setting-feedback',
+          },
+          {
             path: '/user-setting/api',
             component: '@/pages/user-setting/setting-api',
             wrappers: ['@/wrappers/settingApi'],
