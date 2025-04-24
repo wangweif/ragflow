@@ -1,12 +1,12 @@
 import { useListTeamUser } from '@/hooks/user-setting-hooks';
 import { ITenantUser } from '@/interfaces/database/user-setting';
-import { DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SyncOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
-import { Button, Table, Tag } from 'antd';
+import { Button, Space, Table, Tag, Tooltip } from 'antd';
 import { upperFirst } from 'lodash';
 import { useEffect } from 'react';
 import { TenantRole } from '../constants';
-import { useHandleRemoveTeamMember } from './hooks';
+import { useHandleRemoveTeamMember, useHandleResetPassword } from './hooks';
 
 const ColorMap = {
   [TenantRole.Normal]: 'green',
@@ -27,6 +27,7 @@ const UserTable = ({ team, onRefresh }: UserTableProps) => {
   const { handleRemoveTeamUser } = useHandleRemoveTeamMember(() => {
     refetch();
   });
+  const { handleResetPassword } = useHandleResetPassword();
 
   // 将refetch函数传递给父组件
   useEffect(() => {
@@ -83,9 +84,21 @@ const UserTable = ({ team, onRefresh }: UserTableProps) => {
       title: '操作',
       key: 'action',
       render: (_, record) => (
-        <Button type="text" onClick={handleRemoveTeamUser(teamId, record.id)}>
-          <DeleteOutlined size={20} />
-        </Button>
+        <Space>
+          <Tooltip title="重置密码">
+            <Button type="text" onClick={handleResetPassword(record.id)}>
+              <SyncOutlined size={20} />
+            </Button>
+          </Tooltip>
+          <Tooltip title="删除用户">
+            <Button
+              type="text"
+              onClick={handleRemoveTeamUser(teamId, record.id)}
+            >
+              <DeleteOutlined size={20} />
+            </Button>
+          </Tooltip>
+        </Space>
       ),
     },
   ];

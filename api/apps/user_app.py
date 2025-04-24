@@ -23,6 +23,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_required, current_user, login_user, logout_user
 
 from api.db.db_models import TenantLLM
+from api.db.init_data import encode_to_base64
 from api.db.services.llm_service import TenantLLMService, LLMService
 from api.utils.api_utils import (
     server_error_response,
@@ -762,7 +763,7 @@ def reset_password():
     
     try:
         # 检查用户是否存在
-        user = UserService.query_by_id(user_id)
+        user = UserService.filter_by_id(user_id)
         if not user:
             return get_json_result(
                 data=False,
@@ -771,7 +772,7 @@ def reset_password():
             )
         
         # 更新密码
-        password_hash = generate_password_hash(default_password)
+        password_hash = generate_password_hash(str(encode_to_base64(default_password)))
         UserService.update_by_id(user_id, {"password": password_hash})
         
         return get_json_result(

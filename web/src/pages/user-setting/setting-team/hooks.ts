@@ -11,6 +11,7 @@ import {
   useUpdateTeam,
 } from '@/hooks/user-setting-hooks';
 import { addUser } from '@/services/user-service';
+import { getAuthorization } from '@/utils/authorization-util';
 import { Modal, message } from 'antd';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -257,4 +258,46 @@ export const useEditTeam = () => {
     editingTeamId,
     loading: updateLoading,
   };
+};
+
+export const useHandleResetPassword = (onSuccess?: () => void) => {
+  const showDeleteConfirm = useShowDeleteConfirm();
+  const { t } = useTranslation();
+
+  const handleResetPassword = (userId: string) => () => {
+    showDeleteConfirm({
+      title: '您确定要重置该成员密码吗？',
+      content: '密码将被重置为：123456',
+      onOk: async () => {
+        try {
+          const res = await fetch('/v1/user/reset_password', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: getAuthorization(),
+            },
+            body: JSON.stringify({
+              user_id: userId,
+            }),
+          });
+
+          const data = await res.json();
+
+          if (data.code === 0) {
+            // 重置成功
+            message.success('密码重置成功！');
+            onSuccess?.();
+          } else {
+            // 重置失败
+            message.error(data.message || '密码重置失败');
+          }
+        } catch (error) {
+          console.error('Reset password error:', error);
+          message.error('密码重置失败');
+        }
+      },
+    });
+  };
+
+  return { handleResetPassword };
 };
