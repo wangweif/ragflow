@@ -710,3 +710,79 @@ def set_tenant_info():
         return get_json_result(data=True)
     except Exception as e:
         return server_error_response(e)
+
+
+@manager.route("/reset_password", methods=["POST"])  # noqa: F821
+@login_required
+@validate_request("user_id")
+def reset_password():
+    """
+    Reset user password to 123456.
+    ---
+    tags:
+      - User
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - in: body
+        name: body
+        description: User ID for password reset.
+        required: true
+        schema:
+          type: object
+          properties:
+            user_id:
+              type: string
+              description: ID of the user whose password needs to be reset.
+    responses:
+      200:
+        description: Password reset successful.
+        schema:
+          type: object
+      401:
+        description: Unauthorized access.
+        schema:
+          type: object
+      404:
+        description: User not found.
+        schema:
+          type: object
+    """
+    if not current_user.is_superuser:
+        return get_json_result(
+            data=False,
+            code=settings.RetCode.AUTHENTICATION_ERROR,
+            message="只有超级管理员可以重置密码!"
+        )
+    
+    user_id = request.json.get("user_id")
+    
+    # 默认密码为123456
+    default_password = "123456"
+    
+    try:
+        # 检查用户是否存在
+        user = UserService.query_by_id(user_id)
+        if not user:
+            return get_json_result(
+                data=False,
+                code=settings.RetCode.DATA_NOT_FOUND_ERROR,
+                message="用户不存在!"
+            )
+        
+        # 更新密码
+        password_hash = generate_password_hash(default_password)
+        UserService.update_by_id(user_id, {"password": password_hash})
+        
+        return get_json_result(
+            data=True,
+            message="密码重置成功!"
+        )
+    except Exception as e:
+        logging.exception(e)
+        return get_json_result(
+            data=False,
+            message="密码重置失败!",
+            code=settings.RetCode.EXCEPTION_ERROR
+        )
+
