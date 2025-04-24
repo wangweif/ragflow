@@ -1,165 +1,100 @@
-import { Domain } from '@/constants/common';
-import { useLogin, useRegister } from '@/hooks/login-hooks';
-import { useSystemConfig } from '@/hooks/system-hooks';
+import { useLogin } from '@/hooks/login-hooks';
 import { rsaPsw } from '@/utils';
 import { Button, Checkbox, Form, Input, Layout } from 'antd';
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Icon, useNavigate } from 'umi';
+import { MailOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { useNavigate } from 'umi';
 import styles from './index.less';
 
 const { Footer } = Layout;
 
 const Login = () => {
-  const [title, setTitle] = useState('login');
   const navigate = useNavigate();
   const { login, loading: signLoading } = useLogin();
-  const { register, loading: registerLoading } = useRegister();
-  const { t } = useTranslation('translation', { keyPrefix: 'login' });
-  const loading = signLoading || registerLoading;
-  const { config } = useSystemConfig();
-  const registerEnabled = config?.registerEnabled !== 0;
-
-  const changeTitle = () => {
-    if (title === 'login' && !registerEnabled) {
-      return;
-    }
-    setTitle((title) => (title === 'login' ? 'register' : 'login'));
-  };
+  const loading = signLoading;
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    form.validateFields(['nickname']);
-  }, [form]);
-
-  const onCheck = async () => {
+  const onCheck = async () => { 
     try {
       const params = await form.validateFields();
 
       const rsaPassWord = rsaPsw(params.password) as string;
 
-      if (title === 'login') {
-        const code = await login({
-          email: `${params.email}`.trim(),
-          password: rsaPassWord,
-        });
-        if (code === 0) {
-          navigate('/knowledge');
-        }
-      } else {
-        const code = await register({
-          nickname: params.nickname,
-          email: params.email,
-          password: rsaPassWord,
-        });
-        if (code === 0) {
-          setTitle('login');
-        }
+      const code = await login({
+        email: `${params.email}`.trim(),
+        password: rsaPassWord,
+      });
+      if (code === 0) {
+        navigate('/knowledge');
       }
     } catch (errorInfo) {
       console.log('Failed:', errorInfo);
     }
   };
 
-  const toGoogle = () => {
-    window.location.href =
-      'https://github.com/login/oauth/authorize?scope=user:email&client_id=302129228f0d96055bee';
-  };
 
   return (
     <div className={styles.loginPage}>
       <div className={styles.loginLeft}>
         <div className={styles.leftContainer}>
+          <h2 className={styles.loginTitle}>欢迎进入知识库系统</h2>
+          <p className={styles.subtitle}>请输入您的凭证信息</p>
           <Form
             form={form}
             layout="vertical"
-            name="dynamic_rule"
-            style={{ maxWidth: 400, margin: '0 auto' }}
+            name="login_form"
+            className={styles.loginForm}
           >
             <Form.Item
               name="email"
-              label={t('emailLabel')}
-              rules={[{ required: true, message: t('emailPlaceholder') }]}
+              rules={[
+                { required: true, message: '请输入工作邮箱' },
+                { type: 'email', message: '请输入有效的邮箱地址' }
+              ]}
             >
-              <Input size="large" placeholder={t('emailPlaceholder')} />
+              <Input 
+                size="large" 
+                placeholder="工作邮箱" 
+                style={{ fontSize: '16px' }}
+                prefix={<MailOutlined style={{ color: '#9ca3af' }} />}
+                autoComplete="email"
+              />
             </Form.Item>
-            {title === 'register' && (
-              <Form.Item
-                name="nickname"
-                label={t('nicknameLabel')}
-                rules={[{ required: true, message: t('nicknamePlaceholder') }]}
-              >
-                <Input size="large" placeholder={t('nicknamePlaceholder')} />
-              </Form.Item>
-            )}
             <Form.Item
               name="password"
-              label={t('passwordLabel')}
-              rules={[{ required: true, message: t('passwordPlaceholder') }]}
+              rules={[{ required: true, message: "请输入登录密码" }]}
             >
               <Input.Password
                 size="large"
-                placeholder={t('passwordPlaceholder')}
+                placeholder="登录密码"
                 onPressEnter={onCheck}
+                style={{ fontSize: '16px' }} 
+                prefix={<LockOutlined style={{ color: '#9ca3af'}} />}
+                autoComplete="current-password"
+                iconRender={(visible) => (
+                  visible ? 
+                  <EyeOutlined style={{ color: '#9ca3af', fontSize: 22 }} /> : 
+                  <EyeInvisibleOutlined style={{ color: '#9ca3af', fontSize: 22 }} />
+                )}
               />
             </Form.Item>
-            {title === 'login' && (
-              <Form.Item name="remember" valuePropName="checked">
-                <Checkbox> {t('rememberMe')}</Checkbox>
-              </Form.Item>
-            )}
-            {/* <div>
-              {title === 'login' && registerEnabled && (
-                <div>
-                  {t('signInTip')}
-                  <Button type="link" onClick={changeTitle}>
-                    {t('signUp')}
-                  </Button>
-                </div>
-              )}
-              {title === 'register' && (
-                <div>
-                  {t('signUpTip')}
-                  <Button type="link" onClick={changeTitle}>
-                    {t('login')}
-                  </Button>
-                </div>
-              )}
-            </div> */}
+            <Form.Item name="remember" valuePropName="checked" style={{ marginBottom: 8 }}>
+              <Checkbox>保持登录状态</Checkbox>
+            </Form.Item>
+            
             <Button
               type="primary"
               block
               size="large"
               onClick={onCheck}
               loading={loading}
+              className={styles.loginButton}
             >
-              {title === 'login' ? t('login') : t('continue')}
+              立即登录
             </Button>
-            {title === 'login' && (
-              <>
-                {location.host === Domain && (
-                  <Button
-                    block
-                    size="large"
-                    onClick={toGoogle}
-                    style={{ marginTop: 15 }}
-                  >
-                    <div className="flex items-center">
-                      <Icon
-                        icon="local:github"
-                        style={{ verticalAlign: 'middle', marginRight: 5 }}
-                      />
-                      Sign in with Github
-                    </div>
-                  </Button>
-                )}
-              </>
-            )}
           </Form>
         </div>
       </div>
       <Footer
-        style={{ textAlign: 'center', padding: '12px 0' }}
         className={styles.footer}
       >
         技术支持：北京市农林科学院数据科学与农业经济研究所
