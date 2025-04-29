@@ -54,9 +54,9 @@ const RagHeader = () => {
 
   return (
     <Header
+      className={styles.headerBackground}
       style={{
         padding: '0 16px',
-        background: colorBgContainer,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',

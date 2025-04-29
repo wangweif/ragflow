@@ -1,5 +1,5 @@
 module.exports = {
-  'primary-color': '#338AFF', // '#338AFF',
+  'primary-color': '#10b981', // 绿色
   'border-radius-base': '4px',
   // 'menu-dark-color': '',
   // 'menu-dark-danger-color': '',

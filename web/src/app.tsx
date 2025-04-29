@@ -3,11 +3,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { App, ConfigProvider, ConfigProviderProps, theme } from 'antd';
 import pt_BR from 'antd/lib/locale/pt_BR';
+import zhCN from 'antd/lib/locale/zh_CN';
+import deDE from 'antd/locale/de_DE';
 import enUS from 'antd/locale/en_US';
 import vi_VN from 'antd/locale/vi_VN';
-import zhCN from 'antd/locale/zh_CN';
 import zh_HK from 'antd/locale/zh_HK';
-import deDE from 'antd/locale/de_DE';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -58,11 +58,23 @@ function Root({ children }: React.PropsWithChildren) {
         theme={{
           token: {
             fontFamily: 'Inter',
+            colorPrimary: '#10b981',
+            colorLink: '#10b981',
+            colorLinkHover: '#047857',
+            colorPrimaryHover: '#047857',
+            colorPrimaryActive: '#047857',
           },
           algorithm:
             themeragflow === 'dark'
               ? theme.darkAlgorithm
               : theme.defaultAlgorithm,
+          components: {
+            Button: {
+              colorPrimary: '#10b981',
+              colorPrimaryHover: '#047857',
+              colorPrimaryActive: '#047857',
+            },
+          },
         }}
         locale={locale}
       >

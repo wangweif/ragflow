@@ -95,3 +95,16 @@
   background: white;
   width: 200px;
 }
+
+.greenButtonMixin() {
+  background-color: @greenPrimary;
+  border-color: @greenPrimary;
+  &:hover {
+    background-color: @greenDark;
+    border-color: @greenDark;
+  }
+  &:active {
+    background-color: @greenDark;
+    border-color: @greenDark;
+  }
+}

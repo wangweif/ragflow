@@ -1,4 +1,6 @@
 @import url(./inter.less);
+@import url(./less/variable.less);
+@import url(./less/mixins.less);
 
 html {
   height: 100%;
@@ -17,6 +19,20 @@ body {
 
 .ant-app {
   height: 100%;
+}
+
+// 全局按钮样式
+.ant-btn-primary {
+  .greenButtonMixin();
+}
+
+.ant-btn-default:not([disabled]) {
+  color: @greenPrimary;
+  border-color: @greenPrimary;
+  &:hover {
+    color: @greenDark;
+    border-color: @greenDark;
+  }
 }
 
 /* Scroll bar stylings */
