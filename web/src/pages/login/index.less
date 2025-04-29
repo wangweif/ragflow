@@ -37,7 +37,6 @@
     margin-top: 16px;
     height: 54px;
     font-size: 18px;
-    background: #6c5dd3;
     border-radius: 0.75rem;
   }
 
@@ -54,8 +53,14 @@
   }
 
   @keyframes cardEntry {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   :global {
@@ -63,7 +68,8 @@
       display: none;
     }
 
-    .ant-input, .ant-input-password {
+    .ant-input,
+    .ant-input-password {
       padding-left: 3.5rem;
       border: 1px solid #e5e7eb;
       border-radius: 0.75rem;
@@ -72,7 +78,8 @@
       height: 54px;
       background-color: #f9fafb;
 
-      &:focus, &:hover {
+      &:focus,
+      &:hover {
         border-color: #6c5dd3;
         box-shadow: 0 0 0 2px rgba(108, 93, 211, 0.1);
       }
@@ -86,7 +93,9 @@
       height: 54px;
       background-color: #f9fafb;
 
-      &:focus, &:hover, &-focused {
+      &:focus,
+      &:hover,
+      &-focused {
         border-color: #6c5dd3;
         box-shadow: 0 0 0 2px rgba(108, 93, 211, 0.1);
       }
@@ -113,7 +122,6 @@
     }
 
     .ant-btn-primary {
-      background: #6c5dd3;
       border: none;
       border-radius: 0.75rem;
       height: 54px;
