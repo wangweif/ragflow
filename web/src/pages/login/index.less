@@ -6,7 +6,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: #f9fafb;
+  background: #ffffff; // Changed background to white
   position: relative;
 
   .loginLeft {
@@ -18,39 +18,31 @@
 
   .leftContainer {
     width: 100%;
-    max-width: 460px;
-    padding: 2.5rem;
+    max-width: 420px; // Slightly adjusted width
+    padding: 3rem; // Increased padding
     margin-bottom: 60px;
-    background: white;
-    border-radius: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    background: #e8f5e9; // Light green background
+    border-radius: 2rem; // Increased border-radius
+    // box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); // Removed box-shadow
     animation: cardEntry 0.6s ease forwards;
   }
 
   .loginForm {
     .ant-form-item {
-      margin-bottom: 20px;
+      margin-bottom: 24px; // Slightly increased margin
     }
   }
 
   .loginButton {
-    margin-top: 16px;
-    height: 54px;
-    font-size: 18px;
-    border-radius: 0.75rem;
+    margin-top: 24px; // Increased margin
+    height: 50px; // Adjusted height
+    font-size: 16px; // Adjusted font size
+    border-radius: 50px; // Pill shape
+    font-weight: 500;
   }
 
-  .githubButton {
-    height: 48px;
-    border: 2px solid #e0e0e0;
-    font-size: 16px;
-    transition: all 0.3s;
-
-    &:hover {
-      border-color: #6366f1;
-      color: #6366f1;
-    }
-  }
+  // Remove GitHub button styles if not needed, or restyle similarly
+  // .githubButton { ... }
 
   @keyframes cardEntry {
     from {
@@ -68,113 +60,148 @@
       display: none;
     }
 
-    .ant-input,
-    .ant-input-password {
-      padding-left: 3.5rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 0.75rem;
+    // Input field base styles (for inputs without icons)
+    .ant-input {
+      padding-left: 1rem; // Standard padding if no icon
+      border: 1px solid #a5d6a7; // Light green border
+      border-radius: 50px; // Pill shape
       transition: all 0.3s;
       font-size: 1rem;
-      height: 54px;
-      background-color: #f9fafb;
+      height: 50px; // Adjusted height
+      background-color: #ffffff; // White background
 
       &:focus,
       &:hover {
-        border-color: #6c5dd3;
-        box-shadow: 0 0 0 2px rgba(108, 93, 211, 0.1);
+        border-color: #4caf50; // Darker green border on focus/hover
+        box-shadow: none; // Removed focus shadow
       }
     }
 
+    // Input field wrapper styles (handles icons)
     .ant-input-affix-wrapper {
       padding: 0;
-      border: 1px solid #e5e7eb;
-      border-radius: 0.75rem;
+      border: 1px solid #a5d6a7; // Light green border
+      border-radius: 50px; // Pill shape
       transition: all 0.3s;
-      height: 54px;
-      background-color: #f9fafb;
+      height: 50px; // Adjusted height
+      background-color: #ffffff; // White background
+      overflow: hidden; // Ensure content fits rounded corners
 
       &:focus,
       &:hover,
       &-focused {
-        border-color: #6c5dd3;
-        box-shadow: 0 0 0 2px rgba(108, 93, 211, 0.1);
+        border-color: #4caf50; // Darker green border on focus/hover
+        box-shadow: none; // Removed focus shadow
       }
 
+      // Input field itself within the wrapper
       .ant-input {
         border: none;
         box-shadow: none;
-        height: 52px;
+        height: 48px; // Slightly less than wrapper for border
         background-color: transparent;
-        padding-left: 1rem;
+        padding-left: 1rem; // Reset padding for input inside wrapper
+
+        // Ensure placeholder color is standard gray
+        &::placeholder {
+          color: #9ca3af;
+        }
       }
 
+      // Icon prefix (e.g., email)
       .ant-input-prefix {
         margin-right: 8px;
         margin-left: 16px;
-        font-size: 20px;
-        color: #9ca3af;
+        font-size: 18px; // Adjusted icon size
+        color: #a5d6a7; // Light green icon color
+      }
+
+      // Password visibility toggle icon
+      .ant-input-suffix .ant-input-password-icon {
+        color: #a5d6a7; // Light green icon color
+        margin-right: 16px;
       }
     }
 
-    .ant-input-password-icon {
-      color: #9ca3af;
-      margin-right: 16px;
+    // Specific style for password input to ensure consistency
+    .ant-input-password {
+      border: 1px solid #a5d6a7;
+      border-radius: 50px;
+      height: 50px;
+      background-color: #ffffff;
+
+      &:focus,
+      &:hover {
+        border-color: #4caf50;
+        box-shadow: none;
+      }
     }
 
+    // Login Button styles
     .ant-btn-primary {
+      background: #4caf50; // Darker green background
       border: none;
-      border-radius: 0.75rem;
-      height: 54px;
-      font-size: 18px;
+      border-radius: 50px; // Pill shape
+      height: 50px; // Match adjusted height
+      font-size: 16px; // Match adjusted font size
       font-weight: 500;
       transition: background 0.3s;
 
-      &:hover {
-        background: #5b4eb8;
+      &:hover,
+      &:focus {
+        background: #388e3c; // Slightly darker green on hover/focus
         transform: none;
         box-shadow: none;
       }
     }
 
+    // Checkbox styles
     .ant-checkbox-wrapper {
-      color: #4b5563;
-      font-size: 16px;
+      color: #4b5563; // Keep default text color or adjust if needed
+      font-size: 14px; // Slightly smaller font size
     }
 
     .ant-checkbox {
       .ant-checkbox-inner {
-        border-radius: 0.25rem;
-        border-color: #d1d5db;
-        width: 18px;
-        height: 18px;
+        border-radius: 0.25rem; // Slightly rounded square
+        border-color: #a5d6a7; // Light green border
+        width: 16px; // Adjusted size
+        height: 16px; // Adjusted size
       }
 
       &.ant-checkbox-checked .ant-checkbox-inner {
-        background-color: #6c5dd3;
-        border-color: #6c5dd3;
+        background-color: #4caf50; // Darker green background when checked
+        border-color: #4caf50; // Darker green border when checked
+      }
+
+      // Ensure focus outline matches theme
+      &.ant-checkbox-focused .ant-checkbox-inner {
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
       }
     }
 
+    // Error message styles
     .ant-form-item-explain-error {
       font-size: 12px;
       margin-top: 4px;
+      color: #f44336; // Standard error color
     }
   }
 
   .loginTitle {
-    font-size: 32px;
-    font-weight: 700;
-    line-height: 1.2;
-    color: #1f2937;
+    font-size: 28px; // Adjusted font size
+    font-weight: 600; // Adjusted font weight
+    line-height: 1.3;
+    color: #388e3c; // Darker green color
     text-align: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem; // Adjusted margin
   }
 
   .subtitle {
-    color: #6b7280;
+    color: #618862; // Grayish-green color
     text-align: center;
     margin-bottom: 2.5rem;
-    font-size: 16px;
+    font-size: 14px; // Adjusted font size
   }
 
   @media screen and (max-width: 957px) {
@@ -184,12 +211,14 @@
     }
 
     .leftContainer {
-      padding: 1.5rem;
+      padding: 2rem; // Adjusted padding for smaller screens
       margin: 1rem;
+      max-width: calc(100% - 2rem); // Ensure it fits screen width
     }
   }
 }
 
+// Keep or remove footer as needed
 .footer {
   background-color: #f0f2f5;
   border-top: 1px solid #e8e8e8;
