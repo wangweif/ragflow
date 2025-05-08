@@ -27,6 +27,9 @@ sleep 2
 echo "激活Python虚拟环境..."
 source .venv/bin/activate
 export PYTHONPATH=$(pwd)
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export WS=10
+export MAX_CONTENT_LENGTH=1073741824
 # 设置ONNX Runtime在CUDA环境下的内存设置
 # export ORT_CUDA_PROVIDER_OPTIONS="arena_extend_strategy=kNextPowerOfTwo"
 # export ORT_CUDA_PROVIDER_OPTIONS="$ORT_CUDA_PROVIDER_OPTIONS;cuda_mem_limit=2147483648"
