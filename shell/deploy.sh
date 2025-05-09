@@ -44,6 +44,13 @@ MAX_WAIT=60  # 最长等待时间(秒)
 WAIT_INTERVAL=5  # 每次检查间隔(秒)
 TOTAL_WAIT=0
 
+export WS=10 # 工作线程数
+export MAX_CONTENT_LENGTH=1073741824 # 最大内容长度
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 # 指定CUDA设备
+
+pkill -f "launch" # 杀死所有launch进程
+pkill -f "rag/svr" # 杀死所有rag/svr进程
+
 echo "开始检查服务启动状态..."
 while [ $TOTAL_WAIT -lt $MAX_WAIT ]; do
     if netstat -tuln | grep -q ":9380 "; then
