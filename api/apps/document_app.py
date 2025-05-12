@@ -17,6 +17,7 @@ import json
 import os.path
 import pathlib
 import re
+import logging
 
 import flask
 from flask import request
@@ -47,37 +48,51 @@ from rag.utils.storage_factory import STORAGE_IMPL
 from api.utils.file_utils import filename_type, thumbnail, get_project_base_directory
 from api.utils.web_utils import html2pdf, is_valid_url
 from api.constants import IMG_BASE64_PREFIX
+import logging
+
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 @manager.route('/upload', methods=['POST'])  # noqa: F821
 @login_required
 @validate_request("kb_id")
 def upload():
-    kb_id = request.form.get("kb_id")
-    if not kb_id:
-        return get_json_result(
-            data=False, message='缺少"KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
-    if 'file' not in request.files:
-        return get_json_result(
-            data=False, message='没有文件部分！', code=settings.RetCode.ARGUMENT_ERROR)
-
-    file_objs = request.files.getlist('file')
-    for file_obj in file_objs:
-        if file_obj.filename == '':
+    logger.info("文件上传开始")
+    try:
+        kb_id = request.form.get("kb_id")
+        if not kb_id:
             return get_json_result(
-                data=False, message='未选择文件！', code=settings.RetCode.ARGUMENT_ERROR)
+                data=False, message='缺少"KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
+        if 'file' not in request.files:
+            return get_json_result(
+                data=False, message='没有文件部分！', code=settings.RetCode.ARGUMENT_ERROR)
 
-    e, kb = KnowledgebaseService.get_by_id(kb_id)
-    if not e:
-        raise LookupError("找不到此知识库！")
+        file_objs = request.files.getlist('file')
+        for file_obj in file_objs:
+            if file_obj.filename == '':
+                return get_json_result(
+                    data=False, message='未选择文件！', code=settings.RetCode.ARGUMENT_ERROR)
 
-    err, files = FileService.upload_document(kb, file_objs, current_user.id)
-    files = [f[0] for f in files] # remove the blob
-    
-    if err:
+        e, kb = KnowledgebaseService.get_by_id(kb_id)
+        if not e:
+            raise LookupError("找不到此知识库！")
+
+        err, files = FileService.upload_document(kb, file_objs, current_user.id)
+        files = [f[0] for f in files] # remove the blob
+        
+        if err:
+            return get_json_result(
+                data=files, message="\n".join(err), code=settings.RetCode.SERVER_ERROR)
+        logger.info(f"文件上传成功: {files}")
+        return get_json_result(data=files)
+    except Exception as e:
+        import traceback
+        error_message = f"文件上传失败: {str(e)}\n{traceback.format_exc()}"
+        logger.error(error_message)  # 输出到服务器日志
         return get_json_result(
-            data=files, message="\n".join(err), code=settings.RetCode.SERVER_ERROR)
-    return get_json_result(data=files)
+            data=False, message=error_message, code=settings.RetCode.SERVER_ERROR)
 
 
 @manager.route('/web_crawl', methods=['POST'])  # noqa: F821
