@@ -251,7 +251,11 @@ export const useUploadNextDocument = () => {
       const formData = new FormData();
       formData.append('kb_id', knowledgeId);
       fileList.forEach((file: any) => {
-        formData.append('file', file);
+        if (file.originFileObj) {
+          formData.append('file', file.originFileObj);
+        } else {
+          formData.append('file', file);
+        }
       });
 
       try {
