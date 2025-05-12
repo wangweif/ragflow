@@ -44,11 +44,19 @@
     color: rgba(29, 25, 41, 1);
     margin-right: 8px; /* Add spacing between buttons */
     border-radius: 6px; /* Add rounded corners */
+    min-width: 120px; // Set a minimum width for the buttons
+    padding: 0 15px; // Adjust padding as needed
+    text-align: center; // Center text within the button
     &:last-child {
       margin-right: 0; /* Remove margin from the last button */
     }
     &::before {
       display: none !important;
+    }
+    & a {
+      // Ensure anchor tag takes full height for clickability
+      display: block;
+      height: 100%;
     }
   }
   :global(.ant-radio-button-wrapper-checked) {
@@ -69,11 +77,19 @@
     color: rgba(29, 25, 41, 1);
     margin-right: 8px; /* Add spacing between buttons */
     border-radius: 6px; /* Add rounded corners */
+    min-width: 120px; // Set a minimum width for the buttons
+    padding: 0 15px; // Adjust padding as needed
+    text-align: center; // Center text within the button
     &:last-child {
       margin-right: 0; /* Remove margin from the last button */
     }
     &::before {
       display: none !important;
+    }
+    & a {
+      // Ensure anchor tag takes full height for clickability
+      display: block;
+      height: 100%;
     }
   }
   :global(.ant-radio-button-wrapper-checked) {

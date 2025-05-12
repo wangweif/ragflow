@@ -91,9 +91,11 @@ const RagHeader = () => {
               <a href={item.path}>
                 <Flex
                   align="center"
+                  justify="center" // Horizontally center content within Flex
                   gap={8}
                   onClick={handleChange(item.path)}
                   className="cursor-pointer"
+                  style={{ width: '100%', height: '100%' }} // Make Flex fill the 'a' tag
                 >
                   <item.icon
                     className={styles.radioButtonIcon}
