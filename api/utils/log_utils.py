@@ -16,7 +16,66 @@
 import os
 import os.path
 import logging
-from logging.handlers import RotatingFileHandler
+import datetime
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
+
+# 自定义的每日轮转日志处理器
+class DailyRotatingFileHandler(logging.Handler):
+    def __init__(self, log_dir, basename, backupCount=30):
+        super().__init__()
+        self.log_dir = log_dir
+        self.basename = basename
+        self.backupCount = backupCount
+        self.current_date = None
+        self.current_file = None
+        self._update_file()
+    
+    def _get_date_str(self):
+        return datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    def _update_file(self):
+        date_str = self._get_date_str()
+        if date_str != self.current_date:
+            self.current_date = date_str
+            filename = f"{self.basename}_{date_str}.log"
+            filepath = os.path.join(self.log_dir, filename)
+            
+            # 关闭之前的文件（如果有）
+            if self.current_file is not None:
+                self.current_file.close()
+            
+            # 打开新文件
+            self.current_file = open(filepath, 'a', encoding='utf-8')
+            
+            # 清理旧文件
+            self._cleanup_old_logs()
+    
+    def _cleanup_old_logs(self):
+        files = []
+        for file in os.listdir(self.log_dir):
+            if file.startswith(self.basename) and file.endswith('.log'):
+                files.append(os.path.join(self.log_dir, file))
+        files.sort(reverse=True)  # 最新的文件在前面
+        # 保留最新的backupCount个文件
+        for file in files[self.backupCount:]:
+            try:
+                os.remove(file)
+            except:
+                pass
+    
+    def emit(self, record):
+        try:
+            # 检查是否需要切换文件
+            self._update_file()
+            
+            # 格式化记录
+            msg = self.format(record)
+            
+            # 写入文件
+            self.current_file.write(msg + '\n')
+            self.current_file.flush()
+        except Exception:
+            self.handleError(record)
 
 initialized_root_logger = False
 
@@ -38,12 +97,15 @@ def initRootLogger(logfile_basename: str, log_format: str = "%(asctime)-15s %(le
 
     logger = logging.getLogger()
     logger.handlers.clear()
-    log_path = os.path.abspath(os.path.join(get_project_base_directory(), "logs", f"{logfile_basename}.log"))
-
-    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    
+    # 创建logs/logfile_basename目录
+    log_dir = os.path.abspath(os.path.join(get_project_base_directory(), "logs", logfile_basename))
+    os.makedirs(log_dir, exist_ok=True)
+    
     formatter = logging.Formatter(log_format)
 
-    handler1 = RotatingFileHandler(log_path, maxBytes=10*1024*1024, backupCount=5)
+    # 使用自定义的DailyRotatingFileHandler，确保每天严格切换一个新的日志文件
+    handler1 = DailyRotatingFileHandler(log_dir, logfile_basename, backupCount=30)
     handler1.setFormatter(formatter)
     logger.addHandler(handler1)
 
@@ -76,5 +138,5 @@ def initRootLogger(logfile_basename: str, log_format: str = "%(asctime)-15s %(le
         pkg_logger = logging.getLogger(pkg_name)
         pkg_logger.setLevel(pkg_level)
 
-    msg = f"{logfile_basename} log path: {log_path}, log levels: {pkg_levels}"
+    msg = f"{logfile_basename} log dir: {log_dir}, log levels: {pkg_levels}"
     logger.info(msg)
