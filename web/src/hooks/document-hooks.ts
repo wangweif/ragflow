@@ -9,10 +9,12 @@ import i18n from '@/locales/config';
 import chatService from '@/services/chat-service';
 import kbService from '@/services/knowledge-service';
 import api, { api_host } from '@/utils/api';
+import { getAuthorization } from '@/utils/authorization-util';
 import { buildChunkHighlights } from '@/utils/document-util';
 import { post } from '@/utils/request';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { UploadFile, message } from 'antd';
+import axios from 'axios';
 import { get } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { IHighlight } from 'react-pdf-highlighter';
@@ -259,7 +261,11 @@ export const useUploadNextDocument = () => {
       });
 
       try {
-        const ret = await kbService.document_upload(formData);
+        const ret = await axios.post(api.document_upload, formData, {
+          headers: {
+            Authorization: getAuthorization(),
+          },
+        });
         const code = get(ret, 'data.code');
 
         if (code === 0 || code === 500) {
