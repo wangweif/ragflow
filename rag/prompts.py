@@ -133,40 +133,40 @@ def kb_prompt(kbinfos, max_tokens):
 def citation_prompt():
     return """
 
-# Citation requirements:
-- Inserts CITATIONS in format '##i$$ ##j$$' where i,j are the ID of the content you are citing and encapsulated with '##' and '$$'.
-- Inserts the CITATION symbols at the end of a sentence, AND NO MORE than 4 citations.
-- DO NOT insert CITATION in the answer if the content is not from retrieved chunks.
+# 引用要求:
+- 在引用内容时，使用格式 '##i$$ ##j$$'，其中 i,j 是你正在引用的内容的ID，并用 '##' 和 '$$' 包围。
+- 在句子结尾处插入引用符号，并且不超过4个引用。
+- 如果内容不是来自检索到的文本块，请勿在回答中插入引用。
 
---- Example START ---
-<SYSTEM>: Here is the knowledge base:
+--- 示例开始 ---
+<s>: 以下是知识库:
 
-Document: Elon Musk Breaks Silence on Crypto, Warns Against Dogecoin ...
-URL: https://blockworks.co/news/elon-musk-crypto-dogecoin
+文档: 埃隆·马斯克打破沉默谈加密货币，警告关于狗狗币...
+网址: https://blockworks.co/news/elon-musk-crypto-dogecoin
 ID: 0
-The Tesla co-founder advised against going all-in on dogecoin, but Elon Musk said it’s still his favorite crypto...
+特斯拉联合创始人建议不要全力投入狗狗币，但埃隆·马斯克说这仍然是他最喜欢的加密货币...
 
-Document: Elon Musk's Dogecoin tweet sparks social media frenzy
+文档: 埃隆·马斯克的狗狗币推文引发社交媒体狂热
 ID: 1
-Musk said he is 'willing to serve' D.O.G.E. – shorthand for Dogecoin.
+马斯克表示他"愿意为"D.O.G.E.（狗狗币的简称）服务。
 
-Document: Causal effect of Elon Musk tweets on Dogecoin price
+文档: 埃隆·马斯克推文对狗狗币价格的因果影响
 ID: 2
-If you think of Dogecoin — the cryptocurrency based on a meme — you can’t help but also think of Elon Musk...
+如果你想到狗狗币 — 这个基于表情包的加密货币 — 你不禁也会想到埃隆·马斯克...
 
-Document: Elon Musk's Tweet Ignites Dogecoin's Future In Public Services
+文档: 埃隆·马斯克的推文点燃了狗狗币在公共服务中的未来
 ID: 3
-The market is heating up after Elon Musk's announcement about Dogecoin. Is this a new era for crypto?...
+在埃隆·马斯克宣布关于狗狗币的消息后，市场正在升温。这是加密货币的新时代吗？...
 
-      The above is the knowledge base.
+      以上是知识库。
 
-<USER>: What's the Elon's view on dogecoin?
+<USER>: 埃隆对狗狗币的看法是什么？
 
-<ASSISTANT>: Musk has consistently expressed his fondness for Dogecoin, often citing its humor and the inclusion of dogs in its branding. He has referred to it as his favorite cryptocurrency ##0$$ ##1$$.
-Recently, Musk has hinted at potential future roles for Dogecoin. His tweets have sparked speculation about Dogecoin's potential integration into public services ##3$$.
-Overall, while Musk enjoys Dogecoin and often promotes it, he also warns against over-investing in it, reflecting both his personal amusement and caution regarding its speculative nature.
+<ASSISTANT>: 马斯克一直表达对狗狗币的喜爱，经常引用其幽默性和品牌中包含狗的元素。他称其为他最喜欢的加密货币 ##0$$ ##1$$。
+最近，马斯克暗示了狗狗币可能的未来角色。他的推文引发了人们对狗狗币可能融入公共服务的猜测 ##3$$。
+总体而言，虽然马斯克喜欢狗狗币并经常宣传它，但他也警告不要过度投资，这反映了他个人的娱乐态度和对其投机性质的谨慎。
 
---- Example END ---
+--- 示例结束 ---
 
 """
 
