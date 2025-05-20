@@ -25,6 +25,11 @@
   background: linear-gradient(to bottom, rgb(120, 166, 129), white);
 }
 
+/* 北京市农业农村局蓝色主题 */
+.headerBackgroundBlue {
+  background: linear-gradient(to bottom, rgb(51, 138, 255), white);
+}
+
 .appName {
   vertical-align: middle;
   font-family: Inter;
@@ -40,6 +45,40 @@
     line-height: 40px;
     border: 0 !important;
     background-color: #10b981;
+    font-weight: @fontWeight700;
+    color: rgba(29, 25, 41, 1);
+    margin-right: 8px; /* Add spacing between buttons */
+    border-radius: 6px; /* Add rounded corners */
+    min-width: 120px; // Set a minimum width for the buttons
+    padding: 0 15px; // Adjust padding as needed
+    text-align: center; // Center text within the button
+    &:last-child {
+      margin-right: 0; /* Remove margin from the last button */
+    }
+    &::before {
+      display: none !important;
+    }
+    & a {
+      // Ensure anchor tag takes full height for clickability
+      display: block;
+      height: 100%;
+    }
+  }
+  :global(.ant-radio-button-wrapper-checked) {
+    border-radius: 6px !important; /* Keep this for checked state */
+    & a {
+      color: white;
+    }
+  }
+}
+
+/* 北京市农业农村局蓝色主题的Radio按钮 */
+.radioGroupBlue {
+  & label {
+    height: 40px;
+    line-height: 40px;
+    border: 0 !important;
+    background-color: #338aff;
     font-weight: @fontWeight700;
     color: rgba(29, 25, 41, 1);
     margin-right: 8px; /* Add spacing between buttons */

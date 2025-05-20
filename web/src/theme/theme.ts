@@ -1,5 +1,9 @@
+// 根据环境变量设置主题颜色
+const deployType = process.env.DEPLOY_TYPE || 'bjnl';
+const primaryColor = deployType === 'bjny' ? '#338aff' : '#10b981'; // 蓝色 vs 绿色
+
 module.exports = {
-  'primary-color': '#10b981', // 绿色
+  'primary-color': primaryColor,
   'border-radius-base': '4px',
   // 'menu-dark-color': '',
   // 'menu-dark-danger-color': '',

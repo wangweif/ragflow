@@ -21,7 +21,7 @@ body {
   height: 100%;
 }
 
-// 全局按钮样式
+// 默认样式（bjnl主题 - 绿色）
 .ant-btn-primary {
   .greenButtonMixin();
 }
@@ -32,6 +32,22 @@ body {
   &:hover {
     color: @greenDark;
     border-color: @greenDark;
+  }
+}
+
+// 北京市农业农村局主题(蓝色)
+body.bjny-theme {
+  .ant-btn-primary {
+    .blueButtonMixin();
+  }
+
+  .ant-btn-default:not([disabled]) {
+    color: #338aff;
+    border-color: #338aff;
+    &:hover {
+      color: #1677ff;
+      border-color: #1677ff;
+    }
   }
 }
 

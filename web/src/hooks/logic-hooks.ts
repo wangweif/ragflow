@@ -139,9 +139,27 @@ export interface AppConf {
 export const useFetchAppConf = () => {
   const [appConf, setAppConf] = useState<AppConf>({} as AppConf);
   const fetchAppConf = useCallback(async () => {
-    const ret = await axios.get('/conf.json');
+    try {
+      // 根据环境变量区分不同部署环境
+      const deployType = process.env.DEPLOY_TYPE || 'bjnl';
 
-    setAppConf(ret.data);
+      if (deployType === 'bjny') {
+        // 北京市农业农村局
+        setAppConf({
+          appName: '北京市农业农村局',
+        });
+      } else {
+        // 北京市农林科学院知识库系统（默认）
+        const ret = await axios.get('/conf.json');
+        setAppConf(ret.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch app configuration:', error);
+      // 默认配置
+      setAppConf({
+        appName: '北京市农林科学院知识库系统',
+      });
+    }
   }, []);
 
   useEffect(() => {

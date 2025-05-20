@@ -52,17 +52,38 @@ function Root({ children }: React.PropsWithChildren) {
     setLocal(getLocale(lng));
   });
 
+  // 根据环境变量设置主题颜色
+  const deployType = process.env.DEPLOY_TYPE || 'bjnl';
+  const isPrimaryGreen = deployType !== 'bjny'; // 非农业农村局使用绿色
+
+  // 主题颜色配置
+  const primaryColor = isPrimaryGreen ? '#10b981' : '#338aff'; // 绿色 vs 蓝色
+  const primaryHoverColor = isPrimaryGreen ? '#047857' : '#1677ff';
+
+  // 根据环境变量设置body类名
+  useEffect(() => {
+    // 移除所有主题相关的类名
+    document.body.classList.remove('bjny-theme', 'bjnl-theme');
+
+    // 添加当前环境对应的类名
+    if (deployType === 'bjny') {
+      document.body.classList.add('bjny-theme');
+    } else {
+      document.body.classList.add('bjnl-theme');
+    }
+  }, [deployType]);
+
   return (
     <>
       <ConfigProvider
         theme={{
           token: {
             fontFamily: 'Inter',
-            colorPrimary: '#10b981',
-            colorLink: '#10b981',
-            colorLinkHover: '#047857',
-            colorPrimaryHover: '#047857',
-            colorPrimaryActive: '#047857',
+            colorPrimary: primaryColor,
+            colorLink: primaryColor,
+            colorLinkHover: primaryHoverColor,
+            colorPrimaryHover: primaryHoverColor,
+            colorPrimaryActive: primaryHoverColor,
           },
           algorithm:
             themeragflow === 'dark'
@@ -70,9 +91,9 @@ function Root({ children }: React.PropsWithChildren) {
               : theme.defaultAlgorithm,
           components: {
             Button: {
-              colorPrimary: '#10b981',
-              colorPrimaryHover: '#047857',
-              colorPrimaryActive: '#047857',
+              colorPrimary: primaryColor,
+              colorPrimaryHover: primaryHoverColor,
+              colorPrimaryActive: primaryHoverColor,
             },
           },
         }}

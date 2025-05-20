@@ -3,7 +3,7 @@ import { useTranslate } from '@/hooks/common-hooks';
 import { useFetchAppConf } from '@/hooks/logic-hooks';
 import { useNavigateWithFromState } from '@/hooks/route-hook';
 import { MessageOutlined } from '@ant-design/icons';
-import { Flex, Layout, Radio, Space, theme } from 'antd';
+import { Flex, Layout, Radio, Space } from 'antd';
 import { MouseEventHandler, useCallback, useMemo } from 'react';
 import { useLocation } from 'umi';
 import Toolbar from '../right-toolbar';
@@ -14,9 +14,6 @@ import styles from './index.less';
 const { Header } = Layout;
 
 const RagHeader = () => {
-  const {
-    token: { colorBgContainer },
-  } = theme.useToken();
   const navigate = useNavigateWithFromState();
   const { pathname } = useLocation();
   const { t } = useTranslate('header');
@@ -52,9 +49,17 @@ const RagHeader = () => {
     navigate('/');
   }, [navigate]);
 
+  // 根据环境变量判断是否显示logo和选择背景样式
+  const deployType = process.env.DEPLOY_TYPE || 'bjnl';
+  const isNyDeploy = deployType === 'bjny'; // 是否为农业农村局部署
+  const showLogo = !isNyDeploy; // 非农业农村局显示logo
+  const headerClass = isNyDeploy
+    ? styles.headerBackgroundBlue
+    : styles.headerBackground;
+
   return (
     <Header
-      className={styles.headerBackground}
+      className={headerClass}
       style={{
         padding: '0 16px',
         display: 'flex',
@@ -69,7 +74,9 @@ const RagHeader = () => {
           onClick={handleLogoClick}
           className={styles.logoWrapper}
         >
-          <img src="/logo.svg" alt="" className={styles.appIcon} />
+          {showLogo && (
+            <img src="/logo.svg" alt="" className={styles.appIcon} />
+          )}
           <span className={styles.appName}>{appConf.appName}</span>
         </Space>
       </a>
@@ -78,7 +85,11 @@ const RagHeader = () => {
           defaultValue="a"
           buttonStyle="solid"
           className={
-            themeRag === 'dark' ? styles.radioGroupDark : styles.radioGroup
+            themeRag === 'dark'
+              ? styles.radioGroupDark
+              : isNyDeploy
+                ? styles.radioGroupBlue
+                : styles.radioGroup
           }
           value={currentPath}
         >

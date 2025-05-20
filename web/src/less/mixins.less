@@ -96,6 +96,21 @@
   width: 200px;
 }
 
+// 蓝色按钮样式(北京市农业农村局)
+.blueButtonMixin() {
+  background-color: #338aff;
+  border-color: #338aff;
+  &:hover {
+    background-color: #1677ff;
+    border-color: #1677ff;
+  }
+  &:active {
+    background-color: #1677ff;
+    border-color: #1677ff;
+  }
+}
+
+// 绿色按钮样式(默认)
 .greenButtonMixin() {
   background-color: @greenPrimary;
   border-color: @greenPrimary;
