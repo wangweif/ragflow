@@ -2,8 +2,10 @@
   "private": true,
   "author": "bill",
   "scripts": {
-    "build": "umi build",
-    "dev": "cross-env UMI_DEV_SERVER_COMPRESS=none umi dev",
+    "build:bjnl": "cross-env DEPLOY_TYPE=bjnl umi build",
+    "build:bjny": "cross-env DEPLOY_TYPE=bjny umi build",
+    "dev:bjnl": "cross-env UMI_DEV_SERVER_COMPRESS=none DEPLOY_TYPE=bjnl umi dev",
+    "dev:bjny": "cross-env UMI_DEV_SERVER_COMPRESS=none DEPLOY_TYPE=bjny umi dev",
     "postinstall": "umi setup",
     "lint": "umi lint --eslint-only",
     "prepare": "cd .. && husky web/.husky",

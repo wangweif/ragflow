@@ -22,7 +22,7 @@ export default defineConfig({
   icons: {},
   hash: true,
   // 根据环境变量决定是否显示favicon
-  favicons: showFavicon ? ['/logo.svg'] : [],
+  favicons: showFavicon ? ['/logo.svg'] : ['1'],
   clickToComponent: {},
   history: {
     type: 'browser',
