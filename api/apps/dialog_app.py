@@ -92,6 +92,7 @@ def set_dialog():
                 "llm_id": llm_id,
                 "llm_setting": llm_setting,
                 "prompt_config": prompt_config,
+                "language": "Chinese",
                 "top_n": top_n,
                 "top_k": top_k,
                 "rerank_id": rerank_id,

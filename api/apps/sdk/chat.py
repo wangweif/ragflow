@@ -78,6 +78,7 @@ def create(tenant_id):
         req["prompt_config"] = req.pop("prompt")
     # init
     req["id"] = get_uuid()
+    req["language"] = "Chinese"  # 设置默认语言为中文
     req["description"] = req.get("description", "A helpful Assistant")
     req["icon"] = req.get("avatar", "")
     req["top_n"] = req.get("top_n", 6)
@@ -101,15 +102,15 @@ def create(tenant_id):
     req["tenant_id"] = tenant_id
     # prompt more parameter
     default_prompt = {
-        "system": """You are an intelligent assistant. Please summarize the content of the knowledge base to answer the question. Please list the data in the knowledge base and answer in detail. When all knowledge base content is irrelevant to the question, your answer must include the sentence "The answer you are looking for is not found in the knowledge base!" Answers need to consider chat history.
-      Here is the knowledge base:
-      {knowledge}
-      The above is the knowledge base.""",
-        "prologue": "Hi! I'm your assistant, what can I do for you?",
+        "system": """你是一个智能助手。请总结知识库的内容来回答问题，请列举知识库中的数据详细回答。当所有知识库内容都与问题无关时，你的回答必须包括"知识库中未找到您要的答案！"这句话。回答需要考虑聊天历史。
+        以下是知识库：
+        {knowledge}
+        以上是知识库。""",
+        "prologue": "你好！我是你的助理，有什么可以帮到你的吗？",
         "parameters": [
             {"key": "knowledge", "optional": False}
         ],
-        "empty_response": "Sorry! No relevant content was found in the knowledge base!",
+        "empty_response": "抱歉！知识库中未找到相关内容！",
         "quote": True,
         "tts": False,
         "refine_multiturn": True
@@ -244,6 +245,8 @@ def update(tenant_id, chat_id):
         req["icon"] = req.pop("avatar")
     if "dataset_ids" in req:
         req.pop("dataset_ids")
+    # 确保更新时也保持语言为中文
+    req["language"] = "Chinese"
     if not DialogService.update_by_id(chat_id, req):
         return get_error_data_result(message="未找到聊天！")
     return get_result()
