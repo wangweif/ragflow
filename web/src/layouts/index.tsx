@@ -22,7 +22,7 @@ const App: React.FC = () => {
 
   const footerText = useMemo(() => {
     return isNyDeploy
-      ? '技术支持：北京市农业农村局'
+      ? '技术支持：北京市农林科学院'
       : '技术支持：北京市农林科学院数据科学与农业经济研究所';
   }, [isNyDeploy]);
 
