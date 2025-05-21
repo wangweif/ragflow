@@ -1,4 +1,5 @@
-@import '../../theme/vars';
+@import url(../../less/variable.less);
+@import url(../../theme/vars.less);
 
 .loginPage {
   display: flex;
@@ -158,7 +159,7 @@
 
         &:focus,
         &:hover {
-          border-color: #338aff !important; // Darker blue border on focus/hover
+          border-color: @bluePrimary !important; // 使用变量
         }
       }
 
@@ -169,7 +170,7 @@
         &:focus,
         &:hover,
         &-focused {
-          border-color: #338aff !important; // Darker blue border on focus/hover
+          border-color: @bluePrimary !important; // 使用变量
         }
 
         // Icon prefix (e.g., email)
@@ -189,13 +190,13 @@
 
         &:focus,
         &:hover {
-          border-color: #338aff !important;
+          border-color: @bluePrimary !important; // 使用变量
         }
       }
 
       // Login Button styles
       .ant-btn-primary {
-        background: #338aff !important; // Darker blue background
+        background: @bluePrimary !important; // 使用变量
 
         &:hover,
         &:focus {
@@ -210,8 +211,8 @@
         }
 
         &.ant-checkbox-checked .ant-checkbox-inner {
-          background-color: #338aff !important; // Darker blue background when checked
-          border-color: #338aff !important; // Darker blue border when checked
+          background-color: @bluePrimary !important; // 使用变量
+          border-color: @bluePrimary !important; // 使用变量
         }
 
         // Ensure focus outline matches theme

@@ -1,3 +1,11 @@
+@import url(../../../less/variable.less);
+@import url(../../../theme/vars.less);
+
+.header {
+  height: @header-height;
+  border-bottom: 1px solid @border-color;
+}
+
 .tag {
   height: 40px;
   padding: 0 30px;
@@ -78,7 +86,7 @@
     height: 40px;
     line-height: 40px;
     border: 0 !important;
-    background-color: #338aff;
+    background-color: @bluePrimary;
     font-weight: @fontWeight700;
     color: rgba(29, 25, 41, 1);
     margin-right: 8px; /* Add spacing between buttons */

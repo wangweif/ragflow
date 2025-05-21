@@ -57,7 +57,9 @@ function Root({ children }: React.PropsWithChildren) {
   const isPrimaryGreen = deployType !== 'bjny'; // 非农业农村局使用绿色
 
   // 主题颜色配置
-  const primaryColor = isPrimaryGreen ? '#10b981' : '#338aff'; // 绿色 vs 蓝色
+  const primaryColor = isPrimaryGreen
+    ? '#10b981'
+    : process.env.PRIMARY_COLOR || '#1890ff'; // 使用环境变量
   const primaryHoverColor = isPrimaryGreen ? '#047857' : '#1677ff';
 
   // 根据环境变量设置body类名

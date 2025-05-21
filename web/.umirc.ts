@@ -6,6 +6,7 @@ import routes from './src/routes';
 
 // 根据环境变量设置应用名称
 const deployType = process.env.DEPLOY_TYPE || 'bjnl';
+const primaryColor = process.env.PRIMARY_COLOR || '#1890ff';
 const appTitle = deployType === 'bjny' ? '北京市农业农村局' : appName;
 // 农业农村局情况下不显示favicon
 const showFavicon = deployType !== 'bjny';
@@ -35,6 +36,7 @@ export default defineConfig({
   lessLoader: {
     modifyVars: {
       hack: `true; @import "~@/less/index.less";`,
+      'env-PRIMARY_COLOR': primaryColor,
     },
   },
   devtool: 'source-map',
@@ -65,5 +67,6 @@ export default defineConfig({
   define: {
     // 确保环境变量传递到前端，默认为bjnl（北京市农林科学院知识库系统）
     'process.env.DEPLOY_TYPE': process.env.DEPLOY_TYPE || 'bjny',
+    'process.env.PRIMARY_COLOR': process.env.PRIMARY_COLOR || '#1890ff',
   },
 });
