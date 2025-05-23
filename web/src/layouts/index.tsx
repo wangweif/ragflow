@@ -16,15 +16,22 @@ const App: React.FC = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  // 根据环境变量设置技术支持文字
-  const deployType = process.env.DEPLOY_TYPE || 'bjnl';
-  const isNyDeploy = deployType === 'bjny'; // 是否为农业农村局部署
-
+  // 从环境变量获取技术支持文字
   const footerText = useMemo(() => {
-    return isNyDeploy
-      ? '技术支持：北京市农林科学院'
-      : '技术支持：北京市农林科学院数据科学与农业经济研究所';
-  }, [isNyDeploy]);
+    const techSupport =
+      process.env.TECH_SUPPORT || '技术支持：北京市农林科学院';
+    // 如果包含版权信息，则分割并添加适当间距
+    if (techSupport.includes('版权所有') && techSupport.includes('技术支持')) {
+      const parts = techSupport.split('技术支持');
+      return (
+        <span>
+          {parts[0].trim()}
+          <span style={{ marginLeft: '2rem' }}>技术支持{parts[1]}</span>
+        </span>
+      );
+    }
+    return techSupport;
+  }, []);
 
   return (
     <Layout className={styles.layout}>
