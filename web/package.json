@@ -2,15 +2,17 @@
   "private": true,
   "author": "bill",
   "scripts": {
-    "build:bjnl": "cross-env DEPLOY_TYPE=bjnl umi build",
-    "build:bjny": "cross-env DEPLOY_TYPE=bjny umi build",
-    "dev:bjnl": "cross-env UMI_DEV_SERVER_COMPRESS=none DEPLOY_TYPE=bjnl umi dev",
-    "dev:bjny": "cross-env UMI_DEV_SERVER_COMPRESS=none DEPLOY_TYPE=bjny umi dev",
+    "build:bjnl": "cross-env UMI_ENV=bjnl umi build",
+    "build:bjny": "cross-env UMI_ENV=bjny umi build",
+    "dev:bjnl": "cross-env UMI_DEV_SERVER_COMPRESS=none UMI_ENV=bjnl umi dev",
+    "dev:bjny": "cross-env UMI_DEV_SERVER_COMPRESS=none UMI_ENV=bjny umi dev",
     "postinstall": "umi setup",
     "lint": "umi lint --eslint-only",
     "prepare": "cd .. && husky web/.husky",
     "setup": "umi setup",
-    "start": "npm run dev",
+    "start": "npm run dev:bjnl",
+    "start:bjnl": "npm run dev:bjnl",
+    "start:bjny": "npm run dev:bjny",
     "test": "jest --no-cache --coverage"
   },
   "lint-staged": {

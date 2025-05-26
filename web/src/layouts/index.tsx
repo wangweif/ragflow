@@ -16,10 +16,17 @@ const App: React.FC = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
+  // 从环境变量获取颜色值
+  const primaryColor = process.env.UMI_APP_PRIMARY_COLOR || '#10b981'; // 默认绿色
+
   // 从环境变量获取技术支持文字
   const footerText = useMemo(() => {
-    const techSupport =
-      process.env.TECH_SUPPORT || '技术支持：北京市农林科学院';
+    let techSupport =
+      process.env.UMI_APP_TECH_SUPPORT || '技术支持：北京市农林科学院';
+
+    // 去除可能存在的引号
+    techSupport = techSupport.replace(/^"|"$/g, '');
+
     // 如果包含版权信息，则分割并添加适当间距
     if (techSupport.includes('版权所有') && techSupport.includes('技术支持')) {
       const parts = techSupport.split('技术支持');

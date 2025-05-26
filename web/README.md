@@ -8,54 +8,49 @@
 
 ## 2. 北京市农业农村局
 
-蓝色主题，不显示logo，名称为"北京市农业农村局"。
+蓝色主题，不显示logo，名称为"北京市农业农村局专用知识库"。
 
-## 环境变量配置
+## 配置方式
 
-通过环境变量 `DEPLOY_TYPE` 控制不同的部署类型：
+本项目使用Umi框架的官方环境配置方式，通过 `UMI_ENV` 环境变量自动加载对应的配置文件：
 
-- `DEPLOY_TYPE=bjnl`: 北京市农林科学院知识库系统（默认）
-- `DEPLOY_TYPE=bjny`: 北京市农业农村局
+- `UMI_ENV=bjnl`: 自动加载 `config.bjnl.ts` - 北京市农林科学院知识库系统（默认）
+- `UMI_ENV=bjny`: 自动加载 `config.bjny.ts` - 北京市农业农村局专用知识库
 
-## 部署方法
-
-### 方法一：使用配置文件
-
-1. 根据需要，复制对应的环境变量文件：
+## 开发运行
 
 ```bash
-# 北京市农林科学院知识库系统
-cp .env.bjnl .env
+# 北京市农林科学院知识库系统（默认）
+npm run dev:bjnl
 
-# 或者北京市农业农村局
-cp .env.bjny .env
-```
+# 北京市农业农村局专用知识库
+npm run dev:bjny
 
-2. 启动应用
-
-```bash
-npm run dev
-```
-
-### 方法二：直接设置环境变量
-
-```bash
-# Windows PowerShell
-$env:DEPLOY_TYPE="bjny"; npm run dev
-
-# Windows CMD
-set DEPLOY_TYPE=bjny && npm run dev
-
-# Linux/Mac
-DEPLOY_TYPE=bjny npm run dev
+# 或者直接使用默认启动命令（默认为bjnl）
+npm start
 ```
 
 ## 打包部署
 
 ```bash
 # 北京市农林科学院知识库系统
-DEPLOY_TYPE=bjnl npm run build
+npm run build:bjnl
 
-# 北京市农业农村局
-DEPLOY_TYPE=bjny npm run build
-``` 
+# 北京市农业农村局专用知识库
+npm run build:bjny
+```
+
+## 手动设置环境变量
+
+如果需要手动设置环境变量，可以使用：
+
+```bash
+# Windows PowerShell
+$env:UMI_ENV="bjny"; npm run dev
+
+# Windows CMD
+set UMI_ENV=bjny && npm run dev
+
+# Linux/Mac
+UMI_ENV=bjny npm run dev
+```

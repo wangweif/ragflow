@@ -1,5 +1,5 @@
 // 从环境变量中直接读取主题颜色
-const primaryColor = process.env.PRIMARY_COLOR || '#10b981'; // 默认为绿色
+const primaryColor = process.env.UMI_APP_PRIMARY_COLOR || '#10b981'; // 默认为绿色
 
 module.exports = {
   'primary-color': primaryColor,

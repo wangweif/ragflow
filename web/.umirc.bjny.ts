@@ -3,8 +3,23 @@ import TerserPlugin from 'terser-webpack-plugin';
 import { defineConfig } from 'umi';
 import routes from './src/routes';
 
-// 基础配置（不包含环境特定的配置）
+// 北京市农业农村局配置
+const bjnyConfig = {
+  // 部署类型
+  deployType: 'bjny',
+  // 主题色
+  primaryColor: '#1890ff',
+  primaryHoverColor: '#1677ff',
+  // 技术支持文本
+  techSupport: '版权所有：北京市农业农村局    技术支持：北京市农林科学院',
+  // 应用标题
+  appTitle: '北京市农业农村局专用知识库',
+  // 是否显示favicon
+  showFavicon: false,
+};
+
 export default defineConfig({
+  title: bjnyConfig.appTitle,
   outputPath: 'dist',
   alias: { '@parent': path.resolve(__dirname, '../') },
   npmClient: 'npm',
@@ -14,6 +29,7 @@ export default defineConfig({
   esbuildMinifyIIFE: true,
   icons: {},
   hash: true,
+  favicons: bjnyConfig.showFavicon ? ['/logo.svg'] : ['1'],
   clickToComponent: {},
   history: {
     type: 'browser',
@@ -26,7 +42,7 @@ export default defineConfig({
   lessLoader: {
     modifyVars: {
       hack: `true; @import "~@/less/index.less";`,
-      'env-PRIMARY_COLOR': '#10b981', // 默认绿色主题
+      'env-PRIMARY_COLOR': bjnyConfig.primaryColor,
     },
   },
   devtool: 'source-map',
@@ -54,4 +70,13 @@ export default defineConfig({
     return memo;
   },
   tailwindcss: {},
+  // 通过define注入环境变量到前端
+  define: {
+    // 带UMI_APP_前缀的环境变量，确保登录页面可以正确获取
+    'process.env.UMI_APP_DEPLOY_TYPE': bjnyConfig.deployType,
+    'process.env.UMI_APP_PRIMARY_COLOR': bjnyConfig.primaryColor,
+    'process.env.UMI_APP_PRIMARY_HOVER_COLOR': bjnyConfig.primaryHoverColor,
+    'process.env.UMI_APP_TECH_SUPPORT': bjnyConfig.techSupport,
+    'process.env.UMI_APP_APP_TITLE': bjnyConfig.appTitle,
+  },
 });

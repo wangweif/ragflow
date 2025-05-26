@@ -52,15 +52,21 @@ function Root({ children }: React.PropsWithChildren) {
     setLocal(getLocale(lng));
   });
 
-  // 根据环境变量设置主题颜色
-  const deployType = process.env.DEPLOY_TYPE || 'bjnl';
-  const isPrimaryGreen = deployType !== 'bjny'; // 非农业农村局使用绿色
+  // 根据环境变量设置主题颜色（使用 UMI_APP_ 前缀）
+  const deployType = process.env.UMI_APP_DEPLOY_TYPE || 'bjnl';
+  const primaryColor = process.env.UMI_APP_PRIMARY_COLOR || '#10b981';
+  const primaryHoverColor =
+    process.env.UMI_APP_PRIMARY_HOVER_COLOR || '#047857';
 
-  // 主题颜色配置
-  const primaryColor = isPrimaryGreen
-    ? '#10b981'
-    : process.env.PRIMARY_COLOR || '#1890ff'; // 使用环境变量
-  const primaryHoverColor = isPrimaryGreen ? '#047857' : '#1677ff';
+  // 调试信息
+  console.log('App.tsx - deployType:', deployType);
+  console.log('App.tsx - primaryColor:', primaryColor);
+  console.log('App.tsx - primaryHoverColor:', primaryHoverColor);
+  console.log('App.tsx - 原始环境变量:', {
+    UMI_APP_DEPLOY_TYPE: process.env.UMI_APP_DEPLOY_TYPE,
+    UMI_APP_PRIMARY_COLOR: process.env.UMI_APP_PRIMARY_COLOR,
+    UMI_APP_PRIMARY_HOVER_COLOR: process.env.UMI_APP_PRIMARY_HOVER_COLOR,
+  });
 
   // 根据环境变量设置body类名
   useEffect(() => {

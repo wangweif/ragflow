@@ -50,7 +50,7 @@ const RagHeader = () => {
   }, [navigate]);
 
   // 根据环境变量判断是否显示logo和选择背景样式
-  const deployType = process.env.DEPLOY_TYPE || 'bjnl';
+  const deployType = process.env.UMI_APP_DEPLOY_TYPE || 'bjnl';
   const isNyDeploy = deployType === 'bjny'; // 是否为农业农村局部署
   const showLogo = !isNyDeploy; // 非农业农村局显示logo
   const headerClass = isNyDeploy

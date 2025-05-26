@@ -141,7 +141,7 @@ export const useFetchAppConf = () => {
   const fetchAppConf = useCallback(async () => {
     try {
       // 根据环境变量区分不同部署环境
-      const deployType = process.env.DEPLOY_TYPE || 'bjnl';
+      const deployType = process.env.UMI_APP_DEPLOY_TYPE || 'bjnl';
 
       if (deployType === 'bjny') {
         // 北京市农业农村局专用知识库

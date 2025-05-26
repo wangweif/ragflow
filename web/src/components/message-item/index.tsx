@@ -60,7 +60,10 @@ const MessageItem = ({
     useFetchDocumentThumbnailsByIds();
   const { visible, hideModal, showModal } = useSetModalState();
   const [clickedDocumentId, setClickedDocumentId] = useState('');
-  const deployType = useMemo(() => process.env.DEPLOY_TYPE || 'bjnl', []);
+  const deployType = useMemo(
+    () => process.env.UMI_APP_DEPLOY_TYPE || 'bjnl',
+    [],
+  );
   const isDeployTypeBjny = useMemo(() => deployType === 'bjny', [deployType]);
 
   const referenceDocumentList = useMemo(() => {
