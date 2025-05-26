@@ -144,9 +144,9 @@ export const useFetchAppConf = () => {
       const deployType = process.env.DEPLOY_TYPE || 'bjnl';
 
       if (deployType === 'bjny') {
-        // 北京市农业农村局
+        // 北京市农业农村局专用知识库
         setAppConf({
-          appName: '北京市农业农村局',
+          appName: '北京市农业农村局专用知识库',
         });
       } else {
         // 北京市农林科学院知识库系统（默认）

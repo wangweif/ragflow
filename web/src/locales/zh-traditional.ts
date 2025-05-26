@@ -392,7 +392,7 @@ export default {
     },
     chat: {
       newConversation: '新會話',
-      createAssistant: '新建助理',
+      createAssistant: '新建專屬對話助手',
       assistantSetting: '助理設置',
       promptEngine: '提示引擎',
       modelSetting: '模型設置',

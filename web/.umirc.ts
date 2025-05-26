@@ -16,7 +16,7 @@ const techSupport =
   (deployType === 'bjny'
     ? '版权所有：北京市农业农村局    技术支持：北京市农业农村局'
     : '技术支持：北京市农林科学院');
-const appTitle = deployType === 'bjny' ? '北京市农业农村局' : appName;
+const appTitle = deployType === 'bjny' ? '北京市农业农村局专用知识库' : appName;
 // 农业农村局情况下不显示favicon
 const showFavicon = deployType !== 'bjny';
 
