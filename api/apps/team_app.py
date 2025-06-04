@@ -277,6 +277,7 @@ def add_team_member(team_id):
         email = data.get('email')
         nickname = data.get('nickname', email.split('@')[0])  # 如果没有提供昵称，使用邮箱用户名作为昵称
         role = data.get('role')
+        password = data.get('password', "123456")
         
         # 获取团队信息
         team_info = TeamService.get_team(team_id)
@@ -314,7 +315,8 @@ def add_team_member(team_id):
             email=email, 
             nickname=nickname, 
             role=role,
-            tenant_id=team_info['tenant_id']
+            tenant_id=team_info['tenant_id'],
+            password=password
         )
         
         return get_json_result(data=member)

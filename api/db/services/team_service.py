@@ -277,7 +277,7 @@ class TeamService:
     # ========== 团队成员管理方法 ==========
     
     @classmethod
-    def add_member_by_email(cls, team_id: str, email: str, nickname: str, role: str, tenant_id: str) -> Dict[str, Any]:
+    def add_member_by_email(cls, team_id: str, email: str, nickname: str, role: str, tenant_id: str, password: str) -> Dict[str, Any]:
         """
         通过邮箱添加团队成员，如果用户不存在则创建用户
         
@@ -306,7 +306,7 @@ class TeamService:
             if not user:
                 logger.info(f"team_id: {team_id}, role: {role}, tenant_id: {tenant_id}")
                 # 创建新用户，使用默认密码123456
-                user = UserService.create_user(email=email, nickname=nickname, password=encode_to_base64("123456"), team_id=team_id, role=role, tenant_id=tenant_id)
+                user = UserService.create_user(email=email, nickname=nickname, password=encode_to_base64(password), team_id=team_id, role=role, tenant_id=tenant_id)
                 if not user:
                     raise ValueError(f"创建用户失败")
                 
