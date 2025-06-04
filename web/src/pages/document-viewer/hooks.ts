@@ -107,3 +107,60 @@ export const useFetchDocx = (filePath: string) => {
 
   return { succeed, containerRef, error };
 };
+
+export const useFetchCsv = (filePath: string) => {
+  const [csvData, setCsvData] = useState<string[][]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>();
+  const { fetchDocument } = useFetchDocument();
+
+  const fetchCsvAsync = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetchDocument(filePath);
+
+      // Convert ArrayBuffer to string
+      const decoder = new TextDecoder('utf-8');
+      const csvText = decoder.decode(response.data);
+
+      // Parse CSV data
+      const lines = csvText.split('\n').filter((line) => line.trim());
+      const parsedData = lines.map((line) => {
+        // Simple CSV parsing - handles basic cases
+        const cells = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if ((char === ',' || char === '\t') && !inQuotes) {
+            cells.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        cells.push(current.trim());
+
+        return cells;
+      });
+
+      setCsvData(parsedData);
+      setError(undefined);
+    } catch (err: any) {
+      setError(err.toString());
+      setCsvData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filePath, fetchDocument]);
+
+  useEffect(() => {
+    fetchCsvAsync();
+  }, [fetchCsvAsync]);
+
+  return { csvData, loading, error };
+};

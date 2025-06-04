@@ -2,6 +2,7 @@ import { Images } from '@/constants/common';
 import { api_host } from '@/utils/api';
 import { Flex } from 'antd';
 import { useParams, useSearchParams } from 'umi';
+import Csv from './csv';
 import Docx from './docx';
 import Excel from './excel';
 import Image from './image';
@@ -33,7 +34,7 @@ const DocumentViewer = () => {
       )}
       {ext === 'pdf' && <Pdf url={api}></Pdf>}
       {(ext === 'xlsx' || ext === 'xls') && <Excel filePath={api}></Excel>}
-
+      {ext === 'csv' && <Csv filePath={api}></Csv>}
       {ext === 'docx' && <Docx filePath={api}></Docx>}
     </section>
   );
