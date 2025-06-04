@@ -42,6 +42,7 @@ def set_dialog():
     top_n = req.get("top_n", 6)
     top_k = req.get("top_k", 1024)
     rerank_id = req.get("rerank_id", "")
+    user_id = req.get("user_id", current_user.id)
     if not rerank_id:
         req["rerank_id"] = ""
     similarity_threshold = req.get("similarity_threshold", 0.1)
@@ -84,7 +85,7 @@ def set_dialog():
         if not dialog_id:
             dia = {
                 "id": get_uuid(),
-                "user_id": current_user.id,
+                "user_id": user_id,
                 "tenant_id": current_user.tenant_id,
                 "name": name,
                 "kb_ids": req.get("kb_ids", []),
