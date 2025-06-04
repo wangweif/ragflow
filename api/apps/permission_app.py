@@ -193,11 +193,15 @@ def user_accessible_kb():
     """获取用户可访问的所有知识库权限"""
     try:
         tenant_id = request.args.get('tenant_id')
+        user_id = request.args.get('user_id')
         if not tenant_id:
             return get_data_error_result(message="租户ID不能为空")
         
-        # 获取用户可访问的知识库权限
-        permissions = KnowledgebasePermissionService.get_user_kb_permissions(current_user.id, tenant_id)
+        # 获取用户可访问的知识库权限 
+        if user_id:
+            permissions = KnowledgebasePermissionService.get_user_kb_permissions(user_id, tenant_id)
+        else:
+            permissions = KnowledgebasePermissionService.get_user_kb_permissions(current_user.id, tenant_id)
         
         return get_json_result(data=permissions)
     except Exception as e:
