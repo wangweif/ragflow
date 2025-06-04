@@ -1,5 +1,5 @@
 import { Spin, Table } from 'antd';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import FileError from '../file-error';
 import { useFetchCsv } from '../hooks';
 import styles from './index.less';
@@ -10,6 +10,10 @@ interface CsvProps {
 
 const Csv = ({ filePath }: CsvProps) => {
   const { csvData, loading, error } = useFetchCsv(filePath);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 20,
+  });
 
   const { columns, dataSource } = useMemo(() => {
     if (!csvData || csvData.length === 0) {
@@ -19,24 +23,31 @@ const Csv = ({ filePath }: CsvProps) => {
     // First row as headers
     const headers = csvData[0];
     const columns = headers.map((header, index) => ({
-      title: header || `Column ${index + 1}`,
+      title: header || `列 ${index + 1}`,
       dataIndex: `col_${index}`,
       key: `col_${index}`,
       width: 150,
       ellipsis: true,
       render: (text: string) => (
         <div title={text} style={{ wordBreak: 'break-word' }}>
-          {text}
+          {text || ''}
         </div>
       ),
     }));
 
-    // Rest rows as data
-    const dataSource = csvData.slice(1).map((row, rowIndex) => {
+    // Rest rows as data - 过滤掉空行
+    const dataRows = csvData.slice(1).filter((row) => {
+      // 确保行不是完全空的
+      return row.some((cell) => cell && cell.trim().length > 0);
+    });
+
+    const dataSource = dataRows.map((row, rowIndex) => {
       const record: Record<string, any> = { key: rowIndex };
-      row.forEach((cell, cellIndex) => {
-        record[`col_${cellIndex}`] = cell;
-      });
+      // 确保每行的列数与表头一致
+      const maxCols = Math.max(headers.length, row.length);
+      for (let i = 0; i < maxCols; i++) {
+        record[`col_${i}`] = row[i] || '';
+      }
       return record;
     });
 
@@ -65,11 +76,19 @@ const Csv = ({ filePath }: CsvProps) => {
         columns={columns}
         dataSource={dataSource}
         pagination={{
-          pageSize: 50,
+          current: pagination.current,
+          pageSize: pagination.pageSize,
           showSizeChanger: true,
           showQuickJumper: true,
+          pageSizeOptions: ['10', '20', '50', '100'],
           showTotal: (total, range) =>
             `第 ${range[0]}-${range[1]} 条，共 ${total} 条记录`,
+          onChange: (page, pageSize) => {
+            setPagination({ current: page, pageSize: pageSize || 20 });
+          },
+          onShowSizeChange: (_, size) => {
+            setPagination({ current: 1, pageSize: size });
+          },
         }}
         scroll={{ x: 'max-content', y: 'calc(100vh - 200px)' }}
         size="small"

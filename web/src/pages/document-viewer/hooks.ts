@@ -125,28 +125,33 @@ export const useFetchCsv = (filePath: string) => {
 
       // Parse CSV data
       const lines = csvText.split('\n').filter((line) => line.trim());
-      const parsedData = lines.map((line) => {
-        // Simple CSV parsing - handles basic cases
-        const cells = [];
-        let current = '';
-        let inQuotes = false;
+      const parsedData = lines
+        .map((line) => {
+          // Simple CSV parsing - handles basic cases
+          const cells = [];
+          let current = '';
+          let inQuotes = false;
 
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
 
-          if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if ((char === ',' || char === '\t') && !inQuotes) {
-            cells.push(current.trim());
-            current = '';
-          } else {
-            current += char;
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if ((char === ',' || char === '\t') && !inQuotes) {
+              cells.push(current.trim());
+              current = '';
+            } else {
+              current += char;
+            }
           }
-        }
-        cells.push(current.trim());
+          cells.push(current.trim());
 
-        return cells;
-      });
+          return cells;
+        })
+        .filter((row) => {
+          // 过滤掉完全空白的行
+          return row.some((cell) => cell && cell.trim().length > 0);
+        });
 
       setCsvData(parsedData);
       setError(undefined);
