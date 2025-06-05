@@ -787,3 +787,18 @@ def reset_password():
             code=settings.RetCode.EXCEPTION_ERROR
         )
 
+@manager.route("/get_user_info", methods=["GET"]) 
+@validate_request("user_email")
+def get_user_info():
+    """
+    Get user information.
+    """
+    user_email = request.json.get("user_email")
+    user = UserService.filter_by_email(user_email)
+    if not user:
+        return get_json_result(
+            data=False,
+            message="用户不存在!",
+        )
+    return get_json_result(data=user.to_dict())
+  
