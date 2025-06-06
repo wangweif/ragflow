@@ -3,10 +3,12 @@ import { api_host } from '@/utils/api';
 import { Flex } from 'antd';
 import { useParams, useSearchParams } from 'umi';
 import Csv from './csv';
+import Doc from './doc';
 import Docx from './docx';
 import Excel from './excel';
 import Image from './image';
 import Pdf from './pdf';
+import Ppt from './ppt';
 
 import { previewHtmlFile } from '@/utils/file-util';
 import styles from './index.less';
@@ -36,6 +38,8 @@ const DocumentViewer = () => {
       {(ext === 'xlsx' || ext === 'xls') && <Excel filePath={api}></Excel>}
       {ext === 'csv' && <Csv filePath={api}></Csv>}
       {ext === 'docx' && <Docx filePath={api}></Docx>}
+      {ext === 'doc' && <Doc filePath={api}></Doc>}
+      {(ext === 'pptx' || ext === 'ppt') && <Ppt filePath={api}></Ppt>}
     </section>
   );
 };

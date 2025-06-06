@@ -61,3 +61,117 @@ export const isSupportedPreviewDocumentType = (fileExtension: string) => {
 export const isImage = (image: string) => {
   return [...Images, 'svg'].some((x) => x === image);
 };
+
+/**
+ * 检查URL是否适合Office Web Viewer预览
+ *
+ * Office Web Viewer要求URL必须：
+ * 1. 是完整的HTTP/HTTPS地址
+ * 2. 不是本地地址
+ *
+ * @param url 要检查的URL
+ * @returns 是否适合Office Web Viewer
+ */
+export const isUrlSuitableForOfficeWebViewer = (url: string): boolean => {
+  // 检查是否是HTTP或HTTPS URL
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return false;
+  }
+
+  // 检查是否为本地地址
+  if (
+    url.includes('localhost') ||
+    url.includes('127.0.0.1') ||
+    url.match(/^https?:\/\/\d+\.\d+\.\d+\.\d+/)
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * 生成Office Web Viewer预览URL
+ *
+ * 注意：Office Web Viewer要求：
+ * 1. 文档必须在互联网上公开可访问
+ * 2. 文档URL必须是完整的HTTP/HTTPS地址
+ * 3. 文档大小不能超过10MB
+ * 4. 文档不能有密码保护
+ *
+ * @param fileUrl 文件的完整URL
+ * @param fileExtension 文件扩展名
+ * @returns Office Web Viewer URL或null（如果不适合）
+ */
+export const generateOfficeWebViewerUrl = (
+  fileUrl: string,
+  fileExtension: string,
+): string | null => {
+  // 支持的Office文档格式
+  const supportedFormats = [
+    'doc',
+    'docx',
+    'docm',
+    'dotm',
+    'dotx',
+    'xlsx',
+    'xlsb',
+    'xls',
+    'xlsm',
+    'pptx',
+    'ppsx',
+    'ppt',
+    'pps',
+    'pptm',
+    'potm',
+    'ppam',
+    'potx',
+    'ppsm',
+  ];
+
+  const extension = fileExtension.toLowerCase();
+
+  if (supportedFormats.includes(extension)) {
+    // 检查URL是否适合Office Web Viewer
+    if (isUrlSuitableForOfficeWebViewer(fileUrl)) {
+      // URL编码文档地址
+      const encodedUrl = encodeURIComponent(fileUrl);
+      return `http://view.officeapps.live.com/op/view.aspx?src=${encodedUrl}`;
+    } else {
+      console.warn('URL不适合Office Web Viewer，可能为本地地址:', fileUrl);
+      return null;
+    }
+  }
+
+  return null;
+};
+
+/**
+ * 检查是否支持Office Web Viewer预览
+ * @param fileExtension 文件扩展名
+ * @returns 是否支持
+ */
+export const isOfficeWebViewerSupported = (fileExtension: string): boolean => {
+  const supportedFormats = [
+    'doc',
+    'docx',
+    'docm',
+    'dotm',
+    'dotx',
+    'xlsx',
+    'xlsb',
+    'xls',
+    'xlsm',
+    'pptx',
+    'ppsx',
+    'ppt',
+    'pps',
+    'pptm',
+    'potm',
+    'ppam',
+    'potx',
+    'ppsm',
+  ];
+
+  return supportedFormats.includes(fileExtension.toLowerCase());
+};
