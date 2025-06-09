@@ -21,6 +21,7 @@ from flask_login import login_required, current_user
 from api import settings
 from api.db import StatusEnum
 from api.db.db_models import Knowledgebase
+from api.db.services.dialog_service import DialogService
 from api.db.services.permission_service import KnowledgebasePermissionService
 from api.utils.api_utils import get_json_result, validate_request, server_error_response, get_data_error_result
 
@@ -206,6 +207,31 @@ def user_accessible_kb():
         return get_json_result(data=permissions)
     except Exception as e:
         logger.exception(f"获取用户可访问的知识库权限失败: {str(e)}")
+        return server_error_response(e)
+
+@manager.route('/kb/assistant_accessible', methods=['GET'])
+@login_required
+def assistant_accessible_kb():
+    """获取用户可访问的所有知识库权限"""
+    try:
+        assistant_id = request.args.get('assistant_id')
+        if not assistant_id:
+            return get_data_error_result(message="助手ID不能为空")
+        
+        # 根据助手id获取用户id
+        e, assistant = DialogService.get_by_id(assistant_id)
+        if not e:
+            return get_data_error_result(message="助手不存在")
+        
+        user_id = assistant.user_id
+        tenant_id = assistant.tenant_id
+        
+        # 获取用户可访问的知识库权限
+        permissions = KnowledgebasePermissionService.get_user_kb_permissions(user_id, tenant_id)
+        
+        return get_json_result(data=permissions)
+    except Exception as e:
+        logger.exception(f"获取助手可访问的知识库权限失败: {str(e)}")
         return server_error_response(e)
 
 

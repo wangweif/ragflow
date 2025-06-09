@@ -122,7 +122,6 @@ def set_dialog():
 
 
 @manager.route('/get', methods=['GET'])  # noqa: F821
-@login_required
 def get():
     dialog_id = request.args["dialog_id"]
     try:
