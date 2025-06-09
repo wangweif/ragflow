@@ -210,7 +210,6 @@ def user_accessible_kb():
         return server_error_response(e)
 
 @manager.route('/kb/assistant_accessible', methods=['GET'])
-@login_required
 def assistant_accessible_kb():
     """获取用户可访问的所有知识库权限"""
     try:
