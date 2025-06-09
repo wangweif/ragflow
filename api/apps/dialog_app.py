@@ -120,7 +120,95 @@ def set_dialog():
     except Exception as e:
         return server_error_response(e)
 
+# 这个函数和set_dialog函数功能一样，但是不需要认证，user_id通过传入获取
+@manager.route('/set_assistant', methods=['POST'])  # noqa: F821
+def set_assistant():
+    req = request.json
+    dialog_id = req.get("dialog_id")
+    name = req.get("name", "New Dialog")
+    description = req.get("description", "A helpful dialog")
+    icon = req.get("icon", "")
+    top_n = req.get("top_n", 6)
+    top_k = req.get("top_k", 1024)
+    rerank_id = req.get("rerank_id", "")
+    user_id = req.get("user_id", "")
+    if not rerank_id:
+        req["rerank_id"] = ""
+    similarity_threshold = req.get("similarity_threshold", 0.1)
+    vector_similarity_weight = req.get("vector_similarity_weight", 0.3)
+    llm_setting = req.get("llm_setting", {})
+    default_prompt = {
+        "system": """你是一个智能助手，请总结知识库的内容来回答问题，请列举知识库中的数据详细回答。当所有知识库内容都与问题无关时，你的回答必须包括"知识库中未找到您要的答案！"这句话。回答需要考虑聊天历史。
+以下是知识库：
+{knowledge}
+以上是知识库。""",
+        "prologue": "您好，我是您的助手小樱，长得可爱又善良，can I help you?",
+        "parameters": [
+            {"key": "knowledge", "optional": False}
+        ],
+        "empty_response": "Sorry! 知识库中未找到相关内容！"
+    }
+    prompt_config = req.get("prompt_config", default_prompt)
 
+    if not prompt_config["system"]:
+        prompt_config["system"] = default_prompt["system"]
+
+    for p in prompt_config["parameters"]:
+        if p["optional"]:
+            continue
+        if prompt_config["system"].find("{%s}" % p["key"]) < 0:
+            return get_data_error_result(
+                message="参数 '{}' 未被使用".format(p["key"]))
+
+    try:
+        e, tenant = TenantService.get_by_id(current_user.tenant_id)
+        if not e:
+            return get_data_error_result(message="未找到租户！")
+        kbs = KnowledgebaseService.get_by_ids(req.get("kb_ids", []))
+        embd_ids = [TenantLLMService.split_model_name_and_factory(kb.embd_id)[0] for kb in kbs]  # remove vendor suffix for comparison
+        embd_count = len(set(embd_ids))
+        if embd_count > 1:
+            return get_data_error_result(message=f'数据集使用了不同的嵌入模型：{[kb.embd_id for kb in kbs]}"')
+
+        llm_id = req.get("llm_id", tenant.llm_id)
+        if not dialog_id:
+            dia = {
+                "id": get_uuid(),
+                "user_id": user_id,
+                "tenant_id": current_user.tenant_id,
+                "name": name,
+                "kb_ids": req.get("kb_ids", []),
+                "description": description,
+                "llm_id": llm_id,
+                "llm_setting": llm_setting,
+                "prompt_config": prompt_config,
+                "language": "Chinese",
+                "top_n": top_n,
+                "top_k": top_k,
+                "rerank_id": rerank_id,
+                "similarity_threshold": similarity_threshold,
+                "vector_similarity_weight": vector_similarity_weight,
+                "icon": icon
+            }
+            if not DialogService.save(**dia):
+                return get_data_error_result(message="创建新对话失败！")
+            return get_json_result(data=dia)
+        else:
+            del req["dialog_id"]
+            if "kb_names" in req:
+                del req["kb_names"]
+            if not DialogService.update_by_id(dialog_id, req):
+                return get_data_error_result(message="未找到对话！")
+            e, dia = DialogService.get_by_id(dialog_id)
+            if not e:
+                return get_data_error_result(message="更新对话失败！")
+            dia = dia.to_dict()
+            dia.update(req)
+            dia["kb_ids"], dia["kb_names"] = get_kb_names(dia["kb_ids"])
+            return get_json_result(data=dia)
+    except Exception as e:
+        return server_error_response(e)
+    
 @manager.route('/get', methods=['GET'])  # noqa: F821
 def get():
     dialog_id = request.args["dialog_id"]
