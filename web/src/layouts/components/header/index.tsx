@@ -2,6 +2,7 @@ import { ReactComponent as KnowledgeBaseIcon } from '@/assets/svg/knowledge-base
 import { useTranslate } from '@/hooks/common-hooks';
 import { useFetchAppConf } from '@/hooks/logic-hooks';
 import { useNavigateWithFromState } from '@/hooks/route-hook';
+import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { MessageOutlined } from '@ant-design/icons';
 import { Flex, Layout, Radio, Space } from 'antd';
 import { MouseEventHandler, useCallback, useMemo } from 'react';
@@ -19,16 +20,26 @@ const RagHeader = () => {
   const { t } = useTranslate('header');
   const appConf = useFetchAppConf();
   const { theme: themeRag } = useTheme();
-  const tagsData = useMemo(
-    () => [
+
+  // 获取用户信息
+  const { data: userInfo } = useFetchUserInfo();
+  // 判断是否是管理员用户（tenant_id === id）
+  const isAdmin = useMemo(() => userInfo.tenant_id === userInfo.id, [userInfo]);
+  const tagsData = useMemo(() => {
+    const baseData: Array<{ path: string; name: string; icon: any }> = [
       { path: '/knowledge', name: t('knowledgeBase'), icon: KnowledgeBaseIcon },
-      { path: '/chat', name: t('chat'), icon: MessageOutlined },
-      // { path: '/search', name: t('search'), icon: SearchOutlined },
-      //{ path: '/flow', name: t('flow'), icon: GraphIcon },
-      //{ path: '/file', name: t('fileManager'), icon: FileIcon },
-    ],
-    [t],
-  );
+    ];
+
+    // 只有管理员才显示对话按钮
+    if (isAdmin) {
+      baseData.push({ path: '/chat', name: t('chat'), icon: MessageOutlined });
+    }
+
+    return baseData;
+    // { path: '/search', name: t('search'), icon: SearchOutlined },
+    //{ path: '/flow', name: t('flow'), icon: GraphIcon },
+    //{ path: '/file', name: t('fileManager'), icon: FileIcon },
+  }, [t, isAdmin]);
 
   const currentPath = useMemo(() => {
     return (
