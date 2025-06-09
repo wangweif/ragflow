@@ -161,21 +161,18 @@ def set_assistant():
                 message="参数 '{}' 未被使用".format(p["key"]))
 
     try:
-        e, tenant = TenantService.get_by_id(current_user.tenant_id)
-        if not e:
-            return get_data_error_result(message="未找到租户！")
         kbs = KnowledgebaseService.get_by_ids(req.get("kb_ids", []))
         embd_ids = [TenantLLMService.split_model_name_and_factory(kb.embd_id)[0] for kb in kbs]  # remove vendor suffix for comparison
         embd_count = len(set(embd_ids))
         if embd_count > 1:
             return get_data_error_result(message=f'数据集使用了不同的嵌入模型：{[kb.embd_id for kb in kbs]}"')
 
-        llm_id = req.get("llm_id", tenant.llm_id)
+        llm_id = req.get("llm_id", "")
         if not dialog_id:
             dia = {
                 "id": get_uuid(),
                 "user_id": user_id,
-                "tenant_id": current_user.tenant_id,
+                "tenant_id": "",
                 "name": name,
                 "kb_ids": req.get("kb_ids", []),
                 "description": description,
