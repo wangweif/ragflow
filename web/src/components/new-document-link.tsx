@@ -1,4 +1,5 @@
 import {
+  generateDirectOfficeWebViewerLink,
   getExtension,
   isSupportedPreviewDocumentType,
 } from '@/utils/document-util';
@@ -24,8 +25,20 @@ const NewDocumentLink = ({
 }: IProps) => {
   let nextLink = link;
   const extension = getExtension(documentName);
+
   if (!link) {
-    nextLink = `/document/${documentId}?ext=${extension}&prefix=${prefix}`;
+    // 对于ppt、pptx、doc文件，直接生成Office Web Viewer链接
+    const officeViewerLink = generateDirectOfficeWebViewerLink(
+      documentId!,
+      documentName,
+      prefix,
+    );
+    if (officeViewerLink) {
+      nextLink = officeViewerLink;
+    } else {
+      // 其他文件类型使用原来的预览页面
+      nextLink = `/document/${documentId}?ext=${extension}&prefix=${prefix}`;
+    }
   }
 
   return (

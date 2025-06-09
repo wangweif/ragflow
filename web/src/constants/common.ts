@@ -139,7 +139,17 @@ export const Images = [
 ];
 
 // Without FileViewer
-export const ExceptiveType = ['xlsx', 'xls', 'csv', 'pdf', 'docx', ...Images];
+export const ExceptiveType = [
+  'xlsx',
+  'xls',
+  'csv',
+  'pdf',
+  'docx',
+  'doc',
+  'ppt',
+  'pptx',
+  ...Images,
+];
 
 export const SupportedPreviewDocumentTypes = [...ExceptiveType];
 //#endregion

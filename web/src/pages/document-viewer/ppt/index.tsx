@@ -35,35 +35,19 @@ const Ppt = ({ filePath }: { filePath: string }) => {
           : `${window.location.origin}${filePath}`;
         console.log('Full URL:', fullUrl);
 
-        // 检查是否为API端点（包含认证的URL）
-        const isApiEndpoint =
-          filePath.includes('/v1/document/get/') ||
-          filePath.includes('/file/get/');
+        // 生成Office Web Viewer URL
+        const viewerUrl = generateOfficeWebViewerUrl(fullUrl, fileExtension);
+        console.log('Generated viewer URL:', viewerUrl);
 
-        if (isApiEndpoint) {
-          console.log('检测到API端点，使用测试URL验证Office Web Viewer功能');
-          // 直接使用微软官方示例的完整URL
-          const testViewerUrl =
-            'http://view.officeapps.live.com/op/view.aspx?src=newteach.pbworks.com%2Ff%2Fele%2Bnewsletter.docx';
-          console.log('Test viewer URL:', testViewerUrl);
-
-          setOfficeViewerUrl(testViewerUrl);
-          console.log('使用测试URL成功生成Office Web Viewer URL');
+        if (viewerUrl) {
+          setOfficeViewerUrl(viewerUrl);
+          console.log('Office Web Viewer URL set successfully:', viewerUrl);
         } else {
-          // 生成Office Web Viewer URL
-          const viewerUrl = generateOfficeWebViewerUrl(fullUrl, fileExtension);
-          console.log('Generated viewer URL:', viewerUrl);
-
-          if (viewerUrl) {
-            setOfficeViewerUrl(viewerUrl);
-            console.log('Office Web Viewer URL set successfully:', viewerUrl);
-          } else {
-            console.log(
-              'Failed to generate Office Web Viewer URL for:',
-              filePath,
-            );
-            setError('文档URL不适合Office Web Viewer预览，可能为本地地址');
-          }
+          console.log(
+            'Failed to generate Office Web Viewer URL for:',
+            filePath,
+          );
+          setError('文档URL不适合Office Web Viewer预览，可能为本地地址');
         }
       } catch (err: any) {
         console.error('Error loading PPT:', err);
@@ -131,9 +115,7 @@ const Ppt = ({ filePath }: { filePath: string }) => {
             backgroundColor: '#fafafa'
           }}>
             <span style={{ fontSize: '14px', color: '#666' }}>
-              {filePath.includes('/v1/document/get/') || filePath.includes('/file/get/')
-                ? 'Office Web Viewer 测试预览 (使用示例文档)'
-                : 'Office Web Viewer 预览 (需要文档公开可访问)'}
+              Office Web Viewer 预览 (需要文档公开可访问)
             </span>
           </div> */}
 

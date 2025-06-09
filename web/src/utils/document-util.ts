@@ -175,3 +175,73 @@ export const isOfficeWebViewerSupported = (fileExtension: string): boolean => {
 
   return supportedFormats.includes(fileExtension.toLowerCase());
 };
+
+/**
+ * 生成直接的Office Web Viewer链接
+ * 用于ppt、pptx、doc文件的直接预览
+ *
+ * @param documentId 文档ID
+ * @param documentName 文档名称
+ * @param prefix 前缀，默认为'file'
+ * @returns Office Web Viewer链接或null
+ */
+export const generateDirectOfficeWebViewerLink = (
+  documentId: string,
+  documentName: string,
+  prefix: string = 'file',
+): string | null => {
+  const extension = getExtension(documentName);
+  const supportedExtensions = ['ppt', 'pptx', 'doc'];
+
+  console.log('generateDirectOfficeWebViewerLink called with:', {
+    documentId,
+    documentName,
+    prefix,
+    extension,
+  });
+
+  // 只对 ppt/pptx/doc 文件生效
+  if (!supportedExtensions.includes(extension)) {
+    console.log(
+      'Extension not supported for direct Office Web Viewer:',
+      extension,
+    );
+    return null;
+  }
+
+  // 构建文件路径，根据实际扩展名拼接对应的后缀
+  let filePath = `/v1/document/get/${documentId}`;
+  console.log('Initial file path:', filePath);
+
+  // 对于 ppt/pptx/doc 文件，总是拼接对应的扩展名
+  // 根据返回的扩展名决定拼接什么后缀
+  if (extension === 'ppt') {
+    filePath = `${filePath}.ppt`;
+  } else if (extension === 'pptx') {
+    filePath = `${filePath}.pptx`;
+  } else if (extension === 'doc') {
+    filePath = `${filePath}.doc`;
+  }
+
+  console.log('Added extension based on file type, final path:', filePath);
+
+  // 生成完整的URL
+  const fullUrl = `${window.location.origin}${filePath}`;
+  console.log('Full URL for Office Web Viewer:', fullUrl);
+
+  // 生成Office Web Viewer URL
+  const result = generateOfficeWebViewerUrl(fullUrl, extension);
+  console.log('Generated Office Web Viewer URL:', result);
+
+  // 解码URL以便查看实际内容
+  if (result) {
+    const decodedSrc = decodeURIComponent(result.split('src=')[1]);
+    console.log('Decoded source URL:', decodedSrc);
+    console.log(
+      'Expected format should be like: http://know.bjzntd.com/v1/document/get/documentId.' +
+        extension,
+    );
+  }
+
+  return result;
+};
