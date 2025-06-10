@@ -31,9 +31,9 @@ const RagHeader = () => {
     ];
 
     // 只有管理员才显示对话按钮
-    if (isAdmin) {
-      baseData.push({ path: '/chat', name: t('chat'), icon: MessageOutlined });
-    }
+    // if (isAdmin) {
+    baseData.push({ path: '/chat', name: t('chat'), icon: MessageOutlined });
+    // }
 
     return baseData;
     // { path: '/search', name: t('search'), icon: SearchOutlined },
