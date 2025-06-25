@@ -140,7 +140,7 @@ const AssistantSetting = ({
         valuePropName="checked"
         name={['prompt_config', 'quote']}
         tooltip={t('quoteTip')}
-        initialValue={true}
+        initialValue={false}
       >
         <Switch />
       </Form.Item>
