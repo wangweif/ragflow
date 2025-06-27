@@ -2,54 +2,48 @@
 
 echo "准备启动服务..."
 
-# 检查9380端口占用情况
+# 1. 首先停止现有服务
+echo "停止现有服务..."
+bash shell/stop.sh
+
+# 2. 等待进程完全退出
+echo "等待进程完全退出..."
+sleep 3
+
+# 3. 检查9380端口占用情况
 echo "检查9380端口是否被占用..."
 if netstat -tuln | grep -q ":9380 "; then
-    echo "端口9380已被占用，尝试终止占用进程..."
-    # 查找占用9380端口的进程PID
+    echo "端口9380仍被占用，强制终止占用进程..."
     PID=$(lsof -t -i:9380)
     if [ -n "$PID" ]; then
         echo "找到占用端口的进程PID: $PID，正在终止..."
         kill -9 $PID
-        echo "进程已终止"
-    else
-        echo "无法找到占用端口的进程，但端口显示被占用"
+        sleep 2
     fi
-else
-    echo "端口9380未被占用，可以启动服务"
 fi
 
-# 等待2秒确保端口完全释放
-echo "等待2秒确保端口完全释放..."
-sleep 2
-
-# export CUDA_VISIBLE_DEVICES=''
+# 4. 设置环境变量
 echo "激活Python虚拟环境..."
 source .venv/bin/activate
 export PYTHONPATH=$(pwd)
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export WS=10
 export MAX_CONTENT_LENGTH=1073741824
-# 设置ONNX Runtime在CUDA环境下的内存设置
-# export ORT_CUDA_PROVIDER_OPTIONS="arena_extend_strategy=kNextPowerOfTwo"
-# export ORT_CUDA_PROVIDER_OPTIONS="$ORT_CUDA_PROVIDER_OPTIONS;cuda_mem_limit=2147483648"
 
+# 5. 启动服务
 echo "正在启动后端服务..."
 nohup bash docker/launch_backend_service.sh > logs/backend.log 2>&1 &
 
+# 6. 保存主进程PID
+MAIN_PID=$!
+echo $MAIN_PID > logs/ragflow.pid
+echo "主进程PID: $MAIN_PID 已保存到 logs/ragflow.pid"
+
+# 7. 等待服务启动完成
 echo "后端服务启动中，请等待..."
-
-# 检查服务是否成功启动并监听9380端口
-MAX_WAIT=60  # 最长等待时间(秒)
-WAIT_INTERVAL=5  # 每次检查间隔(秒)
+MAX_WAIT=60
+WAIT_INTERVAL=5
 TOTAL_WAIT=0
-
-export WS=10 # 工作线程数
-export MAX_CONTENT_LENGTH=1073741824 # 最大内容长度
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 # 指定CUDA设备
-
-pkill -f "launch" # 杀死所有launch进程
-pkill -f "rag/svr" # 杀死所有rag/svr进程
 
 echo "开始检查服务启动状态..."
 while [ $TOTAL_WAIT -lt $MAX_WAIT ]; do
@@ -63,30 +57,27 @@ while [ $TOTAL_WAIT -lt $MAX_WAIT ]; do
     fi
 done
 
-if [ $TOTAL_WAIT -ge $MAX_WAIT ]; then
-    echo "❌ 警告：服务可能未正常启动，请检查日志文件"
-    echo "请执行 'tail -f logs/backend.log' 查看详细日志"
-else
-    # 尝试检查服务健康状态
+# 8. 健康检查
+if [ $TOTAL_WAIT -lt $MAX_WAIT ]; then
     echo "尝试检查服务健康状态..."
-    sleep 2  # 再等待2秒确保服务完全就绪
+    sleep 2
     
     if command -v curl &> /dev/null; then
         HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:9380/health 2>/dev/null || echo "失败")
         if [ "$HTTP_STATUS" = "200" ]; then
             echo "✅ 服务健康检查通过！"
         else
-            echo "⚠️ 服务健康检查返回状态码: $HTTP_STATUS (预期200)"
+            echo "⚠️ 服务健康检查返回状态码: $HTTP_STATUS"
         fi
-    else
-        echo "未安装curl，跳过健康检查"
     fi
     
-    echo "✅ 后端服务启动完成，日志重定向到logs/backend.log"
-    echo "可以通过 'tail -f logs/backend.log' 查看运行日志"
+    echo "✅ 后端服务启动完成"
+    echo "日志文件: logs/backend.log"
+    echo "PID文件: logs/ragflow.pid"
+else
+    echo "❌ 服务启动超时，请检查日志"
 fi
 
-# 打印服务状态摘要
 echo ""
 echo "===== 服务状态摘要 ====="
 netstat -tuln | grep :9380
