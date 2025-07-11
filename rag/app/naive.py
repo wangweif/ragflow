@@ -349,7 +349,7 @@ def chunk(filename, binary=None, from_page=0, to_page=100000, lang="Chinese", ca
         sections, tables = Docx()(filename, binary)
 
         if vision_model:
-            figures_data = vision_figure_parser_figure_data_wraper(sections)
+            figures_data = vision_figure_parser_figure_data_wrapper(sections)
             try:
                 docx_vision_parser = VisionFigureParser(vision_model=vision_model, figures_data=figures_data, **kwargs)
                 boosted_figures = docx_vision_parser(callback=callback)
