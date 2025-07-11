@@ -29,9 +29,18 @@ from tika import parser
 from api.db import LLMType
 from api.db.services.llm_service import LLMBundle
 from deepdoc.parser import DocxParser, ExcelParser, HtmlParser, JsonParser, MarkdownParser, PdfParser, TxtParser
-from deepdoc.parser.figure_parser import VisionFigureParser, vision_figure_parser_figure_data_wraper
+from deepdoc.parser.figure_parser import VisionFigureParser, vision_figure_parser_figure_data_wrapper
 from deepdoc.parser.pdf_parser import PlainParser, VisionParser
-from rag.nlp import concat_img, find_codec, naive_merge, naive_merge_docx, rag_tokenizer, tokenize_chunks, tokenize_chunks_docx, tokenize_table
+from rag.nlp import (
+    concat_img,
+    find_codec,
+    naive_merge,
+    naive_merge_docx,
+    rag_tokenizer,
+    tokenize_chunks,
+    tokenize_chunks_docx,
+    tokenize_table,
+)
 from rag.utils import num_tokens_from_string
 
 
@@ -77,15 +86,15 @@ class Docx(DocxParser):
         """Get the hierarchical title structure before the table"""
         import re
         from docx.text.paragraph import Paragraph
-        
+
         titles = []
         blocks = []
-        
+
         # Get document name from filename parameter
         doc_name = re.sub(r"\.[a-zA-Z]+$", "", filename)
         if not doc_name:
             doc_name = "Untitled Document"
-            
+
         # Collect all document blocks while maintaining document order
         try:
             # Iterate through all paragraphs and tables in document order
@@ -98,7 +107,7 @@ class Docx(DocxParser):
         except Exception as e:
             logging.error(f"Error collecting blocks: {e}")
             return ""
-            
+
         # Find the target table position
         target_table_pos = -1
         table_count = 0
@@ -108,20 +117,20 @@ class Docx(DocxParser):
                     target_table_pos = pos
                     break
                 table_count += 1
-                
+
         if target_table_pos == -1:
             return ""  # Target table not found
-            
+
         # Find the nearest heading paragraph in reverse order
         nearest_title = None
-        for i in range(len(blocks)-1, -1, -1):
+        for i in range(len(blocks) - 1, -1, -1):
             block_type, pos, block = blocks[i]
             if pos >= target_table_pos:  # Skip blocks after the table
                 continue
-                
+
             if block_type != 'p':
                 continue
-                
+
             if block.style and re.search(r"Heading\s*(\d+)", block.style.name, re.I):
                 try:
                     level_match = re.search(r"(\d+)", block.style.name)
@@ -134,30 +143,30 @@ class Docx(DocxParser):
                                 break
                 except Exception as e:
                     logging.error(f"Error parsing heading level: {e}")
-        
+
         if nearest_title:
             # Add current title
             titles.append(nearest_title)
             current_level = nearest_title[0]
-            
+
             # Find all parent headings, allowing cross-level search
             while current_level > 1:
                 found = False
-                for i in range(len(blocks)-1, -1, -1):
+                for i in range(len(blocks) - 1, -1, -1):
                     block_type, pos, block = blocks[i]
                     if pos >= target_table_pos:  # Skip blocks after the table
                         continue
-                        
+
                     if block_type != 'p':
                         continue
-                        
+
                     if block.style and re.search(r"Heading\s*(\d+)", block.style.name, re.I):
                         try:
                             level_match = re.search(r"(\d+)", block.style.name)
                             if level_match:
                                 level = int(level_match.group(1))
                                 # Find any heading with a higher level
-                                if level < current_level:  
+                                if level < current_level:
                                     title_text = block.text.strip()
                                     if title_text:  # Avoid empty titles
                                         titles.append((level, title_text))
@@ -166,21 +175,20 @@ class Docx(DocxParser):
                                         break
                         except Exception as e:
                             logging.error(f"Error parsing parent heading: {e}")
-                            
+
                 if not found:  # Break if no parent heading is found
                     break
-            
+
             # Sort by level (ascending, from highest to lowest)
             titles.sort(key=lambda x: x[0])
             # Organize titles (from highest to lowest)
             hierarchy = [doc_name] + [t[1] for t in titles]
             return " > ".join(hierarchy)
-            
+
         return ""
 
     def __call__(self, filename, binary=None, from_page=0, to_page=100000):
-        self.doc = Document(
-            filename) if not binary else Document(BytesIO(binary))
+        self.doc = Document(filename) if not binary else Document(BytesIO(binary))
         pn = 0
         lines = []
         last_image = None
@@ -248,18 +256,13 @@ class Pdf(PdfParser):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, filename, binary=None, from_page=0,
-                 to_page=100000, zoomin=3, callback=None, separate_tables_figures=False):
+    def __call__(
+        self, filename, binary=None, from_page=0, to_page=100000, zoomin=3, callback=None, separate_tables_figures=False
+    ):
         start = timer()
         first_start = start
         callback(msg="OCR started")
-        self.__images__(
-            filename if not binary else binary,
-            zoomin,
-            from_page,
-            to_page,
-            callback
-        )
+        self.__images__(filename if not binary else binary, zoomin, from_page, to_page, callback)
         callback(msg="OCR finished ({:.2f}s)".format(timer() - start))
         logging.info("OCR({}~{}): {:.2f}s".format(from_page, to_page, timer() - start))
 
@@ -302,8 +305,8 @@ class Markdown(MarkdownParser):
         tbls = []
         for sec in remainder.split("\n"):
             if num_tokens_from_string(sec) > 3 * self.chunk_token_num:
-                sections.append((sec[:int(len(sec) / 2)], ""))
-                sections.append((sec[int(len(sec) / 2):], ""))
+                sections.append((sec[: int(len(sec) / 2)], ""))
+                sections.append((sec[int(len(sec) / 2) :], ""))
             else:
                 if sec.strip().find("#") == 0:
                     sections.append((sec, ""))
@@ -318,23 +321,19 @@ class Markdown(MarkdownParser):
         return sections, tbls
 
 
-def chunk(filename, binary=None, from_page=0, to_page=100000,
-          lang="Chinese", callback=None, **kwargs):
+def chunk(filename, binary=None, from_page=0, to_page=100000, lang="Chinese", callback=None, **kwargs):
     """
-        Supported file formats are docx, pdf, excel, txt.
-        This method apply the naive ways to chunk files.
-        Successive text will be sliced into pieces using 'delimiter'.
-        Next, these successive pieces are merge into chunks whose token number is no more than 'Max token number'.
+    Supported file formats are docx, pdf, excel, txt.
+    This method apply the naive ways to chunk files.
+    Successive text will be sliced into pieces using 'delimiter'.
+    Next, these successive pieces are merge into chunks whose token number is no more than 'Max token number'.
     """
 
     is_english = lang.lower() == "english"  # is_english(cks)
     parser_config = kwargs.get(
-        "parser_config", {
-            "chunk_token_num": 128, "delimiter": "\n!?。；！？", "layout_recognize": "DeepDOC"})
-    doc = {
-        "docnm_kwd": filename,
-        "title_tks": rag_tokenizer.tokenize(re.sub(r"\.[a-zA-Z]+$", "", filename))
-    }
+        "parser_config", {"chunk_token_num": 128, "delimiter": "\n!?。；！？", "layout_recognize": "DeepDOC"}
+    )
+    doc = {"docnm_kwd": filename, "title_tks": rag_tokenizer.tokenize(re.sub(r"\.[a-zA-Z]+$", "", filename))}
     doc["title_sm_tks"] = rag_tokenizer.fine_grained_tokenize(doc["title_tks"])
     res = []
     pdf_parser = None
@@ -364,9 +363,8 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
         st = timer()
 
         chunks, images = naive_merge_docx(
-            sections, int(parser_config.get(
-                "chunk_token_num", 128)), parser_config.get(
-                "delimiter", "\n!?。；！？"))
+            sections, int(parser_config.get("chunk_token_num", 128)), parser_config.get("delimiter", "\n!?。；！？")
+        )
 
         if kwargs.get("section_only", False):
             return chunks
@@ -391,7 +389,13 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
                 vision_model = None
 
             if vision_model:
-                sections, tables, figures = pdf_parser(filename if not binary else binary, from_page=from_page, to_page=to_page, callback=callback, separate_tables_figures=True)
+                sections, tables, figures = pdf_parser(
+                    filename if not binary else binary,
+                    from_page=from_page,
+                    to_page=to_page,
+                    callback=callback,
+                    separate_tables_figures=True,
+                )
                 callback(0.5, "Basic parsing complete. Proceeding with figure enhancement...")
                 try:
                     pdf_vision_parser = VisionFigureParser(vision_model=vision_model, figures_data=figures, **kwargs)
@@ -401,7 +405,9 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
                     callback(0.6, f"Visual model error: {e}. Skipping figure parsing enhancement.")
                     tables.extend(figures)
             else:
-                sections, tables = pdf_parser(filename if not binary else binary, from_page=from_page, to_page=to_page, callback=callback)
+                sections, tables = pdf_parser(
+                    filename if not binary else binary, from_page=from_page, to_page=to_page, callback=callback
+                )
 
             res = tokenize_table(tables, doc, is_english)
             callback(0.8, "Finish parsing.")
@@ -413,8 +419,9 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
                 vision_model = LLMBundle(kwargs["tenant_id"], LLMType.IMAGE2TEXT, llm_name=layout_recognizer, lang=lang)
                 pdf_parser = VisionParser(vision_model=vision_model, **kwargs)
 
-            sections, tables = pdf_parser(filename if not binary else binary, from_page=from_page, to_page=to_page,
-                                          callback=callback)
+            sections, tables = pdf_parser(
+                filename if not binary else binary, from_page=from_page, to_page=to_page, callback=callback
+            )
             res = tokenize_table(tables, doc, is_english)
             callback(0.8, "Finish parsing.")
 
@@ -428,9 +435,9 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
 
     elif re.search(r"\.(txt|py|js|java|c|cpp|h|php|go|ts|sh|cs|kt|sql)$", filename, re.IGNORECASE):
         callback(0.1, "Start to parse.")
-        sections = TxtParser()(filename, binary,
-                               parser_config.get("chunk_token_num", 128),
-                               parser_config.get("delimiter", "\n!?;。；！？"))
+        sections = TxtParser()(
+            filename, binary, parser_config.get("chunk_token_num", 128), parser_config.get("delimiter", "\n!?;。；！？")
+        )
         callback(0.8, "Finish parsing.")
 
     elif re.search(r"\.(md|markdown)$", filename, re.IGNORECASE):
@@ -466,14 +473,12 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
             return []
 
     else:
-        raise NotImplementedError(
-            "file type not supported yet(pdf, xlsx, doc, docx, txt supported)")
+        raise NotImplementedError("file type not supported yet(pdf, xlsx, doc, docx, txt supported)")
 
     st = timer()
     chunks = naive_merge(
-        sections, int(parser_config.get(
-            "chunk_token_num", 128)), parser_config.get(
-            "delimiter", "\n!?。；！？"))
+        sections, int(parser_config.get("chunk_token_num", 128)), parser_config.get("delimiter", "\n!?。；！？")
+    )
     if kwargs.get("section_only", False):
         return chunks
 
