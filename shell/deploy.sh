@@ -26,7 +26,7 @@ fi
 echo "激活Python虚拟环境..."
 source .venv/bin/activate
 export PYTHONPATH=$(pwd)
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+# export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export WS=10
 export MAX_CONTENT_LENGTH=1073741824
 
