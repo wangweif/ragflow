@@ -1,6 +1,6 @@
 import { Divider, Layout, theme } from 'antd';
-import React, { useMemo } from 'react';
-import { Outlet } from 'umi';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Outlet, useSearchParams } from 'umi';
 import '../locales/config';
 import Header from './components/header';
 
@@ -15,6 +15,29 @@ const App: React.FC = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+
+  // 获取URL参数
+  const [searchParams] = useSearchParams();
+  const hasIdParam = searchParams.get('id');
+
+  // 状态管理show_menu
+  const [showMenu, setShowMenu] = useState(() => {
+    // 初始化时从localStorage读取
+    try {
+      const stored = localStorage.getItem('show_menu');
+      return stored === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  // 监听URL参数变化，当有id参数时设置localStorage
+  useEffect(() => {
+    if (hasIdParam) {
+      localStorage.setItem('show_menu', 'true');
+      setShowMenu(true);
+    }
+  }, [hasIdParam]);
 
   // 从环境变量获取颜色值
   const primaryColor = process.env.UMI_APP_PRIMARY_COLOR || '#10b981'; // 默认绿色
@@ -43,8 +66,19 @@ const App: React.FC = () => {
   return (
     <Layout className={styles.layout}>
       <Layout>
-        <Header></Header>
-        <Divider orientationMargin={0} className={styles.divider} />
+        <div
+          style={{
+            height: '72px',
+            background: showMenu ? '#ffffff' : 'transparent',
+          }}
+        >
+          {!showMenu && (
+            <>
+              <Header></Header>
+              <Divider orientationMargin={0} className={styles.divider} />
+            </>
+          )}
+        </div>
         <Content
           style={{
             minHeight: 280,
@@ -56,12 +90,29 @@ const App: React.FC = () => {
         >
           <Outlet />
         </Content>
-        <Footer
-          style={{ textAlign: 'center', padding: '12px 0' }}
-          className={styles.footer}
+        <div
+          style={{
+            height: '48px',
+            background: showMenu ? '#ffffff' : 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
-          {footerText}
-        </Footer>
+          {!showMenu && (
+            <Footer
+              style={{
+                textAlign: 'center',
+                padding: '12px 0',
+                background: 'transparent',
+                width: '100%',
+              }}
+              className={styles.footer}
+            >
+              {footerText}
+            </Footer>
+          )}
+        </div>
         <Toaster />
         <Sonner position={'top-right'} expand richColors closeButton></Sonner>
       </Layout>

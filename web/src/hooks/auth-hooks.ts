@@ -34,9 +34,33 @@ export const useAuth = () => {
   const auth = useLoginWithGithub();
   const [isLogin, setIsLogin] = useState<Nullable<boolean>>(null);
 
+  // 检查登录状态的函数
+  const checkLoginStatus = () => {
+    const hasAuth = !!authorizationUtil.getAuthorization() || !!auth;
+    setIsLogin(hasAuth);
+  };
+
   useEffect(() => {
-    setIsLogin(!!authorizationUtil.getAuthorization() || !!auth);
+    checkLoginStatus();
   }, [auth]);
+
+  // 监听localStorage变化
+  useEffect(() => {
+    const handleStorageChange = () => {
+      checkLoginStatus();
+    };
+
+    // 监听storage事件
+    window.addEventListener('storage', handleStorageChange);
+
+    // 使用定时器定期检查，以防storage事件不触发
+    const interval = setInterval(checkLoginStatus, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   return { isLogin };
 };

@@ -801,3 +801,63 @@ def get_user_info():
             message="用户不存在!",
         )
     return get_json_result(data=user.to_dict())
+
+
+@manager.route("/get_token_by_email", methods=["POST"])
+@validate_request("email")
+def get_token_by_email():
+    """
+    Get user token by email.
+    ---
+    tags:
+      - User
+    parameters:
+      - in: body
+        name: body
+        description: User email.
+        required: true
+        schema:
+          type: object
+          properties:
+            email:
+              type: string
+              description: User email.
+    responses:
+      200:
+        description: Token retrieved successfully.
+        schema:
+          type: object
+          properties:
+            access_token:
+              type: string
+              description: User access token.
+            user_info:
+              type: object
+              description: User information.
+      400:
+        description: User not found.
+        schema:
+          type: object
+    """
+    user_email = request.json.get("email")
+    user = UserService.get_by_email(user_email)
+    if not user:
+        return get_json_result(
+            data=False,
+            message="用户不存在!",
+            code=settings.RetCode.AUTHENTICATION_ERROR,
+        )
+    
+    # 生成新的access_token
+    user.access_token = get_uuid()
+    user.update_time = current_timestamp()
+    user.update_date = datetime_format(datetime.now())
+    user.save()
+    
+    response_data = {
+        "access_token": user.access_token,
+        "user_info": user.to_dict()
+    }
+    
+    # 使用construct_response返回JWT格式的authorization
+    return construct_response(data=response_data, auth=user.get_id(), message="获取token成功")

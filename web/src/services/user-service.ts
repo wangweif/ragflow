@@ -24,6 +24,7 @@ const {
   createSystemToken,
   getSystemConfig,
   setLangfuseConfig,
+  get_token_by_email,
 } = api;
 
 const methods = {
@@ -53,6 +54,10 @@ const methods = {
   },
   set_tenant_info: {
     url: set_tenant_info,
+    method: 'post',
+  },
+  get_token_by_email: {
+    url: get_token_by_email,
     method: 'post',
   },
   factories_list: {
