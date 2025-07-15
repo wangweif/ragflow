@@ -200,6 +200,8 @@ def thumbnail_img(filename, blob):
 
     elif re.match(r".*\.(jpg|jpeg|png|tif|gif|icon|ico|webp)$", filename):
         image = Image.open(BytesIO(blob))
+        if image.mode == 'CMYK':
+            image = image.convert('RGB')
         image.thumbnail((30, 30))
         buffered = BytesIO()
         image.save(buffered, format="png")
