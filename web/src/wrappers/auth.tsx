@@ -17,7 +17,7 @@ export default () => {
     return (
       <Flex justify="center" align="center" style={{ height: '100vh' }}>
         <Spin size="large" />
-        <span style={{ marginLeft: 16 }}>正在自动登录...</span>
+        <span style={{ marginLeft: 16 }}>正在加载...</span>
       </Flex>
     );
   }
@@ -27,7 +27,7 @@ export default () => {
     return (
       <Flex justify="center" align="center" style={{ height: '100vh' }}>
         <Spin size="large" />
-        <span style={{ marginLeft: 16 }}>正在自动登录...</span>
+        <span style={{ marginLeft: 16 }}>正在加载...</span>
       </Flex>
     );
   }
