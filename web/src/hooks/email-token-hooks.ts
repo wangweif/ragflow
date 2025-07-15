@@ -18,7 +18,7 @@ export const useEmailTokenAuth = () => {
     // 避免重复处理
     if (processed) return;
 
-    const encodedId = searchParams.get('id');
+    const encodedId = searchParams.get('dbumid');
     if (!encodedId) {
       setProcessed(true);
       return;
@@ -78,7 +78,7 @@ export const useEmailTokenAuth = () => {
 
         // 清除URL参数，但保持在当前页面
         const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('id');
+        newUrl.searchParams.delete('dbumid');
         window.history.replaceState({}, '', newUrl.toString());
 
         // 不需要强制刷新，让useAuth hook自动检测变化

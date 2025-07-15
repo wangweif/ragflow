@@ -18,26 +18,29 @@ const App: React.FC = () => {
 
   // 获取URL参数
   const [searchParams] = useSearchParams();
-  const hasIdParam = searchParams.get('id');
+  const hasDbumidParam = searchParams.get('dbumid');
 
   // 状态管理show_menu
   const [showMenu, setShowMenu] = useState(() => {
     // 初始化时从localStorage读取
     try {
       const stored = localStorage.getItem('show_menu');
+      if (stored == null) {
+        return true;
+      }
       return stored === 'true';
     } catch {
-      return false;
+      return true;
     }
   });
 
-  // 监听URL参数变化，当有id参数时设置localStorage
+  // 监听URL参数变化，当有dbumid参数时设置localStorage
   useEffect(() => {
-    if (hasIdParam) {
-      localStorage.setItem('show_menu', 'true');
-      setShowMenu(true);
+    if (hasDbumidParam) {
+      localStorage.setItem('show_menu', 'false');
+      setShowMenu(false);
     }
-  }, [hasIdParam]);
+  }, [hasDbumidParam]);
 
   // 从环境变量获取颜色值
   const primaryColor = process.env.UMI_APP_PRIMARY_COLOR || '#10b981'; // 默认绿色
@@ -69,10 +72,10 @@ const App: React.FC = () => {
         <div
           style={{
             height: '72px',
-            background: showMenu ? '#ffffff' : 'transparent',
+            background: showMenu ? 'transparent' : '#ffffff',
           }}
         >
-          {!showMenu && (
+          {showMenu && (
             <>
               <Header></Header>
               <Divider orientationMargin={0} className={styles.divider} />
@@ -93,13 +96,13 @@ const App: React.FC = () => {
         <div
           style={{
             height: '48px',
-            background: showMenu ? '#ffffff' : 'transparent',
+            background: showMenu ? 'transparent' : '#ffffff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          {!showMenu && (
+          {showMenu && (
             <Footer
               style={{
                 textAlign: 'center',
