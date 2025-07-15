@@ -25,11 +25,11 @@ export const useEmailTokenAuth = () => {
     }
 
     // 检查是否已经有token（避免重复登录）
-    const existingAuth = authorizationUtil.getAuthorization();
-    if (existingAuth) {
-      setProcessed(true);
-      return;
-    }
+    // const existingAuth = authorizationUtil.getAuthorization();
+    // if (existingAuth) {
+    //   setProcessed(true);
+    //   return;
+    // }
 
     try {
       setLoading(true);
@@ -48,18 +48,13 @@ export const useEmailTokenAuth = () => {
         body: JSON.stringify({ email: decodedEmail }),
       });
 
-      console.log('完整响应对象:', response);
-      console.log('响应头:', response.headers);
-
       const data = await response.json();
-      console.log('响应数据:', data);
 
       if (data.code === 0) {
         const { access_token, user_info } = data.data;
 
         // 从响应头获取JWT格式的authorization
         const authorization = response.headers.get('Authorization');
-        console.log('authorization:', authorization);
 
         if (!authorization) {
           message.error('获取授权信息失败');
@@ -79,7 +74,7 @@ export const useEmailTokenAuth = () => {
           Token: access_token,
         });
 
-        message.success('自动登录成功');
+        // message.success('自动登录成功');
 
         // 清除URL参数，但保持在当前页面
         const newUrl = new URL(window.location.href);
