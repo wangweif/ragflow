@@ -71,10 +71,21 @@ class DocumentService(CommonService):
     @DB.connection_context()
     def get_by_kb_id(cls, kb_id, page_number, items_per_page,
                      orderby, desc, keywords):
+        status_keywords = {
+            "未解析": "0",
+            "解析中": "1", 
+            "取消": "2",
+            "成功": "3",
+            "失败": "4"
+        }
+        matched_status = []
+        for status_name, status_value in status_keywords.items():
+            if status_name in keywords:
+                matched_status.append(status_value)
         if keywords:
             docs = cls.model.select().where(
                 (cls.model.kb_id == kb_id),
-                (fn.LOWER(cls.model.name).contains(keywords.lower()))
+                (fn.LOWER(cls.model.name).contains(keywords.lower()) | (cls.model.run.in_(matched_status)))
             )
         else:
             docs = cls.model.select().where(cls.model.kb_id == kb_id)
