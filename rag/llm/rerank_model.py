@@ -397,6 +397,7 @@ class CoHereRerank(Base):
             documents=texts,
             top_n=len(texts),
             return_documents=False,
+            request_options={"additional_body_parameters": {"truncate_prompt_tokens": 4096}},
         )
         rank = np.zeros(len(texts), dtype=float)
         for d in res.results:
