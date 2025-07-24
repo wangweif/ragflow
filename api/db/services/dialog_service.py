@@ -251,6 +251,8 @@ def chat(dialog, messages, stream=True, **kwargs):
 
     kwargs["knowledge"] = "\n------\n" + "\n\n------\n\n".join(knowledges)
     gen_conf = dialog.llm_setting
+    gen_conf["top_p"] = gen_conf.get("top_p", 1) 
+    gen_conf["temperature"] = gen_conf.get("temperature", 0)
 
     msg = [{"role": "system", "content": prompt_config["system"].format(**kwargs)}]
     prompt4citation = ""

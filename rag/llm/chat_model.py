@@ -343,7 +343,7 @@ class Base(ABC):
         total_tokens = 0
         reasoning_start = False
         try:
-            response = self.client.chat.completions.create(model=self.model_name, messages=history, stream=True, **gen_conf)
+            response = self.client.chat.completions.create(model=self.model_name, messages=history, stream=True, **gen_conf, seed=42, extra_body={"top_k": 0})
             for resp in response:
                 if not resp.choices:
                     continue
