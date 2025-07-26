@@ -219,6 +219,7 @@ class KnowledgebaseService(CommonService):
             cls.model.language,
             cls.model.description,
             cls.model.permission,
+            cls.model.created_by,
             cls.model.doc_num,
             cls.model.token_num,
             cls.model.chunk_num,
