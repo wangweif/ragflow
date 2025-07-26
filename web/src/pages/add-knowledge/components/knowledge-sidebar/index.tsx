@@ -74,7 +74,7 @@ const KnowledgeSidebar = () => {
         <TestingIcon />,
       ),
     ];
-    if (userInfo?.id === userInfo.tenant_id) {
+    if (userInfo?.id === knowledgeDetails.created_by) {
       list.push(
         getItem(
           KnowledgeRouteKey.Configuration,
@@ -95,7 +95,7 @@ const KnowledgeSidebar = () => {
     }
 
     return list;
-  }, [data, getItem]);
+  }, [data, getItem, userInfo?.id, knowledgeDetails.created_by]);
 
   useEffect(() => {
     if (windowWidth.width > 957) {
