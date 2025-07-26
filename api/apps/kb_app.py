@@ -58,7 +58,7 @@ def create():
         status=StatusEnum.VALID.value)
     try:
         req["id"] = get_uuid()
-        req["tenant_id"] = current_user.id
+        req["tenant_id"] = current_user.tenant_id
         req["created_by"] = current_user.id
         e, t = TenantService.get_by_id(current_user.tenant_id)
         if not e:
