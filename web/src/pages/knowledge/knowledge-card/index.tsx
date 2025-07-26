@@ -33,7 +33,7 @@ const KnowledgeCard = ({ item }: IProps) => {
   };
 
   // 检查当前用户是否有权删除此知识库
-  const canDelete = userInfo?.role === 'owner' || userInfo?.role === 'admin';
+  const canDelete = userInfo?.id === item.kb_info?.created_by;
 
   return (
     // <Badge.Ribbon
