@@ -216,7 +216,6 @@ class KnowledgebasePermissionService:
                 )
                 .where(
                     KnowledgebasePermission.user_id == user_id,
-                    Knowledgebase.tenant_id == tenant_id,
                     KnowledgebasePermission.status == StatusEnum.VALID.value,
                     Knowledgebase.status == StatusEnum.VALID.value
                 )
