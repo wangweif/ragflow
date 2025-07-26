@@ -61,17 +61,14 @@ const KnowledgeList = () => {
             onChange={handleInputChange}
             prefix={<SearchOutlined />}
           /> */}
-
-          {isAdmin && (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={showModal}
-              className={styles.topButton}
-            >
-              {t('createKnowledgeBase')}
-            </Button>
-          )}
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={showModal}
+            className={styles.topButton}
+          >
+            {t('createKnowledgeBase')}
+          </Button>
         </Space>
       </div>
       <Spin spinning={loading}>

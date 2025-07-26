@@ -60,7 +60,7 @@ def create():
         req["id"] = get_uuid()
         req["tenant_id"] = current_user.id
         req["created_by"] = current_user.id
-        e, t = TenantService.get_by_id(current_user.id)
+        e, t = TenantService.get_by_id(current_user.tenant_id)
         if not e:
             return get_data_error_result(message="未找到租户.")
         req["embd_id"] = t.embd_id
