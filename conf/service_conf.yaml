@@ -12,7 +12,7 @@ mysql:
 minio:
   user: 'rag_flow'
   password: 'infini_rag_flow'
-  host: 'localhost:9000'
+  host: '192.168.8.88:9000'
 es:
   hosts: 'http://192.168.8.88:1200'
   username: 'elastic'
@@ -23,7 +23,7 @@ infinity:
 redis:
   db: 1
   password: 'infini_rag_flow'
-  host: 'localhost:6378'
+  host: '192.168.8.88:6378'
 # postgres:
 #   name: 'rag_flow'
 #   user: 'rag_flow'
