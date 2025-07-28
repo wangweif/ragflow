@@ -42,7 +42,7 @@ echo "主进程PID: $MAIN_PID 已保存到 logs/ragflow.pid"
 
 # 7. 等待服务启动完成
 echo "后端服务启动中，请等待..."
-MAX_WAIT=60
+MAX_WAIT=120
 WAIT_INTERVAL=5
 TOTAL_WAIT=0
 
