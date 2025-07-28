@@ -803,6 +803,22 @@ def get_user_info():
     return get_json_result(data=user.to_dict())
 
 
+@manager.route("/get_user_by_id", methods=["POST"]) 
+@validate_request("user_id")
+def get_user_by_id():
+    """
+    Get user information by user ID.
+    """
+    user_id = request.json.get("user_id")
+    user = UserService.filter_by_id(user_id)
+    if not user:
+        return get_json_result(
+            data=False,
+            message="用户不存在!",
+        )
+    return get_json_result(data=user.to_dict())
+
+
 @manager.route("/get_token_by_email", methods=["POST"])
 @validate_request("email")
 def get_token_by_email():

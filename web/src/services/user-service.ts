@@ -25,6 +25,7 @@ const {
   getSystemConfig,
   setLangfuseConfig,
   get_token_by_email,
+  get_user_by_id,
 } = api;
 
 const methods = {
@@ -58,6 +59,10 @@ const methods = {
   },
   get_token_by_email: {
     url: get_token_by_email,
+    method: 'post',
+  },
+  get_user_by_id: {
+    url: get_user_by_id,
     method: 'post',
   },
   factories_list: {
@@ -183,5 +188,8 @@ export const addUser = (
   nickname: string,
   role: string,
 ) => request.post(api.addUser(teamId), { data: { email, nickname, role } });
+
+export const getUserById = (userId: string) =>
+  post(api.get_user_by_id, { user_id: userId });
 
 export default userService;

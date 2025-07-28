@@ -12,6 +12,7 @@ export default {
   tenant_info: `${api_host}/user/tenant_info`,
   set_tenant_info: `${api_host}/user/set_tenant_info`,
   get_token_by_email: `${api_host}/user/get_token_by_email`,
+  get_user_by_id: `${api_host}/user/get_user_by_id`,
 
   // team
   addTenantUser: (tenantId: string) => `${api_host}/tenant/${tenantId}/user`,
