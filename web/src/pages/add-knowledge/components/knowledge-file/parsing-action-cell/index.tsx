@@ -1,5 +1,6 @@
 import { useShowDeleteConfirm, useTranslate } from '@/hooks/common-hooks';
 import { useRemoveNextDocument } from '@/hooks/document-hooks';
+import { useFetchKnowledgeBaseConfiguration } from '@/hooks/knowledge-hooks';
 import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { IDocumentInfo } from '@/interfaces/database/document';
 import { downloadDocument } from '@/utils/file-util';
@@ -42,8 +43,12 @@ const ParsingActionCell = ({
 
   // 获取用户信息
   const { data: userInfo } = useFetchUserInfo();
-  // 判断是否是管理员用户（tenant_id === id）
-  const isAdmin = useMemo(() => userInfo.tenant_id === userInfo.id, [userInfo]);
+  const { data: knowledgeDetails } = useFetchKnowledgeBaseConfiguration();
+  // 判断是否是所有者（created_by === id）
+  const isOwner = useMemo(
+    () => knowledgeDetails.created_by === userInfo.id,
+    [userInfo, knowledgeDetails],
+  );
 
   const onRmDocument = () => {
     if (!isRunning) {
@@ -107,7 +112,7 @@ const ParsingActionCell = ({
 
   return (
     <Space size={0}>
-      {isVirtualDocument || !isAdmin || !hasWritePermission || (
+      {isVirtualDocument || !isOwner || !hasWritePermission || (
         <Dropdown
           menu={{ items: chunkItems }}
           trigger={['click']}
