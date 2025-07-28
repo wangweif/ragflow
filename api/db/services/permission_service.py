@@ -239,6 +239,7 @@ class KnowledgebasePermissionService:
                     'permission_type': perm.permission_type,
                     'granted_by': perm.granted_by,
                     'granted_at': perm.granted_at,
+                    'avatar': record.knowledgebase.avatar,
                     'kb_info': kb_dict
                 }
                 
