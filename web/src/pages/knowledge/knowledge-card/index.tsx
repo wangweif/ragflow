@@ -8,7 +8,7 @@ import { useNavigate } from 'umi';
 import OperateDropdown from '@/components/operate-dropdown';
 import { useTheme } from '@/components/theme-provider';
 import { useDeleteKnowledge } from '@/hooks/knowledge-hooks';
-import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
+import { useFetchUserInfo, useGetUserById } from '@/hooks/user-setting-hooks';
 import styles from './index.less';
 
 interface IProps {
@@ -19,6 +19,7 @@ const KnowledgeCard = ({ item }: IProps) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { data: userInfo } = useFetchUserInfo();
+  const { data: creatorInfo } = useGetUserById(item.kb_info?.created_by || '');
   const { theme } = useTheme();
   const { deleteKnowledge } = useDeleteKnowledge();
 
@@ -78,28 +79,12 @@ const KnowledgeCard = ({ item }: IProps) => {
               </div>
             </div>
             <div className={styles.bottom}>
-              {/* <div className={styles.bottomLeft}>
-                <CalendarOutlined className={styles.leftIcon} />
+              <div className={styles.bottomLeft}>
+                <UserOutlined className={styles.leftIcon} />
                 <span className={styles.rightText}>
-                  {formatDate(item.kb_info?.update_time)}
+                  {'创建人：' + creatorInfo?.nickname}
                 </span>
-              </div> */}
-              {/* <Avatar.Group size={25}>
-                <Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=1" />
-                <a href="https://ant.design">
-                  <Avatar style={{ backgroundColor: '#f56a00' }}>K</Avatar>
-                </a>
-                <Tooltip title="Ant User" placement="top">
-                  <Avatar
-                    style={{ backgroundColor: '#87d068' }}
-                    icon={<UserOutlined />}
-                  />
-                </Tooltip>
-                <Avatar
-                  style={{ backgroundColor: '#1677ff' }}
-                  icon={<AntDesignOutlined />}
-                />
-              </Avatar.Group> */}
+              </div>
             </div>
           </div>
         </div>

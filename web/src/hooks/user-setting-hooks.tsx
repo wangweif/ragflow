@@ -592,3 +592,17 @@ export const useListSubTeams = (parentId: string | null) => {
 
   return { data, loading, refetch };
 };
+
+export const useGetUserById = (userId: string) => {
+  const { data, isFetching: loading } = useQuery({
+    queryKey: ['userById', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data } = await userService.get_user_by_id({ user_id: userId });
+      return data?.data ?? null;
+    },
+    enabled: !!userId,
+  });
+
+  return { data, loading };
+};
