@@ -48,7 +48,7 @@ export const useSaveKnowledge = () => {
         );
       }
     },
-    [createKnowledge, hideModal, navigate],
+    [createKnowledge, hideModal, navigate, userInfo],
   );
 
   return {
