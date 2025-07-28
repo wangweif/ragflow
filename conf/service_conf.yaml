@@ -5,7 +5,7 @@ mysql:
   name: 'rag_flow'
   user: 'root'
   password: 'infini_rag_flow'
-  host: 'localhost'
+  host: '192.168.8.88'
   port: 5455
   max_connections: 100
   stale_timeout: 30
@@ -14,7 +14,7 @@ minio:
   password: 'infini_rag_flow'
   host: 'localhost:9000'
 es:
-  hosts: 'http://localhost:1200'
+  hosts: 'http://192.168.8.88:1200'
   username: 'elastic'
   password: 'infini_rag_flow'
 infinity:
@@ -24,7 +24,6 @@ redis:
   db: 1
   password: 'infini_rag_flow'
   host: 'localhost:6378'
-
 # postgres:
 #   name: 'rag_flow'
 #   user: 'rag_flow'
