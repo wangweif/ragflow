@@ -23,5 +23,6 @@ API_VERSION = "v1"
 RAG_FLOW_SERVICE_NAME = "ragflow"
 REQUEST_WAIT_SEC = 2
 REQUEST_MAX_WAIT_SEC = 300
-
+DEFAULT_PARSER_CONFIG = {"chunk_token_num": 2048, "auto_keywords": 5, "auto_questions": 3}
 DATASET_NAME_LIMIT = 128
+
