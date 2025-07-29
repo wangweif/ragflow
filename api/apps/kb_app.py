@@ -32,7 +32,7 @@ from api.db.db_models import File
 from api.utils.api_utils import get_json_result
 from api import settings
 from rag.nlp import search
-from api.constants import DATASET_NAME_LIMIT
+from api.constants import DATASET_NAME_LIMIT, DEFAULT_PARSER_CONFIG
 from rag.settings import PAGERANK_FLD
 
 
@@ -60,6 +60,7 @@ def create():
         req["id"] = get_uuid()
         req["tenant_id"] = current_user.tenant_id
         req["created_by"] = current_user.id
+        req["parser_config"] = DEFAULT_PARSER_CONFIG
         e, t = TenantService.get_by_id(current_user.tenant_id)
         if not e:
             return get_data_error_result(message="未找到租户.")
