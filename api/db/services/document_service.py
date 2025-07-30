@@ -28,7 +28,7 @@ from peewee import fn
 
 from api import settings
 from api.db import FileType, LLMType, ParserType, StatusEnum, TaskStatus, UserTenantRole
-from api.db.db_models import DB, Document, Knowledgebase, Task, Tenant, UserTenant
+from api.db.db_models import DB, Document, Knowledgebase, Task, Tenant, UserTenant, User
 from api.db.db_utils import bulk_insert_into_db
 from api.db.services.common_service import CommonService
 from api.db.services.knowledgebase_service import KnowledgebaseService
@@ -278,12 +278,12 @@ class DocumentService(CommonService):
             Knowledgebase, on=(
                 Knowledgebase.id == cls.model.kb_id)
         ).join(
-            UserTenant, on=(
-                (UserTenant.tenant_id == Knowledgebase.created_by) & (UserTenant.user_id == user_id))
+            User, on=(
+                (User.id == Knowledgebase.created_by)
+            )
         ).where(
             cls.model.id == doc_id,
-            UserTenant.status == StatusEnum.VALID.value,
-            ((UserTenant.role == UserTenantRole.NORMAL) | (UserTenant.role == UserTenantRole.OWNER))
+            User.id == user_id
         ).paginate(0, 1)
         docs = docs.dicts()
         if not docs:
