@@ -199,7 +199,7 @@ def rm():
         e, doc = DocumentService.get_by_id(req["doc_id"])
         if not e:
             return get_data_error_result(message="未找到文档！")
-        if not settings.docStoreConn.delete({"id": req["chunk_ids"]}, search.index_name(current_user.id), doc.kb_id):
+        if not settings.docStoreConn.delete({"id": req["chunk_ids"]}, search.index_name(current_user.tenant_id), doc.kb_id):
             return get_data_error_result(message="索引更新失败")
         deleted_chunk_ids = req["chunk_ids"]
         chunk_number = len(deleted_chunk_ids)
