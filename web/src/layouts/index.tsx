@@ -37,8 +37,24 @@ const App: React.FC = () => {
   // 监听URL参数变化，当有dbumid参数时设置localStorage
   useEffect(() => {
     if (hasDbumidParam) {
-      localStorage.setItem('show_menu', 'false');
-      setShowMenu(false);
+      try {
+        // Base64 解码dbumid参数获取email
+        const decodedEmail = atob(hasDbumidParam);
+
+        // 如果email为admin@bjzntd.com，则保持菜单显示
+        if (decodedEmail === 'admin@bjzntd.com') {
+          localStorage.setItem('show_menu', 'true');
+          setShowMenu(true);
+        } else {
+          localStorage.setItem('show_menu', 'false');
+          setShowMenu(false);
+        }
+      } catch (error) {
+        console.error('解码dbumid参数失败:', error);
+        // 解码失败时默认隐藏菜单
+        localStorage.setItem('show_menu', 'false');
+        setShowMenu(false);
+      }
     }
   }, [hasDbumidParam]);
 
