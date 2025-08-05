@@ -9,10 +9,10 @@ export default () => {
   const { isLogin } = useAuth();
   const { loading: emailAuthLoading, processed } = useEmailTokenAuth();
 
-  // 检查URL是否有id参数（需要自动登录）
-  const hasEmailAuth = searchParams.has('id');
+  // 检查URL是否有dbumid或token参数（需要自动登录）
+  const hasEmailAuth = searchParams.has('dbumid') || searchParams.has('token');
 
-  // 如果有id参数且还未处理完成，显示加载状态
+  // 如果有dbumid或token参数且还未处理完成，显示加载状态
   if (hasEmailAuth && !processed) {
     return (
       <Flex justify="center" align="center" style={{ height: '100vh' }}>
@@ -36,7 +36,7 @@ export default () => {
   if (isLogin === true || processed) {
     return <Outlet />;
   } else if (isLogin === false) {
-    // 只有在没有id参数或者已经处理完成后才重定向到登录页面
+    // 只有在没有dbumid或token参数或者已经处理完成后才重定向到登录页面
     if (!hasEmailAuth || processed) {
       redirectToLogin();
     }

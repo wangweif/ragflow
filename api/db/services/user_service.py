@@ -16,7 +16,7 @@
 import hashlib
 import logging
 from datetime import datetime
-from typing import List, Union
+from typing import List, Union, Optional
 
 import peewee
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -28,6 +28,7 @@ from api.db.services.common_service import CommonService
 from api.utils import get_uuid, current_timestamp, datetime_format
 from api.db import StatusEnum
 from rag.settings import MINIO
+from api.utils.local_user_client import local_user_client
 
 logger = logging.getLogger(__name__)
 class UserService(CommonService):
@@ -35,14 +36,47 @@ class UserService(CommonService):
     
     This class extends CommonService to provide specialized functionality for user management,
     including authentication, user creation, updates, and deletions.
+    现已重构为使用本地SQLite数据库。
     
     Attributes:
-        model: The User model class for database operations.
+        model: The User model class for database operations (仅用于兼容性).
     """
     model = User
+    
+    @classmethod
+    def query(cls, **kwargs):
+        """通用查询方法，兼容原有代码调用方式"""
+        try:
+            # 如果查询包含email参数
+            if 'email' in kwargs:
+                user = cls.get_by_email(kwargs['email'])
+                return [user] if user else []
+            
+            # 如果查询包含access_token参数  
+            if 'access_token' in kwargs:
+                # 通过验证token获取用户信息
+                user = local_user_client.verify_token(kwargs['access_token'])
+                return [user] if user else []
+            
+            # 如果查询包含id参数
+            if 'id' in kwargs:
+                user = cls.filter_by_id(kwargs['id'])
+                return [user] if user else []
+            
+            # 其他查询参数暂不支持，返回空列表
+            logger.warning(f"不支持的查询参数: {kwargs}")
+            return []
+            
+        except Exception as e:
+            logger.error(f"查询用户失败: {str(e)}")
+            return []
+    
+    @classmethod
+    def update_by_id(cls, user_id, update_dict):
+        """根据ID更新用户，兼容原有代码调用方式"""
+        return cls.update_user(user_id, update_dict)
 
     @classmethod
-    @DB.connection_context()
     def filter_by_id(cls, user_id):
         """Retrieve a user by their ID.
         
@@ -53,13 +87,13 @@ class UserService(CommonService):
             User object if found, None otherwise.
         """
         try:
-            user = cls.model.select().where(cls.model.id == user_id).get()
+            user = local_user_client.get_user_by_id(user_id)
             return user
-        except peewee.DoesNotExist:
+        except Exception as e:
+            logger.error(f"获取用户失败: {str(e)}")
             return None
 
     @classmethod
-    @DB.connection_context()
     def get_by_email(cls, email):
         """根据邮箱获取用户
         
@@ -67,98 +101,49 @@ class UserService(CommonService):
             email: 用户邮箱
             
         Returns:
-            User对象，如果未找到则返回None
+            User object if found, None otherwise.
         """
         try:
-            user = cls.model.select().where(
-                (cls.model.email == email) & 
-                (cls.model.status == StatusEnum.VALID.value)
-            ).get()
+            user = local_user_client.get_user_by_email(email)
             return user
-        except peewee.DoesNotExist:
+        except Exception as e:
+            logger.error(f"根据邮箱获取用户失败: {str(e)}")
             return None
 
     @classmethod
-    @DB.connection_context()
-    def query_user(cls, email, password):
-        """Authenticate a user with email and password.
+    def authenticate_user(cls, email, password):
+        """用户认证
         
         Args:
-            email: User's email address.
-            password: User's password in plain text.
+            email: 用户邮箱
+            password: 用户密码
             
         Returns:
             User object if authentication successful, None otherwise.
         """
-        user = cls.model.select().where((cls.model.email == email),
-                                        (cls.model.status == StatusEnum.VALID.value)).first()
-        if user and check_password_hash(str(user.password), password):
+        try:
+            user = local_user_client.authenticate_user(email, password)
             return user
-        else:
+        except Exception as e:
+            logger.error(f"用户认证失败: {str(e)}")
             return None
 
     @classmethod
-    @DB.connection_context()
-    def save(cls, **kwargs):
-        if "id" not in kwargs:
-            kwargs["id"] = get_uuid()
-        if "password" in kwargs:
-            kwargs["password"] = generate_password_hash(
-                str(kwargs["password"]))
-
-        kwargs["create_time"] = current_timestamp()
-        kwargs["create_date"] = datetime_format(datetime.now())
-        kwargs["update_time"] = current_timestamp()
-        kwargs["update_date"] = datetime_format(datetime.now())
-        obj = cls.model(**kwargs).save(force_insert=True)
-        return obj
-
-    @classmethod
-    @DB.connection_context()
-    def create_user(cls, email, nickname, password=None, team_id=None, role=None, tenant_id=None):
-        """创建新用户
+    def create_user(cls, **kwargs):
+        """创建用户
         
         Args:
-            email: 用户邮箱
-            nickname: 用户昵称
-            password: 用户密码，如果不提供则生成随机密码
-            team_id: 团队ID
-            role: 用户角色
-            tenant_id: 租户ID
+            **kwargs: 用户数据
             
         Returns:
-            新创建的用户对象
+            User object if creation successful, None otherwise.
         """
-        # 检查邮箱是否已存在
-        existing_user = cls.get_by_email(email)
-        if existing_user:
-            return existing_user
-            
-        # 如果未提供密码，生成随机密码
-        if not password:
-            password = get_uuid()[:8]
-            
-        # logger.info(f"创建用户: email={email}, nickname={nickname}, team_id={team_id}, role={role}, tenant_id={tenant_id}")
-        # 创建用户
-        user_data = {
-            "email": email,
-            "nickname": nickname,
-            "password": password,
-            "is_authenticated": "1",
-            "is_active": "1",
-            "is_anonymous": "0",
-            "status": StatusEnum.VALID.value,
-            "team_id": team_id,
-            "role": role,
-            "tenant_id": tenant_id,
-            "language": "Chinese"
-        }
-        
-        user = cls.save(**user_data)
-        # logger.info(f"用户创建成功: id={user.id}, team_id={user.team_id}, role={user.role}, tenant_id={user.tenant_id}")
-        
-        # 返回创建的用户
-        return cls.get_by_email(email)
+        try:
+            user = local_user_client.create_user(kwargs)
+            return user
+        except Exception as e:
+            logger.error(f"创建用户失败: {str(e)}")
+            return None
 
     @classmethod
     @DB.connection_context()
@@ -168,17 +153,18 @@ class UserService(CommonService):
                 cls.model.id.in_(user_ids)).execute()
 
     @classmethod
-    @DB.connection_context()
     def update_user(cls, user_id, user_dict):
-        with DB.atomic():
+        """更新用户信息（通过本地SQLite客户端）"""
+        try:
             if user_dict:
                 user_dict["update_time"] = current_timestamp()
                 user_dict["update_date"] = datetime_format(datetime.now())
-                cls.model.update(user_dict).where(
-                    cls.model.id == user_id).execute()
+                return local_user_client.update_user(user_id, user_dict)
+        except Exception as e:
+            logger.error(f"更新用户失败: {str(e)}")
+            return False
 
     @classmethod
-    @DB.connection_context()
     def get_users_by_team_id(cls, team_id: Union[str, int]) -> List[User]:
         """
         根据team_id查询用户表中的相关用户
@@ -187,41 +173,20 @@ class UserService(CommonService):
             team_id: 团队ID（字符串或整数类型）
             
         Returns:
-            用户列表，不包含密码字段
+            User列表
         """
         try:
             # 确保team_id是字符串类型
             team_id_str = str(team_id)
             
-            # 明确指定要查询的字段，排除password字段
-            fields = [
-                User.id,
-                User.email,
-                User.nickname,
-                User.avatar,
-                User.is_authenticated,
-                User.is_active,
-                User.is_anonymous,
-                User.status,
-                User.team_id,
-                User.role,
-                User.tenant_id,
-                User.create_time,
-                User.create_date,
-                User.update_time,
-                User.update_date,
-                User.is_superuser,
-                User.language
-            ]
+            # 通过本地SQLite客户端获取团队用户
+            users_data = local_user_client.get_users_by_team_id(team_id_str)
             
-            users = User.select(*fields).where(
-                User.team_id == team_id_str,
-                User.status == StatusEnum.VALID.value
-            )
-            return list(users)
+            # 将字典数据转换为User对象
+            return [user for user in users_data if user]
         except Exception as e:
-            logger.error(f"查询用户失败: {str(e)}")
-            raise
+            logger.error(f"查询团队用户失败: {str(e)}")
+            return []
 
 
 class TenantService(CommonService):

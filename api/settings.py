@@ -65,9 +65,13 @@ kg_retrievaler = None
 # user registration switch
 REGISTER_ENABLED = 1
 
+# 远程用户服务配置
+REMOTE_USER_API_BASE = "http://192.168.31.149:8080/api"
+REMOTE_USER_API_TIMEOUT = 30
+
 
 def init_settings():
-    global LLM, LLM_FACTORY, LLM_BASE_URL, LIGHTEN, DATABASE_TYPE, DATABASE, FACTORY_LLM_INFOS, REGISTER_ENABLED
+    global LLM, LLM_FACTORY, LLM_BASE_URL, LIGHTEN, DATABASE_TYPE, DATABASE, FACTORY_LLM_INFOS, REGISTER_ENABLED, REMOTE_USER_API_BASE, REMOTE_USER_API_TIMEOUT
     LIGHTEN = int(os.environ.get('LIGHTEN', "0"))
     DATABASE_TYPE = os.getenv("DB_TYPE", 'mysql')
     DATABASE = decrypt_database_config(name=DATABASE_TYPE)
@@ -80,6 +84,13 @@ def init_settings():
     except Exception:
         pass  
     
+    # 初始化远程用户服务配置
+    REMOTE_USER_API_BASE = os.environ.get("REMOTE_USER_API_BASE", "http://192.168.8.88:9380/v1")
+    try:
+        REMOTE_USER_API_TIMEOUT = int(os.environ.get("REMOTE_USER_API_TIMEOUT", "30"))
+    except Exception:
+        REMOTE_USER_API_TIMEOUT = 30
+
     try:
         with open(os.path.join(get_project_base_directory(), "conf", "llm_factories.json"), "r") as f:
             FACTORY_LLM_INFOS = json.load(f)["factory_llm_infos"]

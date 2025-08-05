@@ -33,7 +33,8 @@ from flask_session import Session
 from flask_login import LoginManager
 from api import settings
 from api.utils.api_utils import server_error_response
-from api.constants import API_VERSION
+from api.constants import API_VERSION, XIAOZHI_JWT_SECRET_KEY
+import jwt
 
 __all__ = ["app"]
 
@@ -141,22 +142,60 @@ client_urls_prefix = [
 
 @login_manager.request_loader
 def load_user(web_request):
-    jwt = Serializer(secret_key=settings.SECRET_KEY)
-    authorization = web_request.headers.get("Authorization")
-    if authorization:
-        try:
-            access_token = str(jwt.loads(authorization))
-            user = UserService.query(
-                access_token=access_token, status=StatusEnum.VALID.value
-            )
-            if user:
-                return user[0]
+    from api.utils.local_user_client import LocalUserClient
+    from flask_login import login_user
+    import re
+
+    try:
+        # 优先从Authorization头获取token
+        authorization_header = web_request.headers.get("Authorization")
+        authorization = None
+        
+        if authorization_header:
+            # 处理 "Bearer token" 格式
+            if authorization_header.startswith("Bearer "):
+                authorization = authorization_header[7:]  # 移除 "Bearer " 前缀
             else:
-                return None
-        except Exception as e:
-            logging.warning(f"load_user got exception {e}")
+                authorization = authorization_header
+        else:
+            # 如果没有Authorization头，尝试从Cookie中获取（兼容性）
+            cookie_header = web_request.headers.get("Cookie")
+            if cookie_header:
+                # 使用正则表达式提取token值
+                token_match = re.search(r'token=([^;]+)', cookie_header)
+                if token_match:
+                    authorization = token_match.group(1)
+        
+        # 验证token不为空且格式合理
+        if not authorization or len(authorization) < 10:
             return None
-    else:
+        
+        local_user_client = LocalUserClient()
+        
+        try:
+            # 直接从JWT中解析用户信息，无需远程API验证
+            user_info = jwt.decode(authorization, XIAOZHI_JWT_SECRET_KEY, algorithms=["HS256"])
+            
+            # 如果JWT中包含完整的用户信息，直接创建用户对象
+            if user_info is not None and "id" in user_info:
+                user = local_user_client.get_user_by_id(user_info["id"])
+                logging.info(f"------------load_user user: {user}")
+                login_user(user)
+                return user
+            return None
+                
+        except jwt.InvalidTokenError as e:
+            logging.warning(f"load_user JWT解码失败: {e}")
+            return None
+        except jwt.DecodeError as e:
+            logging.warning(f"load_user JWT格式错误: {e}")
+            return None
+        except Exception as e:
+            logging.warning(f"load_user got exception: {e}")
+            return None
+            
+    except Exception as e:
+        logging.warning(f"load_user 认证处理失败: {e}")
         return None
 
 
