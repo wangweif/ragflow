@@ -22,9 +22,11 @@ from api import settings
 from api.db.services.team_service import TeamService
 from api.db.services.user_service import UserService
 from api.utils.api_utils import get_json_result, validate_request, server_error_response, get_data_error_result
-from api.db import StatusEnum
+from api.db import StatusEnum, UserTenantRole
 from api.utils import current_timestamp, datetime_format
 from datetime import datetime
+from api.utils.remote_user_client import RemoteUserClient
+from api.db.services.user_service import UserTenantService
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +138,7 @@ def update_team(team_id):
 @manager.route('/delete/<team_id>', methods=['POST'])
 @login_required
 def delete_team(team_id):
+    return get_json_result(data=False, message='暂时不允许删除')
     """删除团队（递归删除子团队及其成员）"""
     try:
         # 获取团队信息
@@ -278,6 +281,9 @@ def add_team_member(team_id):
         nickname = data.get('nickname', email.split('@')[0])  # 如果没有提供昵称，使用邮箱用户名作为昵称
         role = data.get('role')
         password = data.get('password', "123456")
+        token = request.headers.get('cookie')
+        token = token.split('=')[1]
+        token = token.split(';')[0]
         
         # 获取团队信息
         team_info = TeamService.get_team(team_id)
@@ -308,16 +314,27 @@ def add_team_member(team_id):
         member = UserService.get_by_email(email)
         if member:
             return get_data_error_result(message="邮箱已存在")
-        
-        # 使用邮箱添加成员
-        member = TeamService.add_member_by_email(
-            team_id=team_id, 
-            email=email, 
-            nickname=nickname, 
-            role=role,
-            tenant_id=team_info['tenant_id'],
-            password=password
-        )
+        remote_user_client = RemoteUserClient(token = token)
+        user = remote_user_client.create_user({"email": email, "password": password, "name": nickname})
+        logger.info(f"------------user: {user}")
+        if user:
+            # 添加记录到用户租户表
+            UserTenantService.save(
+                user_id=user['id'],
+                tenant_id=team_info['tenant_id'],
+                role=UserTenantRole.NORMAL,
+                invited_by=team_info['tenant_id'],
+                status=StatusEnum.VALID.value
+            )
+            # 完善信息到用户表
+            UserService.update_user(
+                user['id'],
+                {
+                    "team_id": team_id,
+                    "ragflow_user_id": user['id'],
+                    "tenant_id": team_info['tenant_id'],
+                }
+            )
         
         return get_json_result(data=member)
     except ValueError as e:
@@ -330,6 +347,8 @@ def add_team_member(team_id):
 @manager.route('/<team_id>/member/<user_id>', methods=['POST'])
 @login_required
 def remove_team_member(team_id, user_id):
+    # 不允许移除
+    return get_json_result(data=False, message='暂时不允许移除')
     """移除团队成员"""
     try:
         # 获取团队信息

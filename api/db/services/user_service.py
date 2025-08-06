@@ -17,6 +17,7 @@ import hashlib
 import logging
 from datetime import datetime
 from typing import List, Union, Optional
+import time
 
 import peewee
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -157,8 +158,7 @@ class UserService(CommonService):
         """更新用户信息（通过本地SQLite客户端）"""
         try:
             if user_dict:
-                user_dict["update_time"] = current_timestamp()
-                user_dict["update_date"] = datetime_format(datetime.now())
+                user_dict["updated_at"] = int(time.time())
                 return local_user_client.update_user(user_id, user_dict)
         except Exception as e:
             logger.error(f"更新用户失败: {str(e)}")

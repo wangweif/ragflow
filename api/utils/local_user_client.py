@@ -76,40 +76,6 @@ class LocalUserClient:
         
         return user
     
-    def authenticate_user(self, email: str, password: str) -> Optional['User']:
-        """用户认证"""
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.row_factory = self._dict_factory
-                cursor = conn.cursor()
-                
-                cursor.execute("""
-                    SELECT * FROM user 
-                    WHERE email = ? AND status = 1 AND is_active = 1
-                """, (email,))
-                
-                user_dict = cursor.fetchone()
-                if user_dict and check_password_hash(user_dict['password'], password):
-                    # 更新最后登录时间
-                    now = datetime.now()
-                    cursor.execute("""
-                        UPDATE user 
-                        SET last_login_time = ?, update_time = ?, update_date = ?
-                        WHERE id = ?
-                    """, (now.strftime('%Y-%m-%d %H:%M:%S'), current_timestamp(), 
-                          datetime_format(now), user_dict['id']))
-                    conn.commit()
-                    
-                    logger.info(f"用户认证成功: {email}")
-                    return self._dict_to_user(user_dict)
-                else:
-                    logger.warning(f"用户认证失败: {email}")
-                    return None
-                    
-        except Exception as e:
-            logger.error(f"用户认证失败: {str(e)}")
-            return None
-    
     def get_user_by_email(self, email: str) -> Optional['User']:
         """根据邮箱获取用户信息"""
         try:
@@ -154,79 +120,11 @@ class LocalUserClient:
             logger.error(f"根据ID获取用户失败: {str(e)}")
             return None
     
-    def create_user(self, user_data: Dict[str, Any]) -> Optional['User']:
-        """创建用户"""
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.row_factory = self._dict_factory
-                cursor = conn.cursor()
-                
-                # 检查邮箱是否已存在
-                cursor.execute("SELECT id FROM user WHERE email = ?", (user_data.get('email'),))
-                if cursor.fetchone():
-                    logger.warning(f"邮箱已存在: {user_data.get('email')}")
-                    return None
-                
-                # 准备用户数据
-                now = datetime.now()
-                user_id = user_data.get('id', get_uuid())
-                password_hash = generate_password_hash(user_data.get('password', ''))
-                
-                insert_data = {
-                    'id': user_id,
-                    'email': user_data.get('email', ''),
-                    'nickname': user_data.get('nickname', ''),
-                    'password': password_hash,
-                    'avatar': user_data.get('avatar', ''),
-                    'is_superuser': int(user_data.get('is_superuser', False)),
-                    'status': user_data.get('status', 1),
-                    'language': user_data.get('language', 'Chinese'),
-                    'login_channel': user_data.get('login_channel', 'password'),
-                    'last_login_time': user_data.get('last_login_time', ''),
-                    'create_time': current_timestamp(),
-                    'create_date': datetime_format(now),
-                    'update_time': current_timestamp(),
-                    'update_date': datetime_format(now),
-                    'is_authenticated': int(user_data.get('is_authenticated', True)),
-                    'is_active': int(user_data.get('is_active', True)),
-                    'is_anonymous': int(user_data.get('is_anonymous', False)),
-                    'team_id': user_data.get('team_id', ''),
-                    'role': user_data.get('role', ''),
-                    'tenant_id': user_data.get('tenant_id', ''),
-                    'access_token': user_data.get('access_token', '')
-                }
-                
-                # 插入用户数据
-                placeholders = ', '.join(['?' for _ in insert_data])
-                columns = ', '.join(insert_data.keys())
-                values = list(insert_data.values())
-                
-                cursor.execute(f"""
-                    INSERT INTO user ({columns}) 
-                    VALUES ({placeholders})
-                """, values)
-                
-                conn.commit()
-                
-                # 返回创建的用户信息
-                created_user = self.get_user_by_id(user_id)
-                logger.info(f"创建用户成功: {user_data.get('email')}")
-                return created_user
-                
-        except Exception as e:
-            logger.error(f"创建用户失败: {str(e)}")
-            return None
-    
     def update_user(self, user_id: str, update_data: Dict[str, Any]) -> bool:
         """更新用户信息"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
-                
-                # 准备更新数据
-                now = datetime.now()
-                update_data['update_time'] = current_timestamp()
-                update_data['update_date'] = datetime_format(now)
                 
                 # 如果更新密码，需要哈希
                 if 'password' in update_data:
@@ -234,12 +132,12 @@ class LocalUserClient:
                 
                 # 构建更新语句
                 set_clause = ', '.join([f"{key} = ?" for key in update_data.keys()])
-                values = list(update_data.values()) + [user_id]
+                values = list(update_data.values()) + [user_id, user_id]
                 
                 cursor.execute(f"""
                     UPDATE user 
                     SET {set_clause}
-                    WHERE ragflow_user_id = ?
+                    WHERE ragflow_user_id = ? OR id = ?
                 """, values)
                 
                 conn.commit()
@@ -254,29 +152,6 @@ class LocalUserClient:
         except Exception as e:
             logger.error(f"更新用户失败: {str(e)}")
             return False
-    
-    def verify_token(self, token: str) -> Optional['User']:
-        """验证用户令牌（这里简单实现，实际应该用JWT）"""
-        try:
-            # 这里简单按access_token字段查询，实际应该验证JWT
-            with sqlite3.connect(self.db_path) as conn:
-                conn.row_factory = self._dict_factory
-                cursor = conn.cursor()
-                
-                cursor.execute("""
-                    SELECT * FROM user 
-                    WHERE access_token = ? AND status = 1 AND is_active = 1
-                """, (token,))
-                
-                user_dict = cursor.fetchone()
-                if user_dict:
-                    logger.info(f"令牌验证成功: {user_dict['email']}")
-                    return self._dict_to_user(user_dict)
-                return None
-                
-        except Exception as e:
-            logger.error(f"令牌验证失败: {str(e)}")
-            return None
     
     def get_users_by_team_id(self, team_id: str) -> List['User']:
         """根据团队ID获取用户列表"""

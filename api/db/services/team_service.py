@@ -17,6 +17,7 @@
 import logging
 import uuid
 import json
+import time
 from datetime import datetime
 from typing import List, Dict, Any, Optional, Union
 
@@ -356,8 +357,7 @@ class TeamService:
                 user_id,
                 {
                     "status": StatusEnum.INVALID.value,
-                    "update_time": current_timestamp(),
-                    "update_date": datetime_format(datetime.now())
+                    "updated_at": int(time.time())
                 }
             )
             return True
