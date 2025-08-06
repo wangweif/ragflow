@@ -1,7 +1,7 @@
 import { useListSubTeams, useListTenant } from '@/hooks/user-setting-hooks';
 import { ITeam } from '@/interfaces/database/user-setting';
 
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { EditOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
 import { Button, Space, Table, Tooltip } from 'antd';
 import { useHandleDeleteTeam } from './hooks';
@@ -50,14 +50,14 @@ const TeamList = ({
             />
           </Tooltip>
 
-          <Tooltip title={'删除'}>
+          {/* <Tooltip title={'删除'}>
             <Button
               type="text"
               danger
               icon={<DeleteOutlined />}
               onClick={handleDeleteTeam(record.id)}
             />
-          </Tooltip>
+          </Tooltip> */}
         </Space>
       ),
     },

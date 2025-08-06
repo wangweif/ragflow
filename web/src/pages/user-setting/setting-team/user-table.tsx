@@ -1,8 +1,7 @@
 import { useListTeamUser } from '@/hooks/user-setting-hooks';
 import { ITenantUser } from '@/interfaces/database/user-setting';
-import { DeleteOutlined, SyncOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
-import { Button, Space, Table, Tag, Tooltip } from 'antd';
+import { Table, Tag } from 'antd';
 import { upperFirst } from 'lodash';
 import { useEffect } from 'react';
 import { TenantRole } from '../constants';
@@ -83,23 +82,24 @@ const UserTable = ({ team, onRefresh }: UserTableProps) => {
     {
       title: '操作',
       key: 'action',
-      render: (_, record) => (
-        <Space>
-          <Tooltip title="重置密码">
-            <Button type="text" onClick={handleResetPassword(record.id)}>
-              <SyncOutlined size={20} />
-            </Button>
-          </Tooltip>
-          <Tooltip title="删除用户">
-            <Button
-              type="text"
-              onClick={handleRemoveTeamUser(teamId, record.id)}
-            >
-              <DeleteOutlined size={20} />
-            </Button>
-          </Tooltip>
-        </Space>
-      ),
+      // render: (_, record) => (
+      //   <Space>
+      //     <Tooltip title="重置密码">
+      //       <Button type="text" onClick={handleResetPassword(record.id)}>
+      //         <SyncOutlined size={20} />
+      //       </Button>
+      //     </Tooltip>
+      //     <Tooltip title="删除用户">
+      //       <Button
+      //         type="text"
+      //         onClick={handleRemoveTeamUser(teamId, record.id)}
+      //       >
+      //         <DeleteOutlined size={20} />
+      //       </Button>
+      //     </Tooltip>
+      //   </Space>
+      // ),
+      render: () => <span>暂无</span>,
     },
   ];
 
