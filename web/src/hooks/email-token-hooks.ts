@@ -38,6 +38,7 @@ export const useEmailTokenAuth = () => {
         // Save authorization and user info to localStorage
         authorizationUtil.setItems({
           Cookie: cookie,
+          Authorization: `Bearer ${encodedToken}`,
         });
 
         console.log('JWT token saved to localStorage');
