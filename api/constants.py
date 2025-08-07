@@ -26,5 +26,6 @@ REQUEST_MAX_WAIT_SEC = 300
 DEFAULT_PARSER_CONFIG = {"chunk_token_num": 2048, "auto_keywords": 5, "auto_questions": 3}
 DATASET_NAME_LIMIT = 128
 XIAOZHI_JWT_SECRET_KEY = "t0p-s3cr3t"
-LOCAL_USER_DB_PATH = "/mnt/c/Users/30310/work/open-webui/backend/data/webui.db"
+LOCAL_USER_DB_PATH = "/home/ubuntu/work/xiaozhi_data/webui.db"
+REMOTE_USER_API_BASE = "http://192.168.8.88:8080/api" # 远程(小智3.0)用户API地址
 
