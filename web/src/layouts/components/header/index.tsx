@@ -57,7 +57,7 @@ const RagHeader = () => {
   );
 
   const handleLogoClick = useCallback(() => {
-    navigate('/');
+    // navigate('/');
   }, [navigate]);
 
   // 根据环境变量判断是否显示logo和选择背景样式
@@ -79,7 +79,7 @@ const RagHeader = () => {
         height: '72px',
       }}
     >
-      <a href={window.location.origin}>
+      <a>
         <Space
           size={12}
           onClick={handleLogoClick}

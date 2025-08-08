@@ -87,6 +87,7 @@ const App: React.FC = () => {
       <Layout>
         <div
           style={{
+            marginTop: '22px',
             height: '72px',
             background: showMenu ? 'transparent' : '#ffffff',
           }}
@@ -109,7 +110,7 @@ const App: React.FC = () => {
         >
           <Outlet />
         </Content>
-        <div
+        {/* <div
           style={{
             height: '48px',
             background: showMenu ? 'transparent' : '#ffffff',
@@ -131,7 +132,7 @@ const App: React.FC = () => {
               {footerText}
             </Footer>
           )}
-        </div>
+        </div> */}
         <Toaster />
         <Sonner position={'top-right'} expand richColors closeButton></Sonner>
       </Layout>
