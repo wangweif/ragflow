@@ -281,9 +281,8 @@ def add_team_member(team_id):
         nickname = data.get('nickname', email.split('@')[0])  # 如果没有提供昵称，使用邮箱用户名作为昵称
         role = data.get('role')
         password = data.get('password', "123456")
-        token = request.headers.get('cookie')
-        token = token.split('=')[1]
-        token = token.split(';')[0]
+        token = request.headers.get('Authorization')
+        token = token[7:]
         
         # 获取团队信息
         team_info = TeamService.get_team(team_id)
