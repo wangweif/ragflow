@@ -85,10 +85,8 @@ const RagHeader = () => {
           onClick={handleLogoClick}
           className={styles.logoWrapper}
         >
-          {showLogo && (
-            <img src="/logo.svg" alt="" className={styles.appIcon} />
-          )}
-          <span className={styles.appName}>{appConf.appName}</span>
+          {false && <img src="/logo.svg" alt="" className={styles.appIcon} />}
+          <span className={styles.appName}></span>
         </Space>
       </a>
       <Space size={[0, 8]} wrap>
