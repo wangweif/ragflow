@@ -52,9 +52,9 @@ class DeepResearcher:
         """Generate reasoning steps"""
         query_think = ""
         if msg_history[-1]["role"] != "user":
-            msg_history.append({"role": "user", "content": "Continues reasoning with the new information.\n"})
+            msg_history.append({"role": "user", "content": "继续用新信息进行推理。\n"})
         else:
-            msg_history[-1]["content"] += "\n\nContinues reasoning with the new information.\n"
+            msg_history[-1]["content"] += "\n\n继续用新信息进行推理。\n"
             
         for ans in self.chat_mdl.chat_streamly(REASON_PROMPT, msg_history, {"temperature": 0.7}):
             ans = re.sub(r"<think>.*</think>", "", ans, flags=re.DOTALL)
@@ -159,7 +159,7 @@ class DeepResearcher:
         for step_index in range(MAX_SEARCH_LIMIT + 1):
             # Check if the maximum search limit has been reached
             if step_index == MAX_SEARCH_LIMIT - 1:
-                summary_think = f"\n{BEGIN_SEARCH_RESULT}\nThe maximum search limit is exceeded. You are not allowed to search.\n{END_SEARCH_RESULT}\n"
+                summary_think = f"\n{BEGIN_SEARCH_RESULT}\n已超过最大搜索限制。不允许搜索。\n{END_SEARCH_RESULT}\n"
                 yield {"answer": think + summary_think + "</think>", "reference": {}, "audio_binary": None}
                 all_reasoning_steps.append(summary_think)
                 msg_history.append({"role": "assistant", "content": summary_think})
@@ -189,7 +189,7 @@ class DeepResearcher:
 
                 # Check if the query has already been executed
                 if search_query in executed_search_queries:
-                    summary_think = f"\n{BEGIN_SEARCH_RESULT}\nYou have searched this query. Please refer to previous results.\n{END_SEARCH_RESULT}\n"
+                    summary_think = f"\n{BEGIN_SEARCH_RESULT}\n您已搜索此查询。请参考之前的结果。\n{END_SEARCH_RESULT}\n"
                     yield {"answer": think + summary_think + "</think>", "reference": {}, "audio_binary": None}
                     all_reasoning_steps.append(summary_think)
                     msg_history.append({"role": "user", "content": summary_think})

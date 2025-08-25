@@ -21,93 +21,97 @@ END_SEARCH_RESULT = "<|end_search_result|>"
 MAX_SEARCH_LIMIT = 6
 
 REASON_PROMPT = (
-        "You are a reasoning assistant with the ability to perform dataset searches to help "
-        "you answer the user's question accurately. You have special tools:\n\n"
-        f"- To perform a search: write {BEGIN_SEARCH_QUERY} your query here {END_SEARCH_QUERY}.\n"
-        f"Then, the system will search and analyze relevant content, then provide you with helpful information in the format {BEGIN_SEARCH_RESULT} ...search results... {END_SEARCH_RESULT}.\n\n"
-        f"You can repeat the search process multiple times if necessary. The maximum number of search attempts is limited to {MAX_SEARCH_LIMIT}.\n\n"
-        "Once you have all the information you need, continue your reasoning.\n\n"
-        "-- Example 1 --\n" ########################################
-        "Question: \"Are both the directors of Jaws and Casino Royale from the same country?\"\n"
-        "Assistant:\n"
-        f"    {BEGIN_SEARCH_QUERY}Who is the director of Jaws?{END_SEARCH_QUERY}\n\n"
-        "User:\n"
-        f"    {BEGIN_SEARCH_RESULT}\nThe director of Jaws is Steven Spielberg...\n{END_SEARCH_RESULT}\n\n"
-        "Continues reasoning with the new information.\n"
-        "Assistant:\n"
-        f"    {BEGIN_SEARCH_QUERY}Where is Steven Spielberg from?{END_SEARCH_QUERY}\n\n"
-        "User:\n"
-        f"    {BEGIN_SEARCH_RESULT}\nSteven Allan Spielberg is an American filmmaker...\n{END_SEARCH_RESULT}\n\n"
-        "Continues reasoning with the new information...\n\n"
-        "Assistant:\n"
-        f"    {BEGIN_SEARCH_QUERY}Who is the director of Casino Royale?{END_SEARCH_QUERY}\n\n"
-        "User:\n"
-        f"    {BEGIN_SEARCH_RESULT}\nCasino Royale is a 2006 spy film directed by Martin Campbell...\n{END_SEARCH_RESULT}\n\n"
-        "Continues reasoning with the new information...\n\n"
-        "Assistant:\n"
-        f"    {BEGIN_SEARCH_QUERY}Where is Martin Campbell from?{END_SEARCH_QUERY}\n\n"
-        "User:\n"
-        f"    {BEGIN_SEARCH_RESULT}\nMartin Campbell (born 24 October 1943) is a New Zealand film and television director...\n{END_SEARCH_RESULT}\n\n"
-        "Continues reasoning with the new information...\n\n"
-        "Assistant:\nIt's enough to answer the question\n"
+        "你是一个推理助手，可以通过执行数据集搜索来帮助你准确回答用户的问题。"
+        "你有一些特殊的工具：\n\n"
+        f"- 要执行搜索：写 {BEGIN_SEARCH_QUERY} 在这里写下你的查询 {END_SEARCH_QUERY}。\n"
+        f"然后，系统会搜索并分析相关内容，并以如下格式向你提供有用的信息："
+        f"{BEGIN_SEARCH_RESULT} ...搜索结果... {END_SEARCH_RESULT}。\n\n"
+        f"如果有必要，你可以重复搜索过程多次。最大搜索次数限制为 {MAX_SEARCH_LIMIT}。\n\n"
+        "一旦你获得了所需的全部信息，请继续进行推理。\n\n"
+        
+        "-- 示例 1 --\n" ########################################
+        "问题: \"《大白鲨》和《皇家赌场》的导演是否来自同一个国家？\"\n"
+        "助手:\n"
+        f"    {BEGIN_SEARCH_QUERY}《大白鲨》的导演是谁？{END_SEARCH_QUERY}\n\n"
+        "用户:\n"
+        f"    {BEGIN_SEARCH_RESULT}\n《大白鲨》的导演是史蒂文·斯皮尔伯格...\n{END_SEARCH_RESULT}\n\n"
+        "助手在获得新信息后继续推理。\n"
+        "助手:\n"
+        f"    {BEGIN_SEARCH_QUERY}史蒂文·斯皮尔伯格来自哪里？{END_SEARCH_QUERY}\n\n"
+        "用户:\n"
+        f"    {BEGIN_SEARCH_RESULT}\n史蒂文·斯皮尔伯格是一位美国电影导演...\n{END_SEARCH_RESULT}\n\n"
+        "助手在获得新信息后继续推理...\n\n"
+        "助手:\n"
+        f"    {BEGIN_SEARCH_QUERY}《皇家赌场》的导演是谁？{END_SEARCH_QUERY}\n\n"
+        "用户:\n"
+        f"    {BEGIN_SEARCH_RESULT}\n《皇家赌场》是一部2006年的间谍片，由马丁·坎贝尔执导...\n{END_SEARCH_RESULT}\n\n"
+        "助手在获得新信息后继续推理...\n\n"
+        "助手:\n"
+        f"    {BEGIN_SEARCH_QUERY}马丁·坎贝尔来自哪里？{END_SEARCH_QUERY}\n\n"
+        "用户:\n"
+        f"    {BEGIN_SEARCH_RESULT}\n马丁·坎贝尔（1943年10月24日出生）是一位新西兰电影和电视导演...\n{END_SEARCH_RESULT}\n\n"
+        "助手在获得新信息后继续推理...\n\n"
+        "助手:\n已经有足够的信息可以回答问题了\n"
 
-        "-- Example 2 --\n" #########################################
-        "Question: \"When was the founder of craigslist born?\"\n"
-        "Assistant:\n"
-        f"    {BEGIN_SEARCH_QUERY}Who was the founder of craigslist?{END_SEARCH_QUERY}\n\n"
-        "User:\n"
-        f"    {BEGIN_SEARCH_RESULT}\nCraigslist was founded by Craig Newmark...\n{END_SEARCH_RESULT}\n\n"
-        "Continues reasoning with the new information.\n"
-        "Assistant:\n"
-        f"    {BEGIN_SEARCH_QUERY} When was Craig Newmark born?{END_SEARCH_QUERY}\n\n"
-        "User:\n"
-        f"    {BEGIN_SEARCH_RESULT}\nCraig Newmark was born on December 6, 1952...\n{END_SEARCH_RESULT}\n\n"
-        "Continues reasoning with the new information...\n\n"
-        "Assistant:\nIt's enough to answer the question\n"
-        "**Remember**:\n"
-        f"- You have a dataset to search, so you just provide a proper search query.\n"
-        f"- Use {BEGIN_SEARCH_QUERY} to request a dataset search and end with {END_SEARCH_QUERY}.\n"
-        "- The language of query MUST be as the same as 'Question' or 'search result'.\n"
-        "- If no helpful information can be found, rewrite the search query to be less and precise keywords.\n"
-        "- When done searching, continue your reasoning.\n\n"
-        'Please answer the following question. You should think step by step to solve it.\n\n'
+        "-- 示例 2 --\n" #########################################
+        "问题: \"Craigslist 创始人是什么时候出生的？\"\n"
+        "助手:\n"
+        f"    {BEGIN_SEARCH_QUERY}Craigslist 的创始人是谁？{END_SEARCH_QUERY}\n\n"
+        "用户:\n"
+        f"    {BEGIN_SEARCH_RESULT}\nCraigslist 的创始人是克雷格·纽马克...\n{END_SEARCH_RESULT}\n\n"
+        "助手在获得新信息后继续推理。\n"
+        "助手:\n"
+        f"    {BEGIN_SEARCH_QUERY}克雷格·纽马克是什么时候出生的？{END_SEARCH_QUERY}\n\n"
+        "用户:\n"
+        f"    {BEGIN_SEARCH_RESULT}\n克雷格·纽马克出生于1952年12月6日...\n{END_SEARCH_RESULT}\n\n"
+        "助手在获得新信息后继续推理...\n\n"
+        "助手:\n已经有足够的信息可以回答问题了\n"
+
+        "**请记住**:\n"
+        f"- 你有一个数据集可以搜索，所以只需提供一个合适的搜索查询。\n"
+        f"- 使用 {BEGIN_SEARCH_QUERY} 来请求搜索，并以 {END_SEARCH_QUERY} 结束。\n"
+        "- 查询语言必须与 '问题' 或 '搜索结果' 保持一致。\n"
+        "- 如果找不到有用的信息，请重写搜索查询，使其更简洁和精准。\n"
+        "- 当搜索完成后，继续进行推理。\n\n"
+        "请回答以下问题。你应该逐步思考并解决它。\n\n"
     )
 
-RELEVANT_EXTRACTION_PROMPT = """**Task Instruction:**
+RELEVANT_EXTRACTION_PROMPT = """**任务说明：**
 
-    You are tasked with reading and analyzing web pages based on the following inputs: **Previous Reasoning Steps**, **Current Search Query**, and **Searched Web Pages**. Your objective is to extract relevant and helpful information for **Current Search Query** from the **Searched Web Pages** and seamlessly integrate this information into the **Previous Reasoning Steps** to continue reasoning for the original question.
+    你的任务是基于以下输入内容阅读和分析网页：**先前的推理步骤**、**当前搜索查询** 和 **已搜索的网页**。  
+    你的目标是从 **已搜索的网页** 中提取与 **当前搜索查询** 相关且有帮助的信息，并将这些信息无缝整合进 **先前的推理步骤**，以继续推进对原始问题的推理。
 
-    **Guidelines:**
+    **指导原则：**
 
-    1. **Analyze the Searched Web Pages:**
-    - Carefully review the content of each searched web page.
-    - Identify factual information that is relevant to the **Current Search Query** and can aid in the reasoning process for the original question.
+    1. **分析已搜索的网页：**
+    - 仔细审阅每一个已搜索网页的内容。  
+    - 找出与 **当前搜索查询** 相关、并能帮助原始问题推理的事实性信息。  
 
-    2. **Extract Relevant Information:**
-    - Select the information from the Searched Web Pages that directly contributes to advancing the **Previous Reasoning Steps**.
-    - Ensure that the extracted information is accurate and relevant.
+    2. **提取相关信息：**
+    - 从已搜索的网页中挑选出能够直接推动 **先前推理步骤** 的信息。  
+    - 确保提取的信息准确且相关。  
 
-    3. **Output Format:**
-    - **If the web pages provide helpful information for current search query:** Present the information beginning with `**Final Information**` as shown below.
-    - The language of query **MUST BE** as the same as 'Search Query' or 'Web Pages'.\n"
-    **Final Information**
+    3. **输出格式：**
+    - **如果网页提供了对当前搜索查询有帮助的信息：** 按如下所示，以 `**检索到的信息**` 开头输出。  
+    - 查询的语言 **必须与**「搜索查询」或「网页内容」保持一致。\n"
+    **检索到的信息**
 
-    [Helpful information]
+    [有用的信息]
 
-    - **If the web pages do not provide any helpful information for current search query:** Output the following text.
+    - **如果网页没有提供任何对当前搜索查询有帮助的信息：** 输出以下内容。  
 
-    **Final Information**
+    **检索到的信息**
 
-    No helpful information found.
+    未找到有效信息
 
-    **Inputs:**
-    - **Previous Reasoning Steps:**  
+    **输入：**
+    - **先前的推理步骤：**  
     {prev_reasoning}
 
-    - **Current Search Query:**  
+    - **当前搜索查询：**  
     {search_query}
 
-    - **Searched Web Pages:**  
+    - **已搜索的网页：**  
     {document}
 
     """
