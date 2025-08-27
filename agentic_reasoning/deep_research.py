@@ -57,7 +57,7 @@ class DeepResearcher:
             msg_history[-1]["content"] += "\n\n继续用新信息进行推理。\n"
             
         for ans in self.chat_mdl.chat_streamly(REASON_PROMPT, msg_history, {"temperature": 0.7}):
-            ans = re.sub(r"<think>.*</think>", "", ans, flags=re.DOTALL)
+            # ans = re.sub(r"<think>.*</think>", "", ans, flags=re.DOTALL)
             if not ans:
                 continue
             query_think = ans
@@ -140,9 +140,9 @@ class DeepResearcher:
                     document="\n".join(kb_prompt(kbinfos, 4096))
                 ),
                 [{"role": "user",
-                  "content": f'Now you should analyze each web page and find helpful information based on the current search query "{search_query}" and previous reasoning steps.'}],
+                  "content": f'现在您应该分析每个知识库内容，并根据当前搜索查询“{search_query}”和前面的推理步骤找到有用的信息。'}],
                 {"temperature": 0.7}):
-            ans = re.sub(r"<think>.*</think>", "", ans, flags=re.DOTALL)
+            # ans = re.sub(r"<think>.*</think>", "", ans, flags=re.DOTALL)
             if not ans:
                 continue
             summary_think = ans
@@ -154,43 +154,59 @@ class DeepResearcher:
         executed_search_queries = []
         msg_history = [{"role": "user", "content": f'Question:\"{question}\"\n'}]
         all_reasoning_steps = []
-        think = "<think>"
+        think = ""
         
         for step_index in range(MAX_SEARCH_LIMIT + 1):
             # Check if the maximum search limit has been reached
             if step_index == MAX_SEARCH_LIMIT - 1:
                 summary_think = f"\n{BEGIN_SEARCH_RESULT}\n已超过最大搜索限制。不允许搜索。\n{END_SEARCH_RESULT}\n"
-                yield {"answer": think + summary_think + "</think>", "reference": {}, "audio_binary": None}
+                yield {"answer": think + summary_think, "reference": {}, "audio_binary": None}
+                # yield {"answer": think + summary_think + "</think>", "reference": {}, "audio_binary": None}
                 all_reasoning_steps.append(summary_think)
                 msg_history.append({"role": "assistant", "content": summary_think})
                 break
 
             # Step 1: Generate reasoning
+            # think += "\n\n正在进行推理..."
+            # yield {"answer": think, "reference": {}, "audio_binary": None}
+            # yield {"answer": think + "</think>", "reference": {}, "audio_binary": None}
+            
             query_think = ""
             for ans in self._generate_reasoning(msg_history):
                 query_think = ans
-                yield {"answer": think + self._remove_query_tags(query_think) + "</think>", "reference": {}, "audio_binary": None}
+                yield {"answer": think + query_think, "reference": {}, "audio_binary": None}
+            # yield {"answer": think + query_think + "</think>", "reference": {}, "audio_binary": None}
 
-            think += self._remove_query_tags(query_think)
+            think += query_think
             all_reasoning_steps.append(query_think)
             
             # Step 2: Extract search queries
+            think += "\n\n正在提取搜索问题..."
+            yield {"answer": think, "reference": {}, "audio_binary": None}
+            # yield {"answer": think + "</think>", "reference": {}, "audio_binary": None}
+            
             queries = self._extract_search_queries(query_think, question, step_index)
             if not queries and step_index > 0:
                 # If not the first step and no queries, end the search process
+                think += "\n\n没有需要搜索的问题。\n\n检索结束"
+                yield {"answer": think, "reference": {}, "audio_binary": None}
+                # yield {"answer": think + "</think>", "reference": {}, "audio_binary": None}
                 break
 
             # Process each search query
             for search_query in queries:
+                think += "\n\n正在查询搜索..."
                 logging.info(f"[THINK]Query: {step_index}. {search_query}")
                 msg_history.append({"role": "assistant", "content": search_query})
                 think += f"\n\n> {step_index + 1}. {search_query}\n\n"
-                yield {"answer": think + "</think>", "reference": {}, "audio_binary": None}
+                yield {"answer": think, "reference": {}, "audio_binary": None}
+                # yield {"answer": think + "</think>", "reference": {}, "audio_binary": None}
 
                 # Check if the query has already been executed
                 if search_query in executed_search_queries:
                     summary_think = f"\n{BEGIN_SEARCH_RESULT}\n您已搜索此查询。请参考之前的结果。\n{END_SEARCH_RESULT}\n"
-                    yield {"answer": think + summary_think + "</think>", "reference": {}, "audio_binary": None}
+                    yield {"answer": think + summary_think, "reference": {}, "audio_binary": None}
+                    # yield {"answer": think + summary_think + "</think>", "reference": {}, "audio_binary": None}
                     all_reasoning_steps.append(summary_think)
                     msg_history.append({"role": "user", "content": summary_think})
                     think += summary_think
@@ -208,16 +224,21 @@ class DeepResearcher:
                 self._update_chunk_info(chunk_info, kbinfos)
                 
                 # Step 6: Extract relevant information
+                think += "\n\n正在分析搜索结果..."
+                yield {"answer": think, "reference": {}, "audio_binary": None}
+                # yield {"answer": think + "</think>", "reference": {}, "audio_binary": None}
+                
                 think += "\n\n"
                 summary_think = ""
                 for ans in self._extract_relevant_info(truncated_prev_reasoning, search_query, kbinfos):
                     summary_think = ans
-                    yield {"answer": think + self._remove_result_tags(summary_think) + "</think>", "reference": {}, "audio_binary": None}
+                    yield {"answer": think + summary_think, "reference": {}, "audio_binary": None}
+                # yield {"answer": think + summary_think + "</think>", "reference": {}, "audio_binary": None}
 
                 all_reasoning_steps.append(summary_think)
                 msg_history.append(
                     {"role": "user", "content": f"\n\n{BEGIN_SEARCH_RESULT}{summary_think}{END_SEARCH_RESULT}\n\n"})
-                think += self._remove_result_tags(summary_think)
+                think += summary_think
                 logging.info(f"[THINK]Summary: {step_index}. {summary_think}")
 
-        yield think + "</think>"
+        yield think

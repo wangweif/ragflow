@@ -355,6 +355,9 @@ def chat(dialog, messages, stream=True, **kwargs):
     if langfuse_tracer:
         langfuse_generation = langfuse_tracer.trace.generation(name="chat", model=llm_model_config["llm_name"], input={"prompt": prompt, "prompt4citation": prompt4citation, "messages": msg})
 
+    if prompt_config.get("reasoning", False):
+        return
+
     if stream:
         last_ans = ""
         answer = ""
