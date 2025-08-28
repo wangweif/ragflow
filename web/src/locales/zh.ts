@@ -753,8 +753,7 @@ General：实体和关系提取提示来自 GitHub - microsoft/graphrag：基于
       uploadFile: '上传文件',
       parseOnCreation: '创建时解析',
       uploadTitle: '点击或拖拽文件至此区域即可上传',
-      uploadDescription:
-        '支持单次或批量上传。 本地部署的单次上传文件总大小上限为 1GB，单次批量上传文件数不超过 32，单个账户不限文件数量。',
+      uploadDescription: '支持单次或批量上传, 单次上传文件总大小上限为 1GB',
       file: '文件',
       directory: '文件夹',
       local: '本地上传',
