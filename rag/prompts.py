@@ -239,7 +239,7 @@ def full_question(tenant_id, llm_id, messages, language=None):
         chat_mdl = LLMBundle(tenant_id, LLMType.CHAT, llm_id)
     conv = []
     for m in messages:
-        if m["role"] not in ["user", "assistant"]:
+        if m["role"] not in ["user"]:
             continue
         conv.append("{}: {}".format(m["role"].upper(), m["content"]))
     conv = "\n".join(conv)
@@ -247,65 +247,53 @@ def full_question(tenant_id, llm_id, messages, language=None):
     yesterday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
     tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
     prompt = f"""
-Role: A helpful assistant
+角色：问题优化助手
 
-Task and steps:
-    1. Generate a full user question that would follow the conversation.
-    2. If the user's question involves relative date, you need to convert it into absolute date based on the current date, which is {today}. For example: 'yesterday' would be converted to {yesterday}.
+任务和步骤：
+1. 根据用户的历史问题，优化用户的最后一条问题。使用<question></question>包裹问题。
+2. 如果用户的问题涉及相对日期，则需要根据当前日期（即 {today}）将其转换为绝对日期。例如：“昨天”将被转换为 {yesterday}。
 
-Requirements & Restrictions:
-  - If the user's latest question is completely, don't do anything, just return the original question.
-  - DON'T generate anything except a refined question."""
-    if language:
-        prompt += f"""
-  - Text generated MUST be in {language}."""
-    else:
-        prompt += """
-  - Text generated MUST be in the same language of the original user's question.
-"""
+要求和限制：
+- 除了返回问题外，不生成任何其他内容。"""
+
     prompt += f"""
 
 ######################
--Examples-
+-示例-
 ######################
 
-# Example 1
-## Conversation
-USER: What is the name of Donald Trump's father?
-ASSISTANT:  Fred Trump.
-USER: And his mother?
+#示例 1
+##用户的问题
+用户：Donald Trump 的父亲叫什么名字？
+用户：他的母亲叫什么名字？
 ###############
-Output: What's the name of Donald Trump's mother?
+输出：<question>Donald Trump 的母亲叫什么名字？</question>
 
 ------------
-# Example 2
-## Conversation
-USER: What is the name of Donald Trump's father?
-ASSISTANT:  Fred Trump.
-USER: And his mother?
-ASSISTANT:  Mary Trump.
-User: What's her full name?
+#示例 2
+##用户的问题
+用户：罗切斯特明天天气怎么样？
 ###############
-Output: What's the full name of Donald Trump's mother Mary Trump?
+输出：<question>罗切斯特 {tomorrow} 的天气怎么样？</question>
 
 ------------
-# Example 3
-## Conversation
-USER: What's the weather today in London?
-ASSISTANT:  Cloudy.
-USER: What's about tomorrow in Rochester?
+#示例 3
+##用户的问题
+用户：如何种蘑菇？
+用户：如何养猪？
 ###############
-Output: What's the weather in Rochester on {tomorrow}?
+输出：<question>如何养猪？</question>
 
 ######################
-# Real Data
-## Conversation
+# 真实数据
+##用户的问题
 {conv}
 ###############
     """
-    ans = chat_mdl.chat(prompt, [{"role": "user", "content": "Output: "}], {"temperature": 0.2})
+    ans = chat_mdl.chat(prompt, [{"role": "user", "content": "Output: "}], {})
     ans = re.sub(r"<think>.*</think>", "", ans, flags=re.DOTALL)
-    return ans if ans.find("**ERROR**") < 0 else messages[-1]["content"]
+    ans = re.search(r"<question>(.*?)</question>", ans, flags=re.DOTALL)
+    return ans.group(1) if ans else messages[-1]["content"]
 
 
 def content_tagging(chat_mdl, content, all_tags, examples, topn=3):
