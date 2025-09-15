@@ -74,7 +74,27 @@ class KnowledgebasePermission(DataBaseModelExtension):
         indexes = [
             (('kb_id', 'user_id', 'permission_type'), True)  # 联合唯一索引：知识库ID、用户ID和权限类型
         ]
-        
+
+    def to_dict(self):
+        """转换为字典"""
+        return model_to_dict(self)
+
+
+# ================== 目录相关模型 ==================
+
+
+class Directory(DataBaseModelExtension):
+    """目录模型"""
+
+    id = CharField(max_length=32, primary_key=True)
+    kb_id = CharField(max_length=256, null=False, help_text="知识库ID", index=True)
+    name = CharField(max_length=255, null=False, help_text="目录名称", index=True)
+    parent_id = CharField(max_length=32, null=True, help_text="父目录ID", index=True)
+    created_by = CharField(max_length=32, null=False, help_text="创建者ID", index=True)
+
+    class Meta:
+        table_name = "directory"
+
     def to_dict(self):
         """转换为字典"""
         return model_to_dict(self)
@@ -90,6 +110,7 @@ def register_models():
     DataBaseModelExtension._meta.database = DB
     Team._meta.database = DB
     KnowledgebasePermission._meta.database = DB
-    
-    models = [Team, KnowledgebasePermission]
-    DB.create_tables(models, safe=True) 
+    Directory._meta.database = DB
+
+    models = [Team, KnowledgebasePermission, Directory]
+    DB.create_tables(models, safe=True)

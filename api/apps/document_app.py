@@ -20,7 +20,7 @@ import re
 import logging
 
 import flask
-from flask import request
+from flask import request, Blueprint
 from flask_login import login_required, current_user
 
 from deepdoc.parser.html_parser import RAGFlowHtmlParser
@@ -36,6 +36,7 @@ from api.db.services import duplicate_name
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.task_service import TaskService
 from api.db.services.document_service import DocumentService, doc_upload_and_parse
+from api.db.services.directory_service import DirectoryService
 from api.utils.api_utils import (
     server_error_response,
     get_data_error_result,
@@ -50,38 +51,147 @@ from api.utils.web_utils import html2pdf, is_valid_url
 from api.constants import IMG_BASE64_PREFIX
 import logging
 
-
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+manager = Blueprint("document", __name__)
 
-@manager.route('/upload', methods=['POST'])  # noqa: F821
+
+def create_directory_structure(kb_id, relative_path, user_id, base_directory_id=None):
+    """
+    根据相对路径创建目录结构
+    返回最终目录的ID
+    """
+    logger.info(f"=== create_directory_structure Debug ===")
+    logger.info(f"kb_id: {kb_id}")
+    logger.info(f"relative_path: {relative_path}")
+    logger.info(f"base_directory_id: {base_directory_id}")
+    logger.info(f"========================================")
+
+    if not relative_path:
+        logger.info("relative_path为空，返回base_directory_id")
+        return base_directory_id
+
+    # 分割路径，去除文件名（最后一部分）
+    path_parts = relative_path.split("/")
+    logger.info(f"path_parts: {path_parts}")
+
+    if len(path_parts) <= 1:
+        logger.info("路径层级 <= 1，返回base_directory_id")
+        return base_directory_id
+
+    # 去除文件名，只保留目录路径
+    dir_parts = path_parts[:-1]
+    logger.info(f"需要创建的目录路径: {dir_parts}")
+
+    # 从基础目录开始，如果没有基础目录则从根目录开始
+    current_parent_id = base_directory_id
+
+    for dir_name in dir_parts:
+        # 检查当前级别是否已存在该目录
+        existing_dirs = DirectoryService.get_directories_by_kb(kb_id, current_parent_id)
+        existing_dir = None
+
+        for dir_item in existing_dirs:
+            if dir_item.name == dir_name:
+                existing_dir = dir_item
+                break
+
+        if existing_dir:
+            # 目录已存在，使用现有目录ID
+            current_parent_id = existing_dir.id
+        else:
+            # 目录不存在，创建新目录
+            new_dir, error = DirectoryService.create_directory(
+                kb_id=kb_id,
+                name=dir_name,
+                parent_id=current_parent_id,
+                created_by=user_id,
+            )
+            if error:
+                logger.error(f"创建目录失败: {error}")
+                raise RuntimeError(f"创建目录失败: {error}")
+
+            current_parent_id = new_dir.id
+
+    logger.info(f"最终创建的目录ID: {current_parent_id}")
+    return current_parent_id
+
+
+@manager.route("/upload", methods=["POST"])  # noqa: F821
 @login_required
 @validate_request("kb_id")
 def upload():
     logger.info("文件上传开始")
     try:
         kb_id = request.form.get("kb_id")
+        directory_id = request.form.get("directory_id")  # 获取目录ID参数
+        logger.info(f"上传参数 - kb_id: {kb_id}, directory_id: {directory_id}")
         if not kb_id:
             return get_json_result(
-                data=False, message='缺少"KB ID"', code=settings.RetCode.ARGUMENT_ERROR)
-        if 'file' not in request.files:
+                data=False, message='缺少"KB ID"', code=settings.RetCode.ARGUMENT_ERROR
+            )
+        if "file" not in request.files:
             return get_json_result(
-                data=False, message='没有文件部分！', code=settings.RetCode.ARGUMENT_ERROR)
+                data=False,
+                message="没有文件部分！",
+                code=settings.RetCode.ARGUMENT_ERROR,
+            )
 
-        file_objs = request.files.getlist('file')
+        file_objs = request.files.getlist("file")
+        # 获取文件路径信息（用于多级目录上传）
+        file_paths = request.form.getlist("webkitRelativePath")
+        logger.info(f"文件数量: {len(file_objs)}, 路径数量: {len(file_paths)}")
+        logger.info(f"文件路径: {file_paths}")
+
         for file_obj in file_objs:
-            if file_obj.filename == '':
+            if file_obj.filename == "":
                 return get_json_result(
-                    data=False, message='未选择文件！', code=settings.RetCode.ARGUMENT_ERROR)
+                    data=False,
+                    message="未选择文件！",
+                    code=settings.RetCode.ARGUMENT_ERROR,
+                )
 
         e, kb = KnowledgebaseService.get_by_id(kb_id)
         if not e:
             raise LookupError("找不到此知识库！")
 
-        err, files = FileService.upload_document(kb, file_objs, current_user.id)
-        files = [f[0] for f in files] # remove the blob
-        
+        # 处理多级目录文件上传
+        file_directory_map = {}
+
+        # 为每个文件确定目标目录
+        for i, file_obj in enumerate(file_objs):
+            relative_path = None
+            if file_paths and i < len(file_paths):
+                relative_path = file_paths[i]
+
+            if relative_path and relative_path != file_obj.filename:
+                # 有相对路径信息，需要创建目录结构
+                try:
+                    target_directory_id = create_directory_structure(
+                        kb_id, relative_path, current_user.id, directory_id
+                    )
+                    file_directory_map[i] = target_directory_id
+                except Exception as e:
+                    logger.error(f"创建目录结构失败: {str(e)}")
+                    return get_json_result(
+                        data=False,
+                        message=f"创建目录结构失败: {str(e)}",
+                        code=settings.RetCode.SERVER_ERROR,
+                    )
+            else:
+                # 没有相对路径信息，使用传入的directory_id
+                file_directory_map[i] = directory_id
+                logger.info(
+                    f"文件 {i} ({file_obj.filename}) 将上传到目录: {directory_id}"
+                )
+
+        logger.info(f"最终文件目录映射: {file_directory_map}")
+
+        err, files = FileService.upload_document(
+            kb, file_objs, current_user.id, directory_id, file_directory_map
+        )
+        files = [f[0] for f in files]  # remove the blob
         if err:
             return get_json_result(
                 data=files, message="\n".join(err), code=settings.RetCode.SERVER_ERROR)
@@ -215,14 +325,15 @@ def list_docs():
             data=False, message='只有知识库所有者有权进行此操作。',
             code=settings.RetCode.OPERATING_ERROR)
     keywords = request.args.get("keywords", "")
-
+    directory_id = request.args.get("directory_id")
     page_number = int(request.args.get("page", 1))
     items_per_page = int(request.args.get("page_size", 15))
     orderby = request.args.get("orderby", "create_time")
     desc = request.args.get("desc", True)
     try:
         docs, tol = DocumentService.get_by_kb_id(
-            kb_id, page_number, items_per_page, orderby, desc, keywords)
+            kb_id, page_number, items_per_page, orderby, desc, keywords, directory_id
+        )
 
         for doc_item in docs:
             if doc_item['thumbnail'] and not doc_item['thumbnail'].startswith(IMG_BASE64_PREFIX):
@@ -314,47 +425,14 @@ def change_status():
 def rm():
     req = request.json
     doc_ids = req["doc_id"]
-    if isinstance(doc_ids, str):
-        doc_ids = [doc_ids]
+    from api.db.services.document_service import delete_documents_core
 
-    for doc_id in doc_ids:
-        if not DocumentService.accessible4deletion(doc_id, current_user.id):
-            return get_json_result(
-                data=False,
-                message='没有授权。',
-                code=settings.RetCode.AUTHENTICATION_ERROR
-            )
+    success, error_msg = delete_documents_core(doc_ids, current_user.id)
 
-    root_folder = FileService.get_root_folder(current_user.id)
-    pf_id = root_folder["id"]
-    FileService.init_knowledgebase_docs(pf_id, current_user.id)
-    errors = ""
-    for doc_id in doc_ids:
-        try:
-            e, doc = DocumentService.get_by_id(doc_id)
-            if not e:
-                return get_data_error_result(message="未找到文档！")
-            tenant_id = DocumentService.get_tenant_id(doc_id)
-            if not tenant_id:
-                return get_data_error_result(message="未找到租户！")
-
-            b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
-
-            TaskService.filter_delete([Task.doc_id == doc_id])
-            if not DocumentService.remove_document(doc, tenant_id):
-                return get_data_error_result(
-                    message="数据库错误（文档删除）！")
-
-            f2d = File2DocumentService.get_by_document_id(doc_id)
-            FileService.filter_delete([File.source_type == FileSource.KNOWLEDGEBASE, File.id == f2d[0].file_id])
-            File2DocumentService.delete_by_document_id(doc_id)
-
-            STORAGE_IMPL.rm(b, n)
-        except Exception as e:
-            errors += str(e)
-
-    if errors:
-        return get_json_result(data=False, message=errors, code=settings.RetCode.SERVER_ERROR)
+    if not success:
+        return get_json_result(
+            data=False, message=error_msg, code=settings.RetCode.SERVER_ERROR
+        )
 
     return get_json_result(data=True)
 

@@ -64,12 +64,12 @@ const PopoverContent = ({ record }: IProps) => {
     {
       key: 'process_duation',
       label: t('processDuration'),
-      children: `${record.process_duation.toFixed(2)} s`,
+      children: `${(record.process_duation || 0).toFixed(2)} s`,
     },
     {
       key: 'progress_msg',
       label: t('progressMsg'),
-      children: replaceText(record.progress_msg.trim()),
+      children: replaceText((record.progress_msg || '').trim()),
     },
   ];
 

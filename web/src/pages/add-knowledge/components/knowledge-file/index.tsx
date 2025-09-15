@@ -2,7 +2,8 @@ import ChunkMethodModal from '@/components/chunk-method-modal';
 import SvgIcon from '@/components/svg-icon';
 import { DocumentParserType } from '@/constants/knowledge';
 import {
-  useFetchNextDocumentList,
+  IMixedItem,
+  useFetchMixedContentList,
   useSetNextDocumentStatus,
 } from '@/hooks/document-hooks';
 import { useCheckKnowledgePermission } from '@/hooks/knowledge-hooks';
@@ -10,10 +11,11 @@ import { useSetSelectedRecord } from '@/hooks/logic-hooks';
 import { useSelectParserList } from '@/hooks/user-setting-hooks';
 import { IChangeParserConfigRequestBody } from '@/interfaces/request/document';
 import { getExtension } from '@/utils/document-util';
-import { Divider, Switch, Table, Tooltip, Typography } from 'antd';
+import { Breadcrumb, Divider, Switch, Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import CreateFileModal from './create-file-modal';
+import DirectoryActionCell from './directory-action-cell';
 import DocumentToolbar from './document-toolbar';
 import {
   useChangeDocumentParser,
@@ -22,6 +24,7 @@ import {
   useHandleUploadDocument,
   useHandleWebCrawl,
   useNavigateToOtherPage,
+  useRenameDirectoryModal,
   useRenameDocument,
   useShowMetaModal,
 } from './hooks';
@@ -31,12 +34,10 @@ import RenameModal from './rename-modal';
 import WebCrawlModal from './web-crawl-modal';
 
 import FileUploadModal from '@/components/file-upload-modal';
-import { IDocumentInfo } from '@/interfaces/database/document';
 import { formatDate } from '@/utils/date';
+import { FolderOpenOutlined, HomeOutlined } from '@ant-design/icons';
 import styles from './index.less';
 import { SetMetaModal } from './set-meta-modal';
-
-const { Text } = Typography;
 
 // 将字符串解析为DocumentParserType枚举类型
 const parseParserType = (
@@ -79,12 +80,18 @@ const parseParserType = (
 };
 
 const KnowledgeFile = () => {
-  const { searchString, documents, pagination, handleInputChange } =
-    useFetchNextDocumentList();
+  const {
+    searchString,
+    mixedItems,
+    pagination,
+    handleInputChange,
+    directoryPath,
+    navigateToDirectory,
+  } = useFetchMixedContentList();
   const parserList = useSelectParserList();
   const { setDocumentStatus } = useSetNextDocumentStatus();
   const { toChunk } = useNavigateToOtherPage();
-  const { currentRecord, setRecord } = useSetSelectedRecord<IDocumentInfo>();
+  const { currentRecord, setRecord } = useSetSelectedRecord<IMixedItem>();
   const { hasWritePermission } = useCheckKnowledgePermission();
 
   const {
@@ -93,7 +100,14 @@ const KnowledgeFile = () => {
     renameVisible,
     hideRenameModal,
     showRenameModal,
-  } = useRenameDocument(currentRecord.id);
+  } = useRenameDocument(currentRecord.id || '');
+  const {
+    renameLoading: directoryRenameLoading,
+    onRenameOk: onDirectoryRenameOk,
+    renameVisible: directoryRenameVisible,
+    hideRenameModal: hideDirectoryRenameModal,
+    showRenameModal: showDirectoryRenameModal,
+  } = useRenameDirectoryModal(currentRecord.id || '');
   const {
     createLoading,
     onCreateOk,
@@ -138,60 +152,104 @@ const KnowledgeFile = () => {
     onSetMetaModalOk,
   } = useShowMetaModal(currentRecord.id);
 
-  const rowSelection = useGetRowSelection();
+  const rowSelection = {
+    ...useGetRowSelection(),
+    getCheckboxProps: (record: IMixedItem) => ({
+      disabled: record.type === 'directory', // 文件夹禁用复选框
+    }),
+    renderCell: (
+      checked: boolean,
+      record: IMixedItem,
+      index: number,
+      originNode: React.ReactNode,
+    ) => {
+      if (record.type === 'directory') {
+        return null; // 完全隐藏文件夹的复选框
+      }
+      return originNode; // 文件正常显示复选框
+    },
+  };
 
-  const columns: ColumnsType<IDocumentInfo> = [
+  const columns: ColumnsType<IMixedItem> = [
     {
       title: t('name'),
       dataIndex: 'name',
       key: 'name',
       fixed: 'left',
-      render: (text: any, { id, thumbnail, name }) => (
-        <div className={styles.toChunks} onClick={() => toChunk(id)}>
-          <div className={styles.nameCell}>
-            {false ? (
-              <img className={styles.fileIcon} src={thumbnail} alt="" />
-            ) : (
-              <SvgIcon
-                name={`file-icon/${getExtension(name)}`}
-                width={16}
-                className={styles.fileIcon}
-              ></SvgIcon>
-            )}
-            <Tooltip title={text} placement="topLeft" mouseEnterDelay={0.5}>
-              <span className={styles.nameText}>{text}</span>
-            </Tooltip>
+      render: (text: any, record) => {
+        const { id, thumbnail, name, type } = record;
+
+        const handleClick = () => {
+          if (type === 'directory') {
+            navigateToDirectory(id);
+          } else if (type === 'document') {
+            toChunk(id);
+          }
+        };
+
+        return (
+          <div className={styles.toChunks} onClick={handleClick}>
+            <div className={styles.nameCell}>
+              {type === 'directory' ? (
+                <SvgIcon
+                  name="file-icon/folder"
+                  width={16}
+                  className={styles.fileIcon}
+                />
+              ) : thumbnail ? (
+                <img className={styles.fileIcon} src={thumbnail} alt="" />
+              ) : (
+                <SvgIcon
+                  name={`file-icon/${getExtension(name)}`}
+                  width={16}
+                  className={styles.fileIcon}
+                />
+              )}
+              <Tooltip title={text} placement="topLeft" mouseEnterDelay={0.5}>
+                <span className={styles.nameText}>{text}</span>
+              </Tooltip>
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: t('chunkNumber'),
       dataIndex: 'chunk_num',
       key: 'chunk_num',
+      render: (value, record) => {
+        // 文件夹不显示chunk数量
+        return record.type === 'directory' ? '-' : value || 0;
+      },
     },
     {
       title: t('uploadDate'),
       dataIndex: 'create_time',
       key: 'create_time',
       render(value) {
-        return formatDate(value);
+        return value ? formatDate(value) : '-';
       },
     },
     {
       title: t('chunkMethod'),
       dataIndex: 'parser_id',
       key: 'parser_id',
-      render: (text) => {
-        return parserList.find((x) => x.value === text)?.label;
+      render: (text, record) => {
+        // 文件夹不显示解析方法
+        if (record.type === 'directory') return '-';
+        return parserList.find((x) => x.value === text)?.label || '-';
       },
     },
     {
       title: t('enabled'),
       key: 'status',
       dataIndex: 'status',
-      render: (_, { status, id }) => (
-        <>
+      render: (_, record) => {
+        // 文件夹不显示启用状态
+        if (record.type === 'directory') return '-';
+
+        const { status, id } = record;
+        return (
           <Switch
             checked={status === '1'}
             onChange={(e) => {
@@ -199,35 +257,52 @@ const KnowledgeFile = () => {
             }}
             disabled={!hasWritePermission}
           />
-        </>
-      ),
+        );
+      },
     },
     {
       title: t('parsingStatus'),
       dataIndex: 'run',
       key: 'run',
       render: (text, record) => {
+        // 文件夹不显示解析状态
+        if (record.type === 'directory') return '-';
+
         return (
           <ParsingStatusCell
-            record={record}
+            record={record as any}
             hasWritePermission={hasWritePermission}
-          ></ParsingStatusCell>
+          />
         );
       },
     },
     {
       title: t('action'),
       key: 'action',
-      render: (_, record) => (
-        <ParsingActionCell
-          setCurrentRecord={setRecord}
-          showRenameModal={showRenameModal}
-          showChangeParserModal={showChangeParserModal}
-          showSetMetaModal={showSetMetaModal}
-          record={record}
-          hasWritePermission={hasWritePermission}
-        ></ParsingActionCell>
-      ),
+      render: (_, record) => {
+        // 根据记录类型显示不同的操作按钮
+        if (record.type === 'directory') {
+          return (
+            <DirectoryActionCell
+              setCurrentRecord={(record: any) => setRecord(record)}
+              showRenameModal={showDirectoryRenameModal}
+              record={record as any}
+              hasWritePermission={hasWritePermission}
+            />
+          );
+        }
+
+        return (
+          <ParsingActionCell
+            setCurrentRecord={(record: any) => setRecord(record)}
+            showRenameModal={showRenameModal}
+            showChangeParserModal={showChangeParserModal}
+            showSetMetaModal={showSetMetaModal}
+            record={record as any}
+            hasWritePermission={hasWritePermission}
+          />
+        );
+      },
     },
   ];
 
@@ -238,7 +313,7 @@ const KnowledgeFile = () => {
 
   // 当前记录的解析器类型转换为枚举
   const parserId =
-    parseParserType(currentRecord.parser_id) || DocumentParserType.Naive;
+    parseParserType(currentRecord.parser_id || '') || DocumentParserType.Naive;
 
   // 修改解析器处理函数的包装
   const handleChangeParserOk = (
@@ -255,6 +330,34 @@ const KnowledgeFile = () => {
       <h3>{t('dataset')}</h3>
       <p>{t('datasetDescription')}</p>
       <Divider></Divider>
+
+      {/* 面包屑导航 */}
+      <div style={{ marginBottom: 16 }}>
+        <Breadcrumb>
+          <Breadcrumb.Item>
+            <span
+              onClick={() => navigateToDirectory()}
+              style={{ cursor: 'pointer' }}
+            >
+              <HomeOutlined />
+              <span style={{ marginLeft: 4 }}>根目录</span>
+            </span>
+          </Breadcrumb.Item>
+          {directoryPath &&
+            directoryPath.map((dir: any) => (
+              <Breadcrumb.Item key={dir.id}>
+                <span
+                  onClick={() => navigateToDirectory(dir.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <FolderOpenOutlined />
+                  <span style={{ marginLeft: 4 }}>{dir.name}</span>
+                </span>
+              </Breadcrumb.Item>
+            ))}
+        </Breadcrumb>
+      </div>
+
       <DocumentToolbar
         selectedRowKeys={rowSelection.selectedRowKeys as string[]}
         showCreateModal={showCreateModal}
@@ -267,7 +370,7 @@ const KnowledgeFile = () => {
       <Table
         rowKey="id"
         columns={finalColumns}
-        dataSource={documents}
+        dataSource={mixedItems}
         pagination={pagination}
         rowSelection={hasWritePermission ? rowSelection : undefined}
         className={styles.documentTable}
@@ -294,6 +397,13 @@ const KnowledgeFile = () => {
         onOk={onRenameOk}
         loading={renameLoading}
         hideModal={hideRenameModal}
+        initialName={currentRecord.name}
+      ></RenameModal>
+      <RenameModal
+        visible={directoryRenameVisible}
+        onOk={onDirectoryRenameOk}
+        loading={directoryRenameLoading}
+        hideModal={hideDirectoryRenameModal}
         initialName={currentRecord.name}
       ></RenameModal>
       <FileUploadModal

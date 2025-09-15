@@ -629,6 +629,7 @@ class Document(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     thumbnail = TextField(null=True, help_text="thumbnail base64 string")
     kb_id = CharField(max_length=256, null=False, index=True)
+    directory_id = CharField(max_length=32, null=True, help_text="目录ID", index=True)
     parser_id = CharField(max_length=32, null=False, help_text="default parser ID", index=True)
     parser_config = JSONField(null=False, default={"pages": [[1, 1000000]]})
     source_type = CharField(max_length=128, null=False, default="local", help_text="where dose this document come from", index=True)
@@ -915,6 +916,11 @@ def migrate_db():
         migrate(migrator.add_column("user", "phone", CharField(max_length=32, null=True, help_text="phone", index=True)))
         migrate(migrator.add_column("user", "user_type", CharField(max_length=32, null=True, help_text="user type", index=True)))
         migrate(migrator.add_column("user", "note", TextField(null=True, help_text="note")))
+    except Exception:
+        pass
+    try:
+        migrate(migrator.add_column("document", "directory_id",
+                                    CharField(max_length=32, null=True, help_text="目录ID", index=True)))
     except Exception:
         pass
 

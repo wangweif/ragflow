@@ -156,4 +156,11 @@ export default {
   testDbConnect: `${api_host}/canvas/test_db_connect`,
   getInputElements: `${api_host}/canvas/input_elements`,
   debug: `${api_host}/canvas/debug`,
+
+  // 目录管理相关 API
+  createDirectory: `${api_host}/directory/create`,
+  listDirectories: `${api_host}/directory/list`,
+  getDirectoryTree: `${api_host}/directory/tree`,
+  renameDirectory: `${api_host}/directory/rename`,
+  deleteDirectory: `${api_host}/directory/delete`,
 };

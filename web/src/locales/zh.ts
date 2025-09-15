@@ -194,6 +194,8 @@ export default {
       metaData: '元数据',
       deleteDocumentConfirmContent:
         '该文档与知识图谱相关联。删除后，相关节点和关系信息将被删除，但图不会立即更新。更新图动作是在解析承载知识图谱提取任务的新文档的过程中执行的。',
+      deleteDirectoryConfirmContent:
+        '您确定要删除此目录吗？此操作将删除目录及其所有内容（包括文档和子目录），且无法恢复。',
       plainText: 'Naive',
       reRankModelWaring: '重排序模型非常耗时。',
     },
@@ -762,6 +764,8 @@ General：实体和关系提取提示来自 GitHub - microsoft/graphrag：基于
       fileError: '文件错误',
       uploadLimit: '文件大小不能超过10M，文件总数不超过128个',
       destinationFolder: '目标文件夹',
+      directoryStructure: '目录结构',
+      files: '文件',
     },
     flow: {
       flow: '工作流',

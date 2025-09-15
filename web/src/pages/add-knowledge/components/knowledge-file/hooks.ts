@@ -1,5 +1,9 @@
 import { useSetModalState } from '@/hooks/common-hooks';
 import {
+  useGetDirectoryId,
+  useRenameDirectory as useRenameDirectoryAPI,
+} from '@/hooks/directory-manager-hooks';
+import {
   useCreateNextDocument,
   useNextWebCrawl,
   useRunNextDocument,
@@ -145,7 +149,8 @@ export const useHandleUploadDocument = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const { uploadDocument, loading } = useUploadNextDocument();
-  const { runDocumentByIds, loading: _ } = useRunNextDocument();
+  const { runDocumentByIds } = useRunNextDocument();
+  const directoryId = useGetDirectoryId();
 
   const onDocumentUploadOk = useCallback(
     async ({
@@ -170,7 +175,7 @@ export const useHandleUploadDocument = () => {
           }),
         );
 
-        const ret = await uploadDocument(filesPart);
+        const ret = await uploadDocument({ fileList: filesPart, directoryId });
 
         const files = ret?.data || [];
         const succesfulFilenames = files.map((file: any) => file.name);
@@ -201,7 +206,10 @@ export const useHandleUploadDocument = () => {
       const totalFiles = fileList.length;
 
       if (directoryFileList.length > 0) {
-        const ret = await uploadDocument(directoryFileList);
+        const ret = await uploadDocument({
+          fileList: directoryFileList,
+          directoryId,
+        });
         if (ret?.code === 0) {
           hideDocumentUploadModal();
         }
@@ -358,5 +366,33 @@ export const useShowMetaModal = (documentId: string) => {
     setMetaVisible,
     hideSetMetaModal,
     showSetMetaModal,
+  };
+};
+
+export const useRenameDirectoryModal = (directoryId: string) => {
+  const { renameDirectory, loading } = useRenameDirectoryAPI();
+
+  const {
+    visible: renameVisible,
+    hideModal: hideRenameModal,
+    showModal: showRenameModal,
+  } = useSetModalState();
+
+  const onRenameOk = useCallback(
+    async (name: string) => {
+      const ret = await renameDirectory({ directory_id: directoryId, name });
+      if (ret === 0) {
+        hideRenameModal();
+      }
+    },
+    [hideRenameModal, renameDirectory, directoryId],
+  );
+
+  return {
+    renameLoading: loading,
+    onRenameOk,
+    renameVisible,
+    hideRenameModal,
+    showRenameModal,
   };
 };

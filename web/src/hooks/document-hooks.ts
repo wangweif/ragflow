@@ -7,6 +7,7 @@ import {
 } from '@/interfaces/request/document';
 import i18n from '@/locales/config';
 import chatService from '@/services/chat-service';
+import directoryManagerService from '@/services/directory-manager-service';
 import kbService from '@/services/knowledge-service';
 import api, { api_host } from '@/utils/api';
 import { getAuthorization } from '@/utils/authorization-util';
@@ -18,7 +19,7 @@ import axios from 'axios';
 import { get } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { IHighlight } from 'react-pdf-highlighter';
-import { useParams } from 'umi';
+import { useParams, useSearchParams } from 'umi';
 import {
   useGetPaginationWithRouter,
   useHandleSearchChange,
@@ -27,6 +28,23 @@ import {
   useGetKnowledgeSearchParams,
   useSetPaginationParams,
 } from './route-hook';
+
+// 定义混合数据项的接口
+export interface IMixedItem {
+  id: string;
+  name: string;
+  type: 'directory' | 'document';
+  create_time?: number;
+  chunk_num?: number;
+  parser_id?: string;
+  status?: string;
+  run?: any;
+  parent_id?: string;
+  kb_id?: string;
+  parser_config?: any;
+  meta_fields?: any;
+  thumbnail?: string;
+}
 
 export const useGetDocumentUrl = (documentId?: string) => {
   const getDocumentUrl = useCallback(
@@ -132,7 +150,8 @@ export const useSetNextDocumentStatus = () => {
       });
       if (data.code === 0) {
         message.success(i18n.t('message.modified'));
-        queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        // queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        queryClient.invalidateQueries({ queryKey: ['fetchMixedContentList'] });
       }
       return data;
     },
@@ -163,7 +182,8 @@ export const useSaveNextDocumentName = () => {
       });
       if (data.code === 0) {
         message.success(i18n.t('message.renamed'));
-        queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        // queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        queryClient.invalidateQueries({ queryKey: ['fetchMixedContentList'] });
       }
       return data.code;
     },
@@ -190,7 +210,10 @@ export const useCreateNextDocument = () => {
       });
       if (data.code === 0) {
         if (page === 1) {
-          queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+          // queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+          queryClient.invalidateQueries({
+            queryKey: ['fetchMixedContentList'],
+          });
         } else {
           setPaginationParams(); // fetch document list
         }
@@ -228,7 +251,8 @@ export const useSetNextDocumentParser = () => {
         parser_config: parserConfig,
       });
       if (data.code === 0) {
-        queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        // queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        queryClient.invalidateQueries({ queryKey: ['fetchMixedContentList'] });
 
         message.success(i18n.t('message.modified'));
       }
@@ -249,15 +273,28 @@ export const useUploadNextDocument = () => {
     mutateAsync,
   } = useMutation({
     mutationKey: ['uploadDocument'],
-    mutationFn: async (fileList: UploadFile[]) => {
+    mutationFn: async (params: {
+      fileList: UploadFile[];
+      directoryId?: string;
+    }) => {
+      const { fileList, directoryId } = params;
       const formData = new FormData();
       formData.append('kb_id', knowledgeId);
+
+      // 如果有directory_id，则添加到formData中
+      if (directoryId) {
+        formData.append('directory_id', directoryId);
+      }
+
       fileList.forEach((file: any) => {
         if (file.originFileObj) {
           formData.append('file', file.originFileObj);
         } else {
           formData.append('file', file);
         }
+        // 添加文件的相对路径信息（用于多级目录上传）
+        const relativePath = (file as any).webkitRelativePath || file.name;
+        formData.append('webkitRelativePath', relativePath);
       });
 
       try {
@@ -269,7 +306,10 @@ export const useUploadNextDocument = () => {
         const code = get(ret, 'data.code');
 
         if (code === 0 || code === 500) {
-          queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+          // queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+          queryClient.invalidateQueries({
+            queryKey: ['fetchMixedContentList'],
+          });
         }
         return ret?.data;
       } catch (error) {
@@ -342,7 +382,8 @@ export const useRunNextDocument = () => {
       });
       const code = get(ret, 'data.code');
       if (code === 0) {
-        queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        // queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        queryClient.invalidateQueries({ queryKey: ['fetchMixedContentList'] });
         message.success(i18n.t('message.operated'));
       }
 
@@ -407,7 +448,8 @@ export const useRemoveNextDocument = () => {
       const { data } = await kbService.document_rm({ doc_id: documentIds });
       if (data.code === 0) {
         message.success(i18n.t('message.deleted'));
-        queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        // queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+        queryClient.invalidateQueries({ queryKey: ['fetchMixedContentList'] });
       }
       return data.code;
     },
@@ -506,7 +548,10 @@ export const useSetDocumentMeta = () => {
         });
 
         if (data?.code === 0) {
-          queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+          // queryClient.invalidateQueries({ queryKey: ['fetchDocumentList'] });
+          queryClient.invalidateQueries({
+            queryKey: ['fetchMixedContentList'],
+          });
 
           message.success(i18n.t('message.modified'));
         }
@@ -518,4 +563,215 @@ export const useSetDocumentMeta = () => {
   });
 
   return { setDocumentMeta: mutateAsync, data, loading };
+};
+
+// 新的hook：同时获取文件夹和文档数据
+export const useFetchMixedContentList = () => {
+  const { knowledgeId } = useGetKnowledgeSearchParams();
+  const { searchString, handleInputChange } = useHandleSearchChange();
+  const { pagination, setPagination } = useGetPaginationWithRouter();
+  const { id } = useParams();
+
+  // 从URL参数获取当前目录ID
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentDirectoryId = searchParams.get('directory_id') || undefined;
+
+  // 获取当前目录信息和完整路径
+  const { data: directoryPath } = useQuery({
+    queryKey: ['directoryPath', currentDirectoryId],
+    queryFn: async () => {
+      if (!currentDirectoryId) return [];
+
+      const kbId = knowledgeId || id;
+      // 获取所有目录，不限制parent_id
+      const { data } = await directoryManagerService.listDirectories({
+        kb_id: kbId,
+        get_all: true, // 获取所有目录用于构建完整路径
+      });
+
+      console.log('=== Directory Path Debug ===');
+      console.log('currentDirectoryId:', currentDirectoryId);
+      console.log('All directories:', data);
+
+      if (data.code === 0) {
+        const directories = data.data || [];
+        const directoryMap = new Map(
+          directories.map((dir: any) => [dir.id, dir]),
+        );
+
+        console.log('directoryMap:', directoryMap);
+
+        // 构建从根目录到当前目录的完整路径
+        const path = [];
+        let currentId = currentDirectoryId;
+
+        console.log('Starting path construction from:', currentId);
+
+        // 向上追溯到根目录
+        while (currentId && directoryMap.has(currentId)) {
+          const dir = directoryMap.get(currentId) as any;
+          console.log('Adding to path:', dir);
+          path.unshift(dir); // 添加到数组开头
+          currentId = dir.parent_id;
+          console.log('Next currentId (parent_id):', currentId);
+
+          // 防止无限循环
+          if (path.length > 10) {
+            console.warn('Path too deep, breaking to prevent infinite loop');
+            break;
+          }
+        }
+
+        console.log('Final path:', path);
+        console.log('============================');
+
+        return path;
+      }
+      return [];
+    },
+    enabled: !!currentDirectoryId && !!(knowledgeId || id),
+  });
+
+  const { data, isFetching: loading } = useQuery<{
+    items: IMixedItem[];
+    total: number;
+  }>({
+    queryKey: [
+      'fetchMixedContentList',
+      searchString,
+      pagination,
+      currentDirectoryId,
+    ],
+    initialData: { items: [], total: 0 },
+    refetchInterval: 15000,
+    enabled: !!knowledgeId || !!id,
+    queryFn: async () => {
+      const kbId = knowledgeId || id;
+
+      try {
+        // 并行获取文件夹和文档数据
+        const [directoriesRes, documentsRes] = await Promise.all([
+          directoryManagerService.listDirectories({
+            kb_id: kbId,
+            parent_id: currentDirectoryId,
+          }),
+          kbService.get_document_list({
+            kb_id: kbId,
+            keywords: searchString,
+            page_size: pagination.pageSize,
+            page: pagination.current,
+            directory_id: currentDirectoryId, // 只获取当前目录下的文档
+          }),
+        ]);
+
+        const mixedItems: IMixedItem[] = [];
+
+        // 添加文件夹数据（只在没有搜索条件时显示）
+        if (!searchString && directoriesRes.data.code === 0) {
+          const directories = directoriesRes.data.data || [];
+          directories.forEach((dir: any) => {
+            mixedItems.push({
+              id: dir.id,
+              name: dir.name,
+              type: 'directory',
+              create_time: dir.create_time,
+              parent_id: dir.parent_id,
+              kb_id: dir.kb_id,
+            });
+          });
+        }
+
+        // 添加文档数据
+        if (documentsRes.data.code === 0) {
+          const documents = documentsRes.data.data?.docs || [];
+          documents.forEach((doc: any) => {
+            mixedItems.push({
+              ...doc,
+              type: 'document',
+            });
+          });
+        }
+
+        // 排序：文件夹在前，文档在后，同类型按名称排序
+        mixedItems.sort((a, b) => {
+          if (a.type !== b.type) {
+            return a.type === 'directory' ? -1 : 1;
+          }
+          return a.name.localeCompare(b.name);
+        });
+
+        return {
+          items: mixedItems,
+          total:
+            (documentsRes.data.data?.total || 0) +
+            mixedItems.filter((item) => item.type === 'directory').length,
+        };
+      } catch (error) {
+        console.error('获取混合内容失败:', error);
+        return {
+          items: [],
+          total: 0,
+        };
+      }
+    },
+  });
+
+  const onInputChange: React.ChangeEventHandler<HTMLInputElement> = useCallback(
+    (e) => {
+      setPagination({ page: 1 });
+      handleInputChange(e);
+    },
+    [handleInputChange, setPagination],
+  );
+
+  // 导航到指定目录
+  const navigateToDirectory = useCallback(
+    (directoryId?: string) => {
+      console.log('=== navigateToDirectory Debug ===');
+      console.log('directoryId:', directoryId);
+      console.log(
+        'current searchParams:',
+        Object.fromEntries(searchParams.entries()),
+      );
+
+      const newParams = new URLSearchParams(searchParams);
+      if (directoryId) {
+        newParams.set('directory_id', directoryId);
+      } else {
+        newParams.delete('directory_id');
+      }
+      // 同时设置page为1，避免后续setPagination覆盖
+      newParams.set('page', '1');
+
+      console.log('new searchParams:', Object.fromEntries(newParams.entries()));
+      console.log('=================================');
+
+      setSearchParams(newParams);
+      // 不要调用setPagination，因为它会用旧的searchParams覆盖新设置的directory_id
+      // setPagination({ page: 1 });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  // 返回上级目录
+  const navigateToParent = useCallback(() => {
+    // 这里需要根据当前目录获取父目录ID
+    // 可以通过API获取当前目录信息来得到parent_id
+    navigateToDirectory(undefined); // 临时实现：返回根目录
+  }, [navigateToDirectory]);
+
+  return {
+    searchString,
+    mixedItems: data.items,
+    pagination: {
+      ...pagination,
+      total: data.total,
+    },
+    handleInputChange: onInputChange,
+    loading,
+    currentDirectoryId,
+    directoryPath: directoryPath || [],
+    navigateToDirectory,
+    navigateToParent,
+  };
 };

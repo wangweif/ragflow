@@ -196,6 +196,8 @@ export default {
       metaData: 'Meta data',
       deleteDocumentConfirmContent:
         'The document is associated with the knowledge graph. After deletion, the related node and relationship information will be deleted, but the graph will not be updated immediately. The update graph action is performed during the process of parsing the new document that carries the knowledge graph extraction task.',
+      deleteDirectoryConfirmContent:
+        'Are you sure you want to delete this directory? This operation will delete the directory and all its contents (including documents and subdirectories) and cannot be undone.',
       plainText: 'Naive',
       reRankModelWaring: 'Re-rank model is very time consuming.',
     },
@@ -532,8 +534,7 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       locale: 'Locale',
       selectLanguage: 'Select a language',
       reasoning: 'Reasoning',
-      reasoningTip:
-        `Whether to enable a reasoning workflow during question answering, as seen in models like Deepseek-R1 or OpenAI o1. When enabled, this allows the model to access external knowledge and tackle complex questions in a step-by-step manner, leveraging techniques like chain-of-thought reasoning. This approach enhances the model's ability to provide accurate responses by breaking down problems into manageable steps, improving performance on tasks that require logical reasoning and multi-step thinking.`,
+      reasoningTip: `Whether to enable a reasoning workflow during question answering, as seen in models like Deepseek-R1 or OpenAI o1. When enabled, this allows the model to access external knowledge and tackle complex questions in a step-by-step manner, leveraging techniques like chain-of-thought reasoning. This approach enhances the model's ability to provide accurate responses by breaking down problems into manageable steps, improving performance on tasks that require logical reasoning and multi-step thinking.`,
       tavilyApiKeyTip:
         'If an API key is correctly set here, Tavily-based web searches will be used to supplement knowledge base retrieval.',
       tavilyApiKeyMessage: 'Please enter your Tavily API Key',
@@ -769,6 +770,8 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       uploadLimit:
         'Each file must not exceed 10MB, and the total number of files must not exceed 128.',
       destinationFolder: 'Destination folder',
+      directoryStructure: 'Directory Structure',
+      files: 'files',
     },
     flow: {
       cite: 'Cite',

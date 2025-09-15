@@ -69,26 +69,48 @@ class DocumentService(CommonService):
 
     @classmethod
     @DB.connection_context()
-    def get_by_kb_id(cls, kb_id, page_number, items_per_page,
-                     orderby, desc, keywords):
+    def get_by_kb_id(
+        cls,
+        kb_id,
+        page_number,
+        items_per_page,
+        orderby,
+        desc,
+        keywords,
+        directory_id=None,
+    ):
         status_keywords = {
             "未解析": "0",
-            "解析中": "1", 
+            "解析中": "1",
             "取消": "2",
             "成功": "3",
-            "失败": "4"
+            "失败": "4",
         }
         matched_status = []
         for status_name, status_value in status_keywords.items():
             if status_name in keywords:
                 matched_status.append(status_value)
+
+        # 构建基础查询条件
+        base_condition = cls.model.kb_id == kb_id
+
+        # 添加目录过滤条件
+        if directory_id is not None:
+            base_condition = base_condition & (cls.model.directory_id == directory_id)
+        else:
+            # 如果没有指定目录，只显示根目录下的文档（directory_id为空的）
+            base_condition = base_condition & (cls.model.directory_id.is_null())
+
         if keywords:
             docs = cls.model.select().where(
-                (cls.model.kb_id == kb_id),
-                (fn.LOWER(cls.model.name).contains(keywords.lower()) | (cls.model.run.in_(matched_status)))
+                base_condition,
+                (
+                    fn.LOWER(cls.model.name).contains(keywords.lower())
+                    | (cls.model.run.in_(matched_status))
+                ),
             )
         else:
-            docs = cls.model.select().where(cls.model.kb_id == kb_id)
+            docs = cls.model.select().where(base_condition)
         count = docs.count()
         if desc:
             docs = docs.order_by(cls.model.getter_by(orderby).desc())
@@ -637,3 +659,67 @@ def doc_upload_and_parse(conversation_id, file_objs, user_id):
             doc_id, kb.id, token_counts[doc_id], chunk_counts[doc_id], 0)
 
     return [d["id"] for d, _ in files]
+
+
+def delete_documents_core(doc_ids, user_id):
+    """核心的文档删除逻辑，可被其他模块调用，返回 (success, error_message)"""
+    if isinstance(doc_ids, str):
+        doc_ids = [doc_ids]
+
+    # 权限检查
+    for doc_id in doc_ids:
+        if not DocumentService.accessible4deletion(doc_id, user_id):
+            return False, "没有授权。"
+
+    try:
+        from api.db.services.file_service import FileService
+        from api.db.services.file2document_service import File2DocumentService
+        from api.db.services.task_service import TaskService
+        from api.db.db_models import File, Task
+        from api.db import FileSource
+
+        root_folder = FileService.get_root_folder(user_id)
+        pf_id = root_folder["id"]
+        FileService.init_knowledgebase_docs(pf_id, user_id)
+
+        errors = []
+        for doc_id in doc_ids:
+            try:
+                e, doc = DocumentService.get_by_id(doc_id)
+                if not e:
+                    errors.append(f"未找到文档 {doc_id}")
+                    continue
+
+                tenant_id = DocumentService.get_tenant_id(doc_id)
+                if not tenant_id:
+                    errors.append(f"未找到租户 (文档 {doc_id})")
+                    continue
+
+                b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
+
+                TaskService.filter_delete([Task.doc_id == doc_id])
+                if not DocumentService.remove_document(doc, tenant_id):
+                    errors.append(f"数据库错误（文档删除 {doc_id}）")
+                    continue
+
+                f2d = File2DocumentService.get_by_document_id(doc_id)
+                if f2d:
+                    FileService.filter_delete(
+                        [
+                            File.source_type == FileSource.KNOWLEDGEBASE,
+                            File.id == f2d[0].file_id,
+                        ]
+                    )
+                File2DocumentService.delete_by_document_id(doc_id)
+
+                STORAGE_IMPL.rm(b, n)
+            except Exception as e:
+                errors.append(f"删除文档 {doc_id} 时发生错误: {str(e)}")
+
+        if errors:
+            return False, "; ".join(errors)
+
+        return True, None
+
+    except Exception as e:
+        return False, f"删除过程中发生错误：{str(e)}"
