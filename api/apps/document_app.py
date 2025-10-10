@@ -545,6 +545,35 @@ def get(doc_id):
     except Exception as e:
         return server_error_response(e)
 
+@manager.route('/download/<doc_id>', methods=['GET'])  # noqa: F821
+def download(doc_id):
+    try:
+        e, doc = DocumentService.get_by_id(doc_id)
+        if not e:
+            return get_data_error_result(message="未找到文档！")
+
+        b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
+        response = flask.make_response(STORAGE_IMPL.get(b, n))
+
+        ext = re.search(r"\.([^.]+)$", doc.name)
+        if ext:
+            if doc.type == FileType.VISUAL.value:
+                response.headers.set('Content-Type', 'image/%s' % ext.group(1))
+            else:
+                response.headers.set(
+                    'Content-Type',
+                    'application/%s' %
+                    ext.group(1))
+            import urllib.parse
+            filename = urllib.parse.quote(doc.name.encode('utf-8'))
+            response.headers.set(
+                "Content-Disposition",
+                f"attachment; filename*=UTF-8''{filename}"
+            )
+        return response
+    except Exception as e:
+        return server_error_response(e)
+
 
 @manager.route('/change_parser', methods=['POST'])  # noqa: F821
 @login_required
