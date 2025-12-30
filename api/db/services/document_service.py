@@ -299,13 +299,9 @@ class DocumentService(CommonService):
         ).join(
             Knowledgebase, on=(
                 Knowledgebase.id == cls.model.kb_id)
-        ).join(
-            User, on=(
-                (User.id == Knowledgebase.created_by)
-            )
         ).where(
             cls.model.id == doc_id,
-            User.id == user_id
+            Knowledgebase.created_by == user_id
         ).paginate(0, 1)
         docs = docs.dicts()
         if not docs:
