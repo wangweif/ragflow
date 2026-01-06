@@ -10,6 +10,7 @@ import {
   Input,
   Space,
   Spin,
+  Tooltip,
   Typography,
   Upload,
   message,
@@ -416,7 +417,14 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
                       style={{ marginLeft: 16 }} // 成员相对于部门标题有缩进
                     >
                       <div className={styles.memberInfo}>
-                        <span>{member.nickname}</span>
+                        <Tooltip
+                          title={member.email || '无邮箱信息'}
+                          placement="top"
+                        >
+                          <span style={{ cursor: 'pointer' }}>
+                            {member.nickname}
+                          </span>
+                        </Tooltip>
                       </div>
                       <div className={styles.radioWrapper}>
                         <div
