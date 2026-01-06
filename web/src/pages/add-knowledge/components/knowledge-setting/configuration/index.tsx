@@ -173,6 +173,9 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>(
     {},
   );
+  // 搜索相关状态
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filteredTeams, setFilteredTeams] = useState<Team[]>([]);
 
   const ConfigurationComponent = useMemo(() => {
     return finalParserId
@@ -254,9 +257,61 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
     form.setFieldsValue({ selectedMembers: newSelectedKeys });
   };
 
+  // 搜索过滤逻辑 - 只搜索用户成员
+  const filterTeamsAndMembers = (
+    teamList: Team[],
+    searchTerm: string,
+  ): Team[] => {
+    if (!searchTerm.trim()) {
+      return teamList;
+    }
+
+    const filtered: Team[] = [];
+    const lowerSearchTerm = searchTerm.toLowerCase();
+
+    for (const team of teamList) {
+      const matchingMembers = team.members.filter((member) =>
+        member.nickname.toLowerCase().includes(lowerSearchTerm),
+      );
+      const filteredSubTeams = filterTeamsAndMembers(team.subTeams, searchTerm);
+
+      // 只有当有匹配的成员或有匹配的子部门时，才包含此部门
+      if (matchingMembers.length > 0 || filteredSubTeams.length > 0) {
+        filtered.push({
+          ...team,
+          members: matchingMembers,
+          subTeams: filteredSubTeams,
+        });
+      }
+    }
+
+    return filtered;
+  };
+
+  // 监听搜索词变化，更新过滤结果
+  useEffect(() => {
+    const filtered = filterTeamsAndMembers(teams, searchTerm);
+    setFilteredTeams(filtered);
+
+    // 如果有搜索结果，自动展开所有匹配的部门
+    if (searchTerm.trim() && filtered.length > 0) {
+      const expandState: Record<string, boolean> = {};
+      const expandAllTeams = (teamList: Team[]) => {
+        for (const team of teamList) {
+          expandState[team.id] = true;
+          if (team.subTeams && team.subTeams.length > 0) {
+            expandAllTeams(team.subTeams);
+          }
+        }
+      };
+      expandAllTeams(filtered);
+      setExpandedTeams(expandState);
+    }
+  }, [teams, searchTerm]);
+
   // 初始化部门展开状态，默认全部折叠
   useEffect(() => {
-    if (teams.length > 0) {
+    if (teams.length > 0 && !searchTerm.trim()) {
       const initialExpandState: Record<string, boolean> = {};
       const initTeamExpandState = (teamList: Team[]) => {
         for (const team of teamList) {
@@ -272,7 +327,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
       initTeamExpandState(teams);
       setExpandedTeams(initialExpandState);
     }
-  }, [teams]);
+  }, [teams, searchTerm]);
 
   // 处理展开/折叠
   const toggleTeamExpand = (teamId: string) => {
@@ -425,13 +480,23 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
 
   // 自定义渲染部门和成员
   const renderTeamMembers = () => {
+    const teamsToRender = searchTerm.trim() ? filteredTeams : teams;
+
     if (!teams.length) {
       return <Text type="secondary">{'没有可用的部门'}</Text>;
     }
 
+    if (searchTerm.trim() && !filteredTeams.length) {
+      return (
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <Text type="secondary">{'未找到匹配的部门或成员'}</Text>
+        </div>
+      );
+    }
+
     return (
       <div className={styles.teamsContainer}>
-        {teams.map((team) => renderTeamAndMembers(team))}
+        {teamsToRender.map((team) => renderTeamAndMembers(team))}
       </div>
     );
   };
@@ -475,9 +540,22 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
 
       {/* 团队成员选择 - 自定义渲染 */}
       <Form.Item name="selectedMembers" label={'选择部门成员'}>
-        <Spin spinning={teamsLoading || permissionsLoading}>
-          {renderTeamMembers()}
-        </Spin>
+        <div>
+          {/* 搜索框 */}
+          <div style={{ marginBottom: '16px' }}>
+            <Input
+              placeholder="搜索部门成员..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              allowClear
+            />
+          </div>
+
+          {/* 部门成员列表 */}
+          <Spin spinning={teamsLoading || permissionsLoading}>
+            {renderTeamMembers()}
+          </Spin>
+        </div>
       </Form.Item>
 
       <ConfigurationComponent></ConfigurationComponent>
