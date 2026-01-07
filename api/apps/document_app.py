@@ -329,7 +329,12 @@ def list_docs():
     page_number = int(request.args.get("page", 1))
     items_per_page = int(request.args.get("page_size", 15))
     orderby = request.args.get("orderby", "create_time")
-    desc = request.args.get("desc", True)
+    desc_param = request.args.get("desc")
+    if desc_param is None:
+        desc = True
+    else:
+        desc_param = str(desc_param).strip().lower()
+        desc = desc_param not in ("false", "0", "no")
     try:
         docs, tol = DocumentService.get_by_kb_id(
             kb_id, page_number, items_per_page, orderby, desc, keywords, directory_id

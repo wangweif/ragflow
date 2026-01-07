@@ -589,41 +589,27 @@ export const useFetchMixedContentList = () => {
         get_all: true, // 获取所有目录用于构建完整路径
       });
 
-      console.log('=== Directory Path Debug ===');
-      console.log('currentDirectoryId:', currentDirectoryId);
-      console.log('All directories:', data);
-
       if (data.code === 0) {
         const directories = data.data || [];
         const directoryMap = new Map(
           directories.map((dir: any) => [dir.id, dir]),
         );
 
-        console.log('directoryMap:', directoryMap);
-
         // 构建从根目录到当前目录的完整路径
         const path = [];
         let currentId = currentDirectoryId;
 
-        console.log('Starting path construction from:', currentId);
-
         // 向上追溯到根目录
         while (currentId && directoryMap.has(currentId)) {
           const dir = directoryMap.get(currentId) as any;
-          console.log('Adding to path:', dir);
           path.unshift(dir); // 添加到数组开头
           currentId = dir.parent_id;
-          console.log('Next currentId (parent_id):', currentId);
 
           // 防止无限循环
           if (path.length > 10) {
-            console.warn('Path too deep, breaking to prevent infinite loop');
             break;
           }
         }
-
-        console.log('Final path:', path);
-        console.log('============================');
 
         return path;
       }
@@ -649,62 +635,111 @@ export const useFetchMixedContentList = () => {
       const kbId = knowledgeId || id;
 
       try {
-        // 并行获取文件夹和文档数据
-        const [directoriesRes, documentsRes] = await Promise.all([
-          directoryManagerService.listDirectories({
-            kb_id: kbId,
-            parent_id: currentDirectoryId,
-          }),
-          kbService.get_document_list({
+        const pageSize = pagination.pageSize;
+        const currentPage = pagination.current;
+        const globalOffset = (currentPage - 1) * pageSize;
+
+        const fetchDocumentPage = async (page: number) => {
+          const ret = await kbService.get_document_list({
             kb_id: kbId,
             keywords: searchString,
-            page_size: pagination.pageSize,
-            page: pagination.current,
-            directory_id: currentDirectoryId, // 只获取当前目录下的文档
-          }),
-        ]);
-
-        const mixedItems: IMixedItem[] = [];
-
-        // 添加文件夹数据（只在没有搜索条件时显示）
-        if (!searchString && directoriesRes.data.code === 0) {
-          const directories = directoriesRes.data.data || [];
-          directories.forEach((dir: any) => {
-            mixedItems.push({
-              id: dir.id,
-              name: dir.name,
-              type: 'directory',
-              create_time: dir.create_time,
-              parent_id: dir.parent_id,
-              kb_id: dir.kb_id,
-            });
+            page_size: pageSize,
+            page,
+            directory_id: currentDirectoryId,
+            orderby: 'name',
+            desc: false,
           });
+
+          if (ret.data.code === 0) {
+            return {
+              docs: ret.data.data?.docs || [],
+              total: ret.data.data?.total || 0,
+            };
+          }
+
+          return { docs: [], total: 0 };
+        };
+
+        if (searchString) {
+          const documentsRes = await fetchDocumentPage(currentPage);
+          const mixedItems: IMixedItem[] = documentsRes.docs.map(
+            (doc: any) => ({
+              ...doc,
+              type: 'document',
+            }),
+          );
+
+          return {
+            items: mixedItems,
+            total: documentsRes.total,
+          };
         }
 
-        // 添加文档数据
-        if (documentsRes.data.code === 0) {
-          const documents = documentsRes.data.data?.docs || [];
-          documents.forEach((doc: any) => {
+        const directoriesRes = await directoryManagerService.listDirectories({
+          kb_id: kbId,
+          parent_id: currentDirectoryId,
+        });
+
+        const directories =
+          directoriesRes.data.code === 0 ? directoriesRes.data.data || [] : [];
+        const directoriesTotal = directories.length;
+
+        const directorySliceStart = Math.min(globalOffset, directoriesTotal);
+        const directorySliceEnd = Math.min(
+          directorySliceStart + pageSize,
+          directoriesTotal,
+        );
+        const directoriesPage = directories.slice(
+          directorySliceStart,
+          directorySliceEnd,
+        );
+
+        const mixedItems: IMixedItem[] = directoriesPage.map((dir: any) => ({
+          id: dir.id,
+          name: dir.name,
+          type: 'directory',
+          create_time: dir.create_time,
+          parent_id: dir.parent_id,
+          kb_id: dir.kb_id,
+        }));
+
+        const remainingSlots = pageSize - mixedItems.length;
+        const docStart = Math.max(0, globalOffset - directoriesTotal);
+
+        let documentsTotal = 0;
+
+        if (remainingSlots > 0) {
+          const firstDocPage = Math.floor(docStart / pageSize) + 1;
+          const withinPageOffset = docStart % pageSize;
+
+          const firstRes = await fetchDocumentPage(firstDocPage);
+          documentsTotal = firstRes.total;
+
+          const docs: any[] = firstRes.docs.slice(
+            withinPageOffset,
+            withinPageOffset + remainingSlots,
+          );
+
+          if (docs.length < remainingSlots) {
+            const secondRes = await fetchDocumentPage(firstDocPage + 1);
+            documentsTotal = Math.max(documentsTotal, secondRes.total);
+            docs.push(...secondRes.docs.slice(0, remainingSlots - docs.length));
+          }
+
+          docs.forEach((doc: any) => {
             mixedItems.push({
               ...doc,
               type: 'document',
             });
           });
+        } else {
+          const firstRes = await fetchDocumentPage(1);
+          documentsTotal = firstRes.total;
         }
-
-        // 排序：文件夹在前，文档在后，同类型按名称排序
-        mixedItems.sort((a, b) => {
-          if (a.type !== b.type) {
-            return a.type === 'directory' ? -1 : 1;
-          }
-          return a.name.localeCompare(b.name);
-        });
 
         return {
           items: mixedItems,
-          total:
-            (documentsRes.data.data?.total || 0) +
-            mixedItems.filter((item) => item.type === 'directory').length,
+          total: directoriesTotal + documentsTotal,
         };
       } catch (error) {
         console.error('获取混合内容失败:', error);
@@ -727,13 +762,6 @@ export const useFetchMixedContentList = () => {
   // 导航到指定目录
   const navigateToDirectory = useCallback(
     (directoryId?: string) => {
-      console.log('=== navigateToDirectory Debug ===');
-      console.log('directoryId:', directoryId);
-      console.log(
-        'current searchParams:',
-        Object.fromEntries(searchParams.entries()),
-      );
-
       const newParams = new URLSearchParams(searchParams);
       if (directoryId) {
         newParams.set('directory_id', directoryId);
@@ -742,10 +770,6 @@ export const useFetchMixedContentList = () => {
       }
       // 同时设置page为1，避免后续setPagination覆盖
       newParams.set('page', '1');
-
-      console.log('new searchParams:', Object.fromEntries(newParams.entries()));
-      console.log('=================================');
-
       setSearchParams(newParams);
       // 不要调用setPagination，因为它会用旧的searchParams覆盖新设置的directory_id
       // setPagination({ page: 1 });

@@ -9,12 +9,6 @@ export const useGetDirectoryId = (): string => {
   const [searchParams] = useSearchParams();
   const directoryId = searchParams.get('directory_id');
 
-  // 调试信息
-  console.log('=== useGetDirectoryId Debug ===');
-  console.log('All URL params:', Object.fromEntries(searchParams.entries()));
-  console.log('directory_id param:', searchParams.get('directory_id'));
-  console.log('==============================');
-
   return directoryId || '';
 };
 
