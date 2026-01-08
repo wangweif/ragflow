@@ -290,7 +290,7 @@ export const useUploadNextDocument = () => {
         if (file.originFileObj) {
           formData.append('file', file.originFileObj);
         } else {
-          formData.append('file', file);
+          formData.append('file', file, file.name);
         }
         // 添加文件的相对路径信息（用于多级目录上传）
         const relativePath = (file as any).webkitRelativePath || file.name;
