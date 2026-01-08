@@ -84,6 +84,23 @@ interface Team {
   subTeams: Team[];
 }
 
+const compareByName = (a?: string, b?: string) =>
+  (a ?? '').localeCompare(b ?? '', 'zh-CN', {
+    numeric: true,
+    sensitivity: 'base',
+  });
+
+const sortTeamsRecursively = (teamList: Team[]): Team[] =>
+  [...teamList]
+    .sort((a, b) => compareByName(a.name, b.name))
+    .map((team) => ({
+      ...team,
+      members: [...(team.members || [])].sort((a, b) =>
+        compareByName(a.nickname, b.nickname),
+      ),
+      subTeams: sortTeamsRecursively(team.subTeams || []),
+    }));
+
 // 自定义Hook用于获取部门层级结构
 const useTeamHierarchy = () => {
   const { data: userInfo } = useFetchUserInfo();
@@ -177,6 +194,14 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
   // 搜索相关状态
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredTeams, setFilteredTeams] = useState<Team[]>([]);
+
+  const teamsToRender = useMemo(() => {
+    return searchTerm.trim() ? filteredTeams : teams;
+  }, [filteredTeams, searchTerm, teams]);
+
+  const sortedTeamsToRender = useMemo(() => {
+    return sortTeamsRecursively(teamsToRender);
+  }, [teamsToRender]);
 
   const ConfigurationComponent = useMemo(() => {
     return finalParserId
@@ -488,8 +513,6 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
 
   // 自定义渲染部门和成员
   const renderTeamMembers = () => {
-    const teamsToRender = searchTerm.trim() ? filteredTeams : teams;
-
     if (!teams.length) {
       return <Text type="secondary">{'没有可用的部门'}</Text>;
     }
@@ -504,7 +527,7 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
 
     return (
       <div className={styles.teamsContainer}>
-        {teamsToRender.map((team) => renderTeamAndMembers(team))}
+        {sortedTeamsToRender.map((team) => renderTeamAndMembers(team))}
       </div>
     );
   };
