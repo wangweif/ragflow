@@ -18,7 +18,7 @@ import sys
 import logging
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-from flask import Blueprint, Flask
+from flask import Blueprint, Flask, Request as FlaskRequest
 from werkzeug.wrappers.request import Request
 from flask_cors import CORS
 from flasgger import Swagger
@@ -38,9 +38,27 @@ import jwt
 
 __all__ = ["app"]
 
-Request.json = property(lambda self: self.get_json(force=True, silent=True))
+# Extend Flask Request to add max_form_parts property
+# This allows uploading more than the default 1000 files/parts
+original_request_class = FlaskRequest
+
+
+class CustomRequest(FlaskRequest):
+    @property
+    def max_form_parts(self) -> int | None:  # type: ignore[override]
+        """Read-only view of the MAX_FORM_PARTS config key."""
+        from flask import current_app
+        if current_app:
+            return current_app.config.get("MAX_FORM_PARTS", None)  # type: ignore[no-any-return]
+        else:
+            return None
+
+
+# Set custom request class
+FlaskRequest.json = property(lambda self: self.get_json(force=True, silent=True))
 
 app = Flask(__name__)
+app.request_class = CustomRequest
 
 # Add this at the beginning of your file to configure Swagger UI
 swagger_config = {
@@ -85,6 +103,18 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["MAX_CONTENT_LENGTH"] = int(
     os.environ.get("MAX_CONTENT_LENGTH", 1024 * 1024 * 1024)
+)
+
+# Configure werkzeug multipart parser to handle many files
+# max_form_memory_size: data in memory beyond this size goes to disk (default: 128KB)
+# Set to 16MB to reduce memory pressure when uploading many small files
+app.config["MAX_FORM_MEMORY_SIZE"] = int(
+    os.environ.get("MAX_FORM_MEMORY_SIZE", 16 * 1024 * 1024)
+)
+# max_form_parts: maximum number of multipart parts (files + form fields)
+# Default werkzeug limit is 1000, increase to allow more files
+app.config["MAX_FORM_PARTS"] = int(
+    os.environ.get("MAX_FORM_PARTS", 10000)
 )
 
 Session(app)
