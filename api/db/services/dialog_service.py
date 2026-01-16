@@ -61,6 +61,114 @@ class DialogService(CommonService):
         return list(chats.dicts())
 
 
+def chat_with_web_search(dialog, messages, stream=True, **kwargs):
+    """Chat function that uses web search when no knowledge bases are available"""
+    chat_start_ts = timer()
+    
+    if llm_id2llm_type(dialog.llm_id) == "image2text":
+        llm_model_config = TenantLLMService.get_model_config(dialog.tenant_id, LLMType.IMAGE2TEXT, dialog.llm_id)
+        chat_mdl = LLMBundle(dialog.tenant_id, LLMType.IMAGE2TEXT, dialog.llm_id)
+    else:
+        llm_model_config = TenantLLMService.get_model_config(dialog.tenant_id, LLMType.CHAT, dialog.llm_id)
+        chat_mdl = LLMBundle(dialog.tenant_id, LLMType.CHAT, dialog.llm_id)
+
+    max_tokens = llm_model_config.get("max_tokens", 8192)
+    prompt_config = dialog.prompt_config
+    
+    # Get user questions
+    questions = [m["content"] for m in messages if m["role"] == "user"][-3:]
+    if len(questions) > 1 and prompt_config.get("refine_multiturn"):
+        questions = [full_question(dialog.tenant_id, dialog.llm_id, messages)]
+    else:
+        questions = questions[-1:]
+    
+    # Perform web search using Tavily
+    kbinfos = {"total": 0, "chunks": [], "doc_aggs": []}
+    if prompt_config.get("tavily_api_key"):
+        tav = Tavily(prompt_config["tavily_api_key"])
+        tav_res = tav.retrieve_chunks(" ".join(questions))
+        kbinfos["chunks"].extend(tav_res["chunks"])
+        kbinfos["doc_aggs"].extend(tav_res["doc_aggs"])
+    
+    # Prepare knowledge from web search results
+    knowledges = kb_prompt(kbinfos, max_tokens) if kbinfos["chunks"] else []
+    
+    # Handle empty results
+    if not knowledges and prompt_config.get("empty_response"):
+        empty_res = prompt_config["empty_response"]
+        tts_mdl = None
+        if prompt_config.get("tts"):
+            tts_mdl = LLMBundle(dialog.tenant_id, LLMType.TTS)
+        yield {"answer": empty_res, "reference": kbinfos, "prompt": "\n\n### Query:\n%s" % " ".join(questions), "audio_binary": tts(tts_mdl, empty_res), "created_at": time.time()}
+        return
+    
+    # Prepare prompt with web search knowledge
+    knowledge_text = "\n------\n" + "\n\n------\n\n".join(knowledges) if knowledges else ""
+    system_prompt = prompt_config.get("system", "")
+    
+    # Handle knowledge parameter substitution
+    if "{knowledge}" in system_prompt:
+        system_prompt = system_prompt.format(knowledge=knowledge_text)
+    elif knowledges:
+        # If no knowledge placeholder but we have web search results, append them
+        system_prompt += f"\n\n### Web Search Results:\n{knowledge_text}"
+    
+    # Prepare messages
+    msg = [{"role": "system", "content": system_prompt}]
+    msg.extend([{"role": m["role"], "content": re.sub(r"##\d+\$\$", "", m["content"])} for m in messages if m["role"] != "system"])
+    used_token_count, msg = message_fit_in(msg, int(max_tokens * 0.95))
+    
+    # Generate response
+    gen_conf = dialog.llm_setting
+    gen_conf["top_p"] = gen_conf.get("top_p", 1) 
+    gen_conf["temperature"] = gen_conf.get("temperature", 0)
+    
+    if "max_tokens" in gen_conf:
+        gen_conf["max_tokens"] = min(gen_conf["max_tokens"], max_tokens - used_token_count)
+    
+    tts_mdl = None
+    if prompt_config.get("tts"):
+        tts_mdl = LLMBundle(dialog.tenant_id, LLMType.TTS)
+    
+    def decorate_answer(answer):
+        nonlocal kbinfos, questions, chat_start_ts
+        refs = deepcopy(kbinfos)
+        for c in refs["chunks"]:
+            if c.get("vector"):
+                del c["vector"]
+        
+        if answer.lower().find("invalid key") >= 0 or answer.lower().find("invalid api") >= 0:
+            answer += " Please set LLM API-Key in 'User Setting -> Model providers -> API-Key'"
+        
+        finish_chat_ts = timer()
+        total_time_cost = (finish_chat_ts - chat_start_ts) * 1000
+        prompt = f"Web search results for: {' '.join(questions)}\n\n### Query:\n{' '.join(questions)}\n\n## Time elapsed:\n  - Total: {total_time_cost:.1f}ms"
+        
+        return {"answer": answer, "reference": refs, "prompt": re.sub(r"\n", "  \n", prompt), "created_at": time.time()}
+    
+    if stream:
+        last_ans = ""
+        answer = ""
+        for ans in chat_mdl.chat_streamly(msg[0]["content"], msg[1:], gen_conf):
+            answer = ans
+            delta_ans = ans[len(last_ans):]
+            if num_tokens_from_string(delta_ans) < 16:
+                continue
+            last_ans = answer
+            yield {"answer": answer, "reference": {}, "audio_binary": tts(tts_mdl, delta_ans)}
+        delta_ans = answer[len(last_ans):]
+        if delta_ans:
+            yield {"answer": answer, "reference": {}, "audio_binary": tts(tts_mdl, delta_ans)}
+        yield decorate_answer(answer)
+    else:
+        answer = chat_mdl.chat(msg[0]["content"], msg[1:], gen_conf)
+        user_content = msg[-1].get("content", "[content not available]")
+        logging.debug("User: {}|Assistant: {}".format(user_content, answer))
+        res = decorate_answer(answer)
+        res["audio_binary"] = tts(tts_mdl, answer)
+        yield res
+
+
 def chat_solo(dialog, messages, stream=True):
     if llm_id2llm_type(dialog.llm_id) == "image2text":
         chat_mdl = LLMBundle(dialog.tenant_id, LLMType.IMAGE2TEXT, dialog.llm_id)
@@ -95,9 +203,18 @@ def chat(dialog, messages, stream=True, **kwargs):
     # logging.info(f"dialog222: {dialog.tenant_id}")
     assert messages[-1]["role"] == "user", "The last content of this conversation is not from user."
     if not dialog.kb_ids:
-        for ans in chat_solo(dialog, messages, stream):
-            yield ans
-        return
+        # Check if web search is configured when no knowledge bases are available
+        prompt_config = dialog.prompt_config
+        if prompt_config.get("tavily_api_key"):
+            # Use web search with chat functionality
+            for ans in chat_with_web_search(dialog, messages, stream, **kwargs):
+                yield ans
+            return
+        else:
+            # Fall back to solo chat without knowledge base or web search
+            for ans in chat_solo(dialog, messages, stream):
+                yield ans
+            return
 
     chat_start_ts = timer()
 
