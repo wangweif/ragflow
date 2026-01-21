@@ -6,7 +6,7 @@ import { useFetchUserInfo } from '@/hooks/user-setting-hooks';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { Button, Space, Tooltip } from 'antd';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import styles from '../parsing-action-cell/index.less';
 
 interface IProps {
@@ -31,10 +31,10 @@ const DirectoryActionCell = ({
   const { data: userInfo } = useFetchUserInfo();
   const { data: knowledgeDetails } = useFetchKnowledgeBaseConfiguration();
   // 判断是否是所有者（created_by === id）
-  const isOwner = useMemo(
-    () => knowledgeDetails.created_by === userInfo.id,
-    [userInfo, knowledgeDetails],
-  );
+  // const isOwner = useMemo(
+  //   () => knowledgeDetails.created_by === userInfo.id,
+  //   [userInfo, knowledgeDetails],
+  // );
 
   const onDeleteDirectory = () => {
     showDeleteConfirm({
@@ -54,7 +54,7 @@ const DirectoryActionCell = ({
 
   return (
     <Space size={0}>
-      {hasWritePermission && isOwner && (
+      {hasWritePermission && (
         <Tooltip title={t('rename', { keyPrefix: 'common' })}>
           <Button
             type="text"
@@ -65,7 +65,7 @@ const DirectoryActionCell = ({
           </Button>
         </Tooltip>
       )}
-      {hasWritePermission && isOwner && (
+      {hasWritePermission && (
         <Tooltip title={t('delete', { keyPrefix: 'common' })}>
           <Button
             type="text"

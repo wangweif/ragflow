@@ -42,7 +42,6 @@ class LocalUserClient:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
-                logger.info("用户数据库表初始化成功")
         except Exception as e:
             logger.error(f"初始化数据库失败: {str(e)}")
             raise
@@ -90,7 +89,6 @@ class LocalUserClient:
                 
                 user_dict = cursor.fetchone()
                 if user_dict:
-                    logger.info(f"根据邮箱获取用户成功: {email}")
                     return self._dict_to_user(user_dict)
                 return None
                 
@@ -112,7 +110,6 @@ class LocalUserClient:
                 
                 user_dict = cursor.fetchone()
                 if user_dict:
-                    logger.info(f"根据ID获取用户成功: {user_id}")
                     return self._dict_to_user(user_dict)
                 return None
                 
@@ -143,7 +140,6 @@ class LocalUserClient:
                 conn.commit()
                 
                 if cursor.rowcount > 0:
-                    logger.info(f"更新用户成功: {user_id}")
                     return True
                 else:
                     logger.warning(f"用户不存在: {user_id}")
@@ -168,7 +164,6 @@ class LocalUserClient:
                 users_dict = cursor.fetchall()
                 users = [self._dict_to_user(user_dict) for user_dict in users_dict if user_dict]
                 users = [user for user in users if user is not None]  # 过滤掉None值
-                logger.info(f"根据团队ID获取用户成功: {team_id}, 用户数: {len(users)}")
                 return users
                 
         except Exception as e:
@@ -191,7 +186,6 @@ class LocalUserClient:
                 conn.commit()
                 
                 if cursor.rowcount > 0:
-                    logger.info(f"删除用户成功: {user_id}")
                     return True
                 else:
                     logger.warning(f"用户不存在: {user_id}")

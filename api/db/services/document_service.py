@@ -295,18 +295,22 @@ class DocumentService(CommonService):
     @classmethod
     @DB.connection_context()
     def accessible4deletion(cls, doc_id, user_id):
-        docs = cls.model.select(cls.model.id
+        from api.db.services.permission_service import KnowledgebasePermissionService
+        
+        docs = cls.model.select(cls.model.id, cls.model.kb_id
         ).join(
             Knowledgebase, on=(
                 Knowledgebase.id == cls.model.kb_id)
         ).where(
-            cls.model.id == doc_id,
-            Knowledgebase.created_by == user_id
+            cls.model.id == doc_id
         ).paginate(0, 1)
-        docs = docs.dicts()
+        docs = list(docs.dicts())
         if not docs:
             return False
-        return True
+        
+        # 检查用户是否具有知识库的写权限
+        kb_id = docs[0]['kb_id']
+        return KnowledgebasePermissionService.can_access_kb(kb_id, user_id, required_permission='write')
 
     @classmethod
     @DB.connection_context()

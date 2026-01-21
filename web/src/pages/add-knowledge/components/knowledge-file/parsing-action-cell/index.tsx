@@ -13,7 +13,7 @@ import {
 import { Button, Dropdown, MenuProps, Space, Tooltip } from 'antd';
 import { isParserRunning } from '../utils';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { DocumentType } from '../constant';
 import styles from './index.less';
 
@@ -45,10 +45,10 @@ const ParsingActionCell = ({
   const { data: userInfo } = useFetchUserInfo();
   const { data: knowledgeDetails } = useFetchKnowledgeBaseConfiguration();
   // 判断是否是所有者（created_by === id）
-  const isOwner = useMemo(
-    () => knowledgeDetails.created_by === userInfo.id,
-    [userInfo, knowledgeDetails],
-  );
+  // const isOwner = useMemo(
+  //   () => knowledgeDetails.created_by === userInfo.id,
+  //   [userInfo, knowledgeDetails],
+  // );
 
   const onRmDocument = () => {
     if (!isRunning) {
@@ -112,7 +112,7 @@ const ParsingActionCell = ({
 
   return (
     <Space size={0}>
-      {isVirtualDocument || !isOwner || !hasWritePermission || (
+      {isVirtualDocument || !hasWritePermission || (
         <Dropdown
           menu={{ items: chunkItems }}
           trigger={['click']}

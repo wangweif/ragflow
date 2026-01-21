@@ -83,10 +83,6 @@ class DirectoryService(CommonService):
         if not directory:
             return False, "目录不存在"
 
-        # 检查权限 - 只有创建者可以重命名
-        if directory.created_by != user_id:
-            return False, "没有权限操作此目录"
-
         # 检查同级目录下名称是否重复
         existing_directory = cls.model.get_or_none(
             cls.model.kb_id == directory.kb_id,
@@ -113,10 +109,6 @@ class DirectoryService(CommonService):
         directory = cls.model.get_or_none(cls.model.id == directory_id)
         if not directory:
             return False, "目录不存在"
-
-        # 检查权限 - 只有创建者可以删除
-        if directory.created_by != user_id:
-            return False, "没有权限操作此目录"
 
         # # 检查目录是否为空（包括子目录）
         # is_empty, error_msg = cls.is_directory_empty_recursive(directory_id)

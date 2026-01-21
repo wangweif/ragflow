@@ -209,7 +209,6 @@ def load_user(web_request):
             # 如果JWT中包含完整的用户信息，直接创建用户对象
             if user_info is not None and "id" in user_info:
                 user = local_user_client.get_user_by_id(user_info["id"])
-                logging.info(f"------------load_user user: {user}")
                 login_user(user)
                 return user
             return None

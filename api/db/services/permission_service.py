@@ -123,19 +123,23 @@ class KnowledgebasePermissionService:
                 return True
             
             # 检查用户是否有直接授权
-            user_perm = KnowledgebasePermission.get_or_none(
-                KnowledgebasePermission.kb_id == kb_id,
-                KnowledgebasePermission.user_id == user_id,
-                KnowledgebasePermission.status == StatusEnum.VALID.value
-            )
-            
-            if user_perm:
-                # 如果需要写权限，检查权限类型
-                if required_permission == 'write':
-                    return user_perm.permission_type == 'write'
-                else:
-                    # 需要读权限，任何权限类型都可以
-                    return True
+            if required_permission == 'write':
+                # 需要写权限，检查是否存在写权限记录
+                user_perm = KnowledgebasePermission.get_or_none(
+                    KnowledgebasePermission.kb_id == kb_id,
+                    KnowledgebasePermission.user_id == user_id,
+                    KnowledgebasePermission.permission_type == 'write',
+                    KnowledgebasePermission.status == StatusEnum.VALID.value
+                )
+                return user_perm is not None
+            else:
+                # 需要读权限，检查是否存在任意权限记录（读或写）
+                user_perm = KnowledgebasePermission.get_or_none(
+                    KnowledgebasePermission.kb_id == kb_id,
+                    KnowledgebasePermission.user_id == user_id,
+                    KnowledgebasePermission.status == StatusEnum.VALID.value
+                )
+                return user_perm is not None
             
             return False
         except Exception as e:
