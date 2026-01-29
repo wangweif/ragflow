@@ -137,7 +137,7 @@ class DeepResearcher:
                 RELEVANT_EXTRACTION_PROMPT.format(
                     prev_reasoning=truncated_prev_reasoning,
                     search_query=search_query,
-                    document="\n".join(kb_prompt(kbinfos, 4096))
+                    document="\n".join(kb_prompt(kbinfos, 32000))
                 ),
                 [{"role": "user",
                   "content": f'现在您应该分析每个知识库内容，并根据当前搜索查询“{search_query}”和前面的推理步骤找到有用的信息。'}],
