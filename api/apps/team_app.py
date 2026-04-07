@@ -280,7 +280,7 @@ def add_team_member(team_id):
         email = data.get('email')
         nickname = data.get('nickname', email.split('@')[0])  # 如果没有提供昵称，使用邮箱用户名作为昵称
         role = data.get('role')
-        password = data.get('password', "123456")
+        password = data.get('password', "bjzntd@123")
         token = request.headers.get('Authorization')
         token = token[7:]
         
