@@ -20,6 +20,7 @@ import time
 from copy import deepcopy
 from functools import partial
 from timeit import default_timer as timer
+from datetime import datetime
 
 from langfuse import Langfuse
 
@@ -370,6 +371,8 @@ def chat(dialog, messages, stream=True, **kwargs):
     gen_conf = dialog.llm_setting
     gen_conf["top_p"] = gen_conf.get("top_p", 1) 
     gen_conf["temperature"] = gen_conf.get("temperature", 0)
+
+    kwargs["current_date"] = datetime.now().strftime("%Y-%m-%d")
 
     msg = [{"role": "system", "content": prompt_config["system"].format(**kwargs)}]
     prompt4citation = ""
