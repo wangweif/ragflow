@@ -22,7 +22,6 @@ from typing import Optional, Dict, Any, List
 from werkzeug.security import generate_password_hash, check_password_hash
 from api.utils import get_uuid, current_timestamp, datetime_format
 from api.db.db_models import User
-from api.constants import LOCAL_USER_DB_PATH
 logger = logging.getLogger(__name__)
 
 class LocalUserClient:
@@ -34,7 +33,7 @@ class LocalUserClient:
         if db_path:
             self.db_path = db_path
         else:
-            self.db_path = LOCAL_USER_DB_PATH
+            self.db_path = os.environ.get("LOCAL_USER_DB_PATH", "./data/webui.db")
         self._init_database()
     
     def _init_database(self):

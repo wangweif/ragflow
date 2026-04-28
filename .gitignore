@@ -46,3 +46,8 @@ nltk_data/
 .lh/
 
 .venv
+
+# Environment variables
+.env
+.env.local
+.env.production

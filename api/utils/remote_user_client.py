@@ -18,7 +18,7 @@ import requests
 import json
 from typing import Optional, Dict, Any, List
 from api import settings
-from api.constants import REMOTE_USER_API_BASE
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,8 @@ class RemoteUserClient:
     """远程用户服务客户端，用于与192.168.8.88服务器的用户API进行交互"""
     
     def __init__(self, base_url: str = None, token: str = None):
-        self.base_url = base_url or REMOTE_USER_API_BASE
-        self.timeout = getattr(settings, 'REMOTE_USER_API_TIMEOUT', 30)
+        self.base_url = base_url or os.environ.get("REMOTE_USER_API_BASE", "http://192.168.8.88:8080/api")
+        self.timeout = int(os.environ.get("REMOTE_USER_API_TIMEOUT", "30"))
         self.session = requests.Session()
         # 设置默认请求头
         self.session.headers.update({

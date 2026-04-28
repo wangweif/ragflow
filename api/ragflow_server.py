@@ -1,4 +1,3 @@
-#
 #  Copyright 2024 The InfiniFlow Authors. All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +16,33 @@
 import faulthandler
 import threading
 from datetime import datetime
+import os
+from pathlib import Path
+
+# 加载 .env 文件
+try:
+    from dotenv import load_dotenv
+    # 尝试加载多个可能的 .env 文件位置
+    possible_env_paths = [
+        Path(__file__).parent / '.env',                  # api/.env
+        Path(__file__).parent.parent / '.env',           # 项目根目录/.env
+    ]
+
+    env_loaded = False
+    for env_path in possible_env_paths:
+        if env_path.exists():
+            load_dotenv(env_path)
+            print(f"Loaded environment variables from {env_path}")
+            env_loaded = True
+            break
+
+    if not env_loaded:
+        print(f"Warning: .env file not found at any of these locations: {[str(p) for p in possible_env_paths]}")
+
+except ImportError:
+    print("Warning: python-dotenv not installed, .env file will not be loaded automatically")
+except Exception as e:
+    print(f"Warning: Failed to load .env file: {str(e)}")
 
 # 启用崩溃堆栈追踪
 faulthandler.enable()
