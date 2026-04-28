@@ -468,7 +468,7 @@ class FileService(CommonService):
                     >= MAX_FILE_NUM_PER_USER
                 ):
                     raise RuntimeError("Exceed the maximum file number of a free user!")
-                if len(file.filename) >= 128:
+                if len(file.filename) >= 255:
                     raise RuntimeError("Exceed the maximum length of file name!")
 
                 filename = duplicate_name(
