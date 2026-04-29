@@ -7,17 +7,27 @@ set -e
 load_env_file() {
     # Get the directory of the current script
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    local env_file="$script_dir/.env"
+    local docker_env_file="$script_dir/.env"
+    local root_env_file="$(cd "$script_dir/.." && pwd)/.env"
 
-    # Check if .env file exists
-    if [ -f "$env_file" ]; then
-        echo "Loading environment variables from: $env_file"
-        # Source the .env file
+    # Load root .env file first
+    if [ -f "$root_env_file" ]; then
+        echo "Loading environment variables from: $root_env_file"
         set -a
-        source "$env_file" 
+        source "$root_env_file"
         set +a
     else
-        echo "Warning: .env file not found at: $env_file"
+        echo "Warning: Root .env file not found at: $root_env_file"
+    fi
+
+    # Load docker .env file (can override root settings)
+    if [ -f "$docker_env_file" ]; then
+        echo "Loading environment variables from: $docker_env_file"
+        set -a
+        source "$docker_env_file"
+        set +a
+    else
+        echo "Warning: .env file not found at: $docker_env_file"
     fi
 }
 
