@@ -327,9 +327,7 @@ class KnowledgebaseService(CommonService):
         if name:
             kbs = kbs.where(cls.model.name == name)
         kbs = kbs.where(
-            ((cls.model.tenant_id.in_(joined_tenant_ids) & (cls.model.permission ==
-                                                            TenantPermission.TEAM.value)) | (
-                cls.model.tenant_id == user_id))
+            (cls.model.created_by == user_id)
             & (cls.model.status == StatusEnum.VALID.value)
         )
         if desc:
