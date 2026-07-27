@@ -4,5 +4,5 @@
     <circle cx="512" cy="512" r="400" fill="white" />
     <path
         d="M448 448H192v128h256v256h128V576h256V448H576V192H448v256z m64 576A512 512 0 1 1 512 0a512 512 0 0 1 0 1024z"
-        fill="#1677ff" p-id="4262"></path>
+        fill="#1890ff" p-id="4262"></path>
 </svg>

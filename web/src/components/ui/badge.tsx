@@ -17,6 +17,16 @@ const badgeVariants = cva(
         outline: 'text-foreground',
         tertiary:
           'border-transparent bg-colors-background-core-strong text-colors-text-persist-light hover:bg-colors-background-core-strong/80',
+        // 规范语义色配方：*-500/20 半透明底 + *-700 / dark:*-200 文字
+        info: 'border-transparent bg-blue-500/20 text-blue-700 dark:text-blue-200',
+        success:
+          'border-transparent bg-green-500/20 text-green-700 dark:text-green-200',
+        warning:
+          'border-transparent bg-yellow-500/20 text-yellow-700 dark:text-yellow-200',
+        error:
+          'border-transparent bg-red-500/20 text-red-700 dark:text-red-200',
+        muted:
+          'border-transparent bg-gray-500/20 text-gray-700 dark:text-gray-200',
       },
     },
     defaultVariants: {

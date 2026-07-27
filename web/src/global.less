@@ -21,17 +21,17 @@ body {
   height: 100%;
 }
 
-// 默认样式（bjnl主题 - 绿色）
+// 默认样式（统一为规范主色 - Ant 蓝 #1890ff）
 .ant-btn-primary {
-  .greenButtonMixin();
+  .blueButtonMixin();
 }
 
 .ant-btn-default:not([disabled]) {
-  color: @greenPrimary;
-  border-color: @greenPrimary;
+  color: @bluePrimary;
+  border-color: @bluePrimary;
   &:hover {
-    color: @greenDark;
-    border-color: @greenDark;
+    color: @blueDark;
+    border-color: @blueDark;
   }
 }
 
@@ -51,24 +51,51 @@ body.bjny-theme {
   }
 }
 
-/* Scroll bar stylings */
+/* 滚动条（对齐 UI 设计规范）：细、透明轨道、圆角 thumb、亮/暗成对 */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 0.6rem;
+  height: 0.8rem;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
-  background: rgb(219, 218, 218);
+  background: transparent;
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #aaaaaa;
-  border-radius: 5px;
+  background: rgba(120, 120, 120, 0.4);
+  border-radius: 9999px;
 }
 
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: #888;
+::-webkit-scrollbar-thumb:active {
+  background: rgba(80, 80, 80, 0.8);
+}
+
+.dark {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(160, 160, 160, 0.3);
+  }
+  ::-webkit-scrollbar-thumb:active {
+    background: rgba(200, 200, 200, 0.7);
+  }
+}
+
+/* 弱化：默认几乎不可见，hover/active 才明显 */
+.scrollbar-hidden::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+.scrollbar-hidden:hover::-webkit-scrollbar-thumb,
+.scrollbar-hidden:active::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 120, 0.4);
+}
+.dark .scrollbar-hidden:hover::-webkit-scrollbar-thumb,
+.dark .scrollbar-hidden:active::-webkit-scrollbar-thumb {
+  background: rgba(160, 160, 160, 0.3);
+}
+
+/* 完全隐藏（含 Firefox） */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

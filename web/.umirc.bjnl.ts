@@ -8,8 +8,8 @@ const bjnlConfig = {
   // 部署类型
   deployType: 'bjnl',
   // 主题色
-  primaryColor: '#10b981',
-  primaryHoverColor: '#047857',
+  primaryColor: '#1890ff',
+  primaryHoverColor: '#096dd9',
   // 技术支持文本
   techSupport: '技术支持：北京市农林科学院',
   // 应用标题
@@ -53,7 +53,7 @@ export default defineConfig({
   proxy: [
     {
       context: ['/api', '/v1'],
-      target: 'http://127.0.0.1:9380/',
+      target: 'http://192.168.8.88:9380/',
       changeOrigin: true,
       ws: true,
       logger: console,

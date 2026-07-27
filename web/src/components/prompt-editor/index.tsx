@@ -81,7 +81,7 @@ function PromptContent() {
       <div className="border-b px-2 py-2 justify-end flex">
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="inline-block cursor-pointer cursor p-0.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-sm">
+            <span className="inline-block cursor-pointer cursor p-0.5 hover:bg-gray-100 dark:hover:bg-accent rounded-sm">
               <Variable size={16} onClick={handleVariableIconClick} />
             </span>
           </TooltipTrigger>

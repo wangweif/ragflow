@@ -178,6 +178,14 @@ module.exports = {
         lg: `var(--radius)`,
         md: `calc(var(--radius) - 2px)`,
         sm: 'calc(var(--radius) - 4px)',
+        // 规范圆角阶梯：交互 xl / 模态·大卡 2xl / 用户消息 3xl
+        xl: '0.75rem',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
+      },
+      boxShadow: {
+        // 规范：模态框 / 确认对话框用柔和大投影
+        '3xl': '0 0 20px rgba(0, 0, 0, 0.15)',
       },
       fontFamily: {
         sans: ['var(--font-sans)', ...fontFamily.sans],

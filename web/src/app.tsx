@@ -54,9 +54,9 @@ function Root({ children }: React.PropsWithChildren) {
 
   // 根据环境变量设置主题颜色（使用 UMI_APP_ 前缀）
   const deployType = process.env.UMI_APP_DEPLOY_TYPE || 'bjnl';
-  const primaryColor = process.env.UMI_APP_PRIMARY_COLOR || '#10b981';
+  const primaryColor = process.env.UMI_APP_PRIMARY_COLOR || '#1890ff';
   const primaryHoverColor =
-    process.env.UMI_APP_PRIMARY_HOVER_COLOR || '#047857';
+    process.env.UMI_APP_PRIMARY_HOVER_COLOR || '#096dd9';
 
   // 调试信息
   console.log('App.tsx - deployType:', deployType);

@@ -53,14 +53,10 @@ export function IterationNode({
 
   return (
     <section
-      className={cn(
-        'w-full h-full bg-zinc-200 opacity-70',
-        styles.iterationNode,
-        {
-          ['bg-gray-800']: theme === 'dark',
-          [styles.selectedIterationNode]: selected,
-        },
-      )}
+      className={cn('w-full h-full bg-muted opacity-70', styles.iterationNode, {
+        ['bg-gray-800']: theme === 'dark',
+        [styles.selectedIterationNode]: selected,
+      })}
     >
       <NodeResizeControl style={controlStyle} minWidth={100} minHeight={50}>
         <ResizeIcon />

@@ -61,7 +61,7 @@ const LlmSettingItems = ({ prefix, formItemLayout = {} }: IProps) => {
         />
       </Form.Item>
       <div className="border rounded-md">
-        <div className="flex justify-between bg-slate-100 p-2 mb-2">
+        <div className="flex justify-between bg-muted p-2 mb-2">
           <div className="space-x-1 items-center">
             <span className="text-lg font-semibold">{t('freedom')}</span>
             <Tooltip title={t('freedomTip')}>

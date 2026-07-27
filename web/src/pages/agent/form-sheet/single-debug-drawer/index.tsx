@@ -60,7 +60,7 @@ const SingleDebugDrawer = ({
           submitButtonDisabled={list.length === 0}
         ></DebugContent>
         {!isEmpty(data) ? (
-          <div className="mt-4 rounded-md bg-slate-200 border border-neutral-200">
+          <div className="mt-4 rounded-md bg-accent border border-neutral-200">
             <div className="flex justify-between p-2">
               <span>JSON</span>
               <CopyToClipboard text={content}></CopyToClipboard>
@@ -69,7 +69,7 @@ const SingleDebugDrawer = ({
               src={data}
               displaySize
               collapseStringsAfterLength={100000000000}
-              className="w-full h-[800px] break-words overflow-auto p-2 bg-slate-100"
+              className="w-full h-[800px] break-words overflow-auto p-2 bg-muted"
             />
           </div>
         ) : null}

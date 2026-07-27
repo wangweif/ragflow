@@ -80,7 +80,7 @@ const FlowHeader = ({ showChatDrawer, chatDrawerVisible }: IProps) => {
         <Badge.Ribbon
           text={data?.nickname}
           style={{ marginRight: -data?.nickname?.length * 5 }}
-          color={userInfo?.nickname === data?.nickname ? '#1677ff' : 'pink'}
+          color={userInfo?.nickname === data?.nickname ? '#1890ff' : 'pink'}
           className={classNames(styles.ribbon, {
             [styles.hideRibbon]: data.permission !== 'team',
           })}

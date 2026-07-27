@@ -16,8 +16,8 @@
 }
 
 .checked {
-  color: #1677ff;
-  border-color: #1677ff;
+  color: #1890ff;
+  border-color: #1890ff;
 }
 
 .logoWrapper {
@@ -30,12 +30,12 @@
 }
 
 .headerBackground {
-  background: linear-gradient(to bottom, rgb(120, 166, 129), white);
+  background: var(--colors-background-neutral-standard);
 }
 
 /* 北京市农业农村局蓝色主题 */
 .headerBackgroundBlue {
-  background: linear-gradient(to bottom, rgb(51, 138, 255), white);
+  background: var(--colors-background-neutral-standard);
 }
 
 .appName {
@@ -52,9 +52,9 @@
     height: 40px;
     line-height: 40px;
     border: 0 !important;
-    background-color: #10b981;
+    background-color: @bluePrimary;
     font-weight: @fontWeight700;
-    color: rgba(29, 25, 41, 1);
+    color: white;
     margin-right: 8px; /* Add spacing between buttons */
     border-radius: 6px; /* Add rounded corners */
     min-width: 120px; // Set a minimum width for the buttons
@@ -74,6 +74,7 @@
   }
   :global(.ant-radio-button-wrapper-checked) {
     border-radius: 6px !important; /* Keep this for checked state */
+    background-color: @blueDark !important; /* 选中态更深的蓝以区分 */
     & a {
       color: white;
     }

@@ -9,7 +9,7 @@ const bjnyConfig = {
   deployType: 'bjny',
   // 主题色
   primaryColor: '#1890ff',
-  primaryHoverColor: '#1677ff',
+  primaryHoverColor: '#096dd9',
   // 技术支持文本
   techSupport: '版权所有：北京市农业农村局    技术支持：北京市农林科学院',
   // 应用标题

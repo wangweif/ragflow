@@ -36,7 +36,7 @@ export function ButtonEdge({
   });
   const { theme } = useTheme();
   const selectedStyle = useMemo(() => {
-    return selected ? { strokeWidth: 2, stroke: '#1677ff' } : {};
+    return selected ? { strokeWidth: 2, stroke: '#1890ff' } : {};
   }, [selected]);
 
   const onEdgeClick = () => {

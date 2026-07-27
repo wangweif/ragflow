@@ -14,7 +14,7 @@ export function DatasetConfigurationContainer({
   return show ? (
     <div
       className={cn(
-        'border p-2 rounded-lg bg-slate-50 dark:bg-gray-600',
+        'border p-2 rounded-lg bg-muted dark:bg-gray-600',
         className,
       )}
     >

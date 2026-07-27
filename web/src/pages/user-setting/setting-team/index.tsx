@@ -21,7 +21,7 @@ import TeamList from './team-list';
 import UserTable from './user-table';
 
 const { Text } = Typography;
-const iconStyle = { fontSize: 20, color: '#1677ff' };
+const iconStyle = { fontSize: 20, color: '#1890ff' };
 
 // 团队导航路径接口
 interface TeamPath {

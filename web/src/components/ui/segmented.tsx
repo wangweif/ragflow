@@ -34,7 +34,7 @@ export function Segmented({
   return (
     <div
       className={cn(
-        'flex items-center rounded-sm p-1 gap-2 bg-zinc-200',
+        'flex items-center rounded-sm p-1 gap-2 bg-muted',
         className,
       )}
     >

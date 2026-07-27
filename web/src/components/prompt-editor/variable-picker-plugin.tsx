@@ -83,13 +83,13 @@ function VariablePickerMenuItem({
       id={'typeahead-item-' + index}
     >
       <div>
-        <span className="text text-slate-500">{option.title}</span>
+        <span className="text text-muted-foreground">{option.title}</span>
         <ul className="pl-2 py-1">
           {option.options.map((x) => (
             <li
               key={x.value}
               onClick={() => selectOptionAndCleanUp(x)}
-              className="hover:bg-slate-300 p-1"
+              className="hover:bg-accent p-1"
             >
               {x.label}
             </li>

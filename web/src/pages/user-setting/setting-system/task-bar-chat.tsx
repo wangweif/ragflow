@@ -32,7 +32,7 @@ const CustomTooltip = ({ active, payload, ...restProps }: any) => {
     );
     return (
       <div className="custom-tooltip">
-        <div className="bg-slate-50 p-2 rounded-md border border-indigo-100">
+        <div className="bg-muted p-2 rounded-lg border border-border">
           <div className="font-semibold text-lg">
             {formatDate(restProps.label)}
           </div>
