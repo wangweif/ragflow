@@ -167,22 +167,22 @@ class UserService(CommonService):
     @classmethod
     def get_users_by_team_id(cls, team_id: Union[str, int]) -> List[User]:
         """
-        根据team_id查询用户表中的相关用户
-        
+        根据team_id(即openwebui的部门/group ID)查询该部门下的成员用户
+
         Args:
-            team_id: 团队ID（字符串或整数类型）
-            
+            team_id: 部门(group)ID（字符串或整数类型）
+
         Returns:
-            User列表
+            User列表（成员以group.user_ids为准）
         """
         try:
             # 确保team_id是字符串类型
             team_id_str = str(team_id)
-            
-            # 通过本地SQLite客户端获取团队用户
-            users_data = local_user_client.get_users_by_team_id(team_id_str)
-            
-            # 将字典数据转换为User对象
+
+            # 从openwebui数据库按部门(group)获取成员，以group.user_ids为准
+            users_data = local_user_client.get_users_by_group_id(team_id_str)
+
+            # 过滤空值
             return [user for user in users_data if user]
         except Exception as e:
             logger.error(f"查询团队用户失败: {str(e)}")

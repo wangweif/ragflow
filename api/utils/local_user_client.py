@@ -169,6 +169,94 @@ class LocalUserClient:
             logger.error(f"根据团队ID获取用户失败: {str(e)}")
             return []
     
+    def _row_to_group_dict(self, row: Dict[str, Any]) -> Dict[str, Any]:
+        """将openwebui的group行转换为ragflow团队字典结构"""
+        import json
+        try:
+            user_ids = json.loads(row.get('user_ids') or '[]')
+        except (ValueError, TypeError):
+            user_ids = []
+        return {
+            'id': row.get('id'),
+            'name': row.get('name'),
+            'description': row.get('description'),
+            # openwebui的group没有tenant_id，用owner(user_id)兜底以兼容原有字段
+            'tenant_id': row.get('user_id'),
+            'created_by': row.get('user_id'),
+            'parent_id': row.get('parent_id'),
+            'user_ids': user_ids,
+        }
+
+    def list_groups(self) -> List[Dict[str, Any]]:
+        """获取openwebui中所有部门(group)"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = self._dict_factory
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM "group"')
+                rows = cursor.fetchall()
+                return [self._row_to_group_dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"获取部门列表失败: {str(e)}")
+            return []
+
+    def get_group_by_id(self, group_id: str) -> Optional[Dict[str, Any]]:
+        """根据部门(group)ID获取部门信息"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = self._dict_factory
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM "group" WHERE id = ?', (group_id,))
+                row = cursor.fetchone()
+                return self._row_to_group_dict(row) if row else None
+        except Exception as e:
+            logger.error(f"获取部门失败: {str(e)}")
+            return None
+
+    def list_groups_by_parent_id(self, parent_id: str) -> List[Dict[str, Any]]:
+        """获取指定父部门下的所有子部门"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = self._dict_factory
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM "group" WHERE parent_id = ?', (parent_id,))
+                rows = cursor.fetchall()
+                return [self._row_to_group_dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"获取子部门列表失败: {str(e)}")
+            return []
+
+    def get_users_by_group_id(self, group_id: str) -> List['User']:
+        """根据部门(group)ID获取成员用户列表，成员以group.user_ids为准"""
+        try:
+            group = self.get_group_by_id(group_id)
+            if not group:
+                return []
+
+            user_ids = group.get('user_ids') or []
+            if not user_ids:
+                return []
+
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = self._dict_factory
+                cursor = conn.cursor()
+
+                placeholders = ','.join(['?'] * len(user_ids))
+                cursor.execute(
+                    f"""
+                    SELECT * FROM user
+                    WHERE id IN ({placeholders}) AND status = 1
+                    """,
+                    user_ids,
+                )
+                users_dict = cursor.fetchall()
+
+            users = [self._dict_to_user(user_dict) for user_dict in users_dict if user_dict]
+            return [user for user in users if user is not None]
+        except Exception as e:
+            logger.error(f"根据部门ID获取成员失败: {str(e)}")
+            return []
+
     def delete_user(self, user_id: str) -> bool:
         """删除用户（软删除）"""
         try:

@@ -229,8 +229,8 @@ def list_team_members(team_id):
         if not team_info:
             return get_data_error_result(message="团队不存在")
         
-        # 验证权限，只有租户管理员、团队成员才能查看团队成员列表
-        if team_info['tenant_id'] != current_user.id and not TeamService.is_team_member(team_id, current_user.id):
+        # 验证权限，只有租户管理员才能查看团队成员列表
+        if current_user.tenant_id != current_user.id:
             return get_json_result(
                 data=False,
                 message='没有查看团队成员列表的权限',
@@ -504,8 +504,8 @@ def list_sub_teams(parent_id):
         if not parent_team:
             return get_data_error_result(message="父团队不存在")
         
-        # 验证权限，只有租户管理员或团队成员才能查看子团队
-        if parent_team['tenant_id'] != current_user.id and not TeamService.is_team_member(parent_id, current_user.id):
+        # 验证权限，只有租户管理员才能查看子团队
+        if current_user.tenant_id != current_user.id:
             return get_json_result(
                 data=False,
                 message='没有查看子团队的权限',

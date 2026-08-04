@@ -26,6 +26,7 @@ from api.db.db_models_extension import Team
 from api.db.init_data import encode_to_base64
 from api.db.services.user_service import UserService, UserTenantService
 from api.utils import current_timestamp, datetime_format, get_uuid
+from api.utils.local_user_client import local_user_client
 
 logger = logging.getLogger(__name__)
 
@@ -91,25 +92,24 @@ class TeamService:
     @classmethod
     def get_team(cls, team_id: str) -> Optional[Dict[str, Any]]:
         """
-        获取团队信息
-        
+        获取团队(部门)信息，从openwebui的group表读取
+
         Args:
-            team_id: 团队ID
-            
+            team_id: 团队(部门)ID
+
         Returns:
             团队信息字典，如果不存在则返回None
         """
-        team = Team.get_or_none(Team.id == team_id, Team.status == StatusEnum.VALID.value)
-        if not team:
+        group = local_user_client.get_group_by_id(team_id)
+        if not group:
             return None
-            
-        result = team.to_dict()
-        # 解析成员JSON数据
-        if team.members:
-            result['members'] = json.loads(team.members)
-        else:
-            result['members'] = {}
-            
+
+        result = dict(group)
+        # 成员以group.user_ids为准，转换为原有 members 字段结构以兼容调用方
+        members = {}
+        for uid in group.get('user_ids') or []:
+            members[uid] = {'role': 'member'}
+        result['members'] = members
         return result
     
     # description: str = None
@@ -188,29 +188,29 @@ class TeamService:
     @classmethod
     def list_teams_by_tenant(cls, tenant_id: str) -> List[Dict[str, Any]]:
         """
-        获取租户下的所有团队
-        
+        获取部门列表（从openwebui的group表读取，返回全部部门）
+
+        注意：openwebui的group表无tenant_id，部门为全局组织架构，
+        此处忽略tenant_id过滤，返回全部部门。
+
         Args:
-            tenant_id: 租户ID
-            
+            tenant_id: 租户ID（保留参数以兼容调用方，实际不作过滤）
+
         Returns:
-            团队信息列表
+            团队(部门)信息列表
         """
-        teams = Team.select().where(
-            Team.tenant_id == tenant_id,
-            Team.status == StatusEnum.VALID.value
-        )
-        
+        groups = local_user_client.list_groups()
+
         result = []
-        for team in teams:
-            team_dict = {
-                "id": team.id,
-                "name": team.name,
-                "tenant_id": team.tenant_id,
-                "parent_id": team.parent_id
-            }
-            result.append(team_dict)
-        
+        for group in groups:
+            result.append({
+                "id": group.get("id"),
+                "name": group.get("name"),
+                "tenant_id": group.get("tenant_id"),
+                "parent_id": group.get("parent_id"),
+                "description": group.get("description"),
+            })
+
         return result
     
     @classmethod
@@ -249,30 +249,26 @@ class TeamService:
     @classmethod
     def list_teams_by_parent_id(cls, parent_id: str) -> List[Dict[str, Any]]:
         """
-        获取指定父团队下的所有子团队
-        
+        获取指定父部门下的所有子部门（从openwebui的group表读取）
+
         Args:
-            parent_id: 父团队ID
-            
+            parent_id: 父部门ID
+
         Returns:
-            子团队信息列表
+            子部门信息列表
         """
-        teams = Team.select().where(
-            Team.parent_id == parent_id,
-            Team.status == StatusEnum.VALID.value
-        )
-        
+        groups = local_user_client.list_groups_by_parent_id(parent_id)
+
         result = []
-        for team in teams:
-            team_dict = {
-                "id": team.id,
-                "name": team.name,
-                "tenant_id": team.tenant_id,
-                "parent_id": team.parent_id,
-                "description": team.description
-            }
-            result.append(team_dict)
-        
+        for group in groups:
+            result.append({
+                "id": group.get("id"),
+                "name": group.get("name"),
+                "tenant_id": group.get("tenant_id"),
+                "parent_id": group.get("parent_id"),
+                "description": group.get("description"),
+            })
+
         return result
     
     # ========== 团队成员管理方法 ==========
