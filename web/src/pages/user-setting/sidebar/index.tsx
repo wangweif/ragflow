@@ -66,6 +66,10 @@ const SideBar = () => {
       if (value === UserSettingRouteKey.Api) {
         return false;
       }
+      // 对所有用户都不显示部门选项
+      if (value === UserSettingRouteKey.Team) {
+        return false;
+      }
       if (
         ownerOnlyRoutes.includes(value) &&
         userInfo.role !== 'owner' &&
