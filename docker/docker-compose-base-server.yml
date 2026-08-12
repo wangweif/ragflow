@@ -1,0 +1,139 @@
+services:
+  es01:
+    image: elasticsearch:8.11.3
+    container_name: ragflow-es-01
+    volumes:
+      - /root/data/ragflow/elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - "1200:9200"
+    environment:
+      - node.name=es01
+      - ELASTIC_PASSWORD=infini_rag_flow
+      - bootstrap.memory_lock=false
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms16g -Xmx16g
+      - cluster.routing.allocation.disk.watermark.low=5gb
+      - cluster.routing.allocation.disk.watermark.high=3gb
+      - cluster.routing.allocation.disk.watermark.flood_stage=2gb
+      - TZ=Asia/Shanghai
+    mem_limit: 64g
+    mem_swappiness: 0
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://elastic:infini_rag_flow@localhost:9200/_cluster/health?wait_for_status=yellow\\&timeout=5s"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - ragflow
+    restart: on-failure
+
+  mysql:
+    image: mysql:8.0.39
+    container_name: ragflow-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=infini_rag_flow
+      - TZ=Asia/Shanghai
+    command:
+      - --max_connections=1000
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --tls_version=TLSv1.2,TLSv1.3
+      - --init-file
+      - /data/application/init.sql
+      - --binlog_expire_logs_seconds=604800
+      - --max_allowed_packet=1G
+      - --innodb-buffer-pool-size=16G
+      - --innodb-redo-log-capacity=2G
+      - --innodb-flush-method=O_DIRECT
+      - --innodb-io-capacity=1000
+      - --innodb-io-capacity-max=2000
+      - --table-open-cache=4096
+      - --thread-cache-size=256
+      - --tmp-table-size=128M
+      - --max-heap-table-size=128M
+      - --skip-name-resolve
+    mem_limit: 32g
+    mem_swappiness: 0
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    ports:
+      - "5455:3306"
+    volumes:
+      - /root/data/ragflow/mysql:/var/lib/mysql
+      - ./init.sql:/data/application/init.sql
+    networks:
+      - ragflow
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-pinfini_rag_flow"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: on-failure
+
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: ragflow-minio
+    command: server --console-address ":9001" /data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=rag_flow
+      - MINIO_ROOT_PASSWORD=infini_rag_flow
+      - TZ=Asia/Shanghai
+    mem_limit: 16g
+    mem_swappiness: 0
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    volumes:
+      - /root/data/ragflow/minio:/data
+    networks:
+      - ragflow
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: on-failure
+
+  redis:
+    image: redis:7-alpine
+    container_name: ragflow-redis
+    command: redis-server --requirepass infini_rag_flow --maxmemory 8gb --maxmemory-policy allkeys-lru --maxmemory-samples 10 --tcp-keepalive 60 --io-threads 4 --io-threads-do-reads yes
+    mem_limit: 16g
+    mem_swappiness: 0
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    ports:
+      - "6378:6379"
+    volumes:
+      - /root/data/ragflow/redis:/data
+    networks:
+      - ragflow
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "infini_rag_flow", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: on-failure
+
+networks:
+  ragflow:
+    driver: bridge
