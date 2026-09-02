@@ -260,12 +260,14 @@ class Base(ABC):
                             continue
                         if not resp.choices[0].delta.content:
                             resp.choices[0].delta.content = ""
-                        if hasattr(resp.choices[0].delta, "reasoning_content") and resp.choices[0].delta.reasoning_content:
+                        # vLLM/Qwen3.x may send reasoning under either `reasoning_content` or `reasoning`
+                        reasoning = getattr(resp.choices[0].delta, "reasoning_content", None) or getattr(resp.choices[0].delta, "reasoning", None)
+                        if reasoning:
                             ans = ""
                             if not reasoning_start:
                                 reasoning_start = True
                                 ans = "<think>"
-                            ans += resp.choices[0].delta.reasoning_content + "</think>"
+                            ans += reasoning + "</think>"
                         else:
                             reasoning_start = False
                             ans = resp.choices[0].delta.content
@@ -342,6 +344,7 @@ class Base(ABC):
         ans = ""
         total_tokens = 0
         reasoning_start = False
+        produced = False
         try:
             response = self.client.chat.completions.create(model=self.model_name, messages=history, stream=True, **gen_conf, seed=42, extra_body={"top_k": 0})
             for resp in response:
@@ -349,15 +352,20 @@ class Base(ABC):
                     continue
                 if not resp.choices[0].delta.content:
                     resp.choices[0].delta.content = ""
-                if hasattr(resp.choices[0].delta, "reasoning_content") and resp.choices[0].delta.reasoning_content:
+                # vLLM/Qwen3.x may send reasoning under either `reasoning_content` (DashScope/older vLLM) or `reasoning` (newer vLLM)
+                reasoning = getattr(resp.choices[0].delta, "reasoning_content", None) or getattr(resp.choices[0].delta, "reasoning", None)
+                if reasoning:
+                    produced = True
                     ans = ""
                     if not reasoning_start:
                         reasoning_start = True
                         ans = "<think>"
-                    ans += resp.choices[0].delta.reasoning_content + "</think>"
+                    ans += reasoning + "</think>"
                 else:
                     reasoning_start = False
                     ans = resp.choices[0].delta.content
+                    if ans:
+                        produced = True
 
                 tol = self.total_token_count(resp)
                 if not tol:
@@ -374,6 +382,10 @@ class Base(ABC):
 
         except openai.APIError as e:
             yield ans + "\n**ERROR**: " + str(e)
+            produced = True
+
+        if not produced:
+            yield "\n**ERROR**: The model service returned an empty response (0 tokens). Please check the model server status and retry."
 
         yield total_tokens
 

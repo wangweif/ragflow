@@ -370,7 +370,10 @@ class LLMBundle:
                 return ans
 
             if txt.endswith("</think>"):
-                ans = ans.rstrip("</think>")
+                # Only strip the exact literal suffix; rstrip("</think>") would also eat
+                # legitimate trailing chars in the set </think> (e.g. the 't' of "Input").
+                if ans.endswith("</think>"):
+                    ans = ans[:-len("</think>")]
 
             ans += txt
             yield ans
