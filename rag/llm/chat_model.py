@@ -108,10 +108,16 @@ class Base(ABC):
 
         ans = ""
         tk_count = 0
+        extra_body = {}
+        if os.environ.get("LLM_DISABLE_THINKING", "false").lower() == "true":
+            extra_body["chat_template_kwargs"] = {"enable_thinking": False}
         # Implement exponential backoff retry strategy
         for attempt in range(self.max_retries):
             try:
-                response = self.client.chat.completions.create(model=self.model_name, messages=history, tools=tools, **gen_conf)
+                request_kwargs = dict(model=self.model_name, messages=history, tools=tools, **gen_conf)
+                if extra_body:
+                    request_kwargs["extra_body"] = extra_body
+                response = self.client.chat.completions.create(**request_kwargs)
 
                 assistant_output = response.choices[0].message
                 if not ans and "tool_calls" not in assistant_output and "reasoning_content" in assistant_output:
@@ -143,7 +149,10 @@ class Base(ABC):
                     #     return ans, tk_count + self.total_token_count(tool_response)
                     history.append({"role": "tool", "tool_call_id": tool_call.id, "content": str(tool_response)})
 
-                final_response = self.client.chat.completions.create(model=self.model_name, messages=history, tools=tools, **gen_conf)
+                request_kwargs = dict(model=self.model_name, messages=history, tools=tools, **gen_conf)
+                if extra_body:
+                    request_kwargs["extra_body"] = extra_body
+                final_response = self.client.chat.completions.create(**request_kwargs)
                 assistant_output = final_response.choices[0].message
                 if "tool_calls" not in assistant_output and "reasoning_content" in assistant_output:
                     ans += "<think>" + ans + "</think>"
@@ -181,10 +190,21 @@ class Base(ABC):
         if "max_tokens" in gen_conf:
             del gen_conf["max_tokens"]
 
+        # Optional global reasoning-disable for OpenAI-compatible servers serving Qwen3-family
+        # models (e.g. vLLM): set env LLM_DISABLE_THINKING=true to skip the reasoning phase in
+        # non-streaming calls. This covers document-parsing-time LLM calls (auto keywords/
+        # questions, tagging, knowledge graph, RAPTOR, ...) which never surface reasoning anyway.
+        extra_body = {}
+        if os.environ.get("LLM_DISABLE_THINKING", "false").lower() == "true":
+            extra_body["chat_template_kwargs"] = {"enable_thinking": False}
+
         # Implement exponential backoff retry strategy
         for attempt in range(self.max_retries):
             try:
-                response = self.client.chat.completions.create(model=self.model_name, messages=history, **gen_conf)
+                request_kwargs = dict(model=self.model_name, messages=history, **gen_conf)
+                if extra_body:
+                    request_kwargs["extra_body"] = extra_body
+                response = self.client.chat.completions.create(**request_kwargs)
 
                 if any([not response.choices, not response.choices[0].message, not response.choices[0].message.content]):
                     return "", 0

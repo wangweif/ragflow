@@ -30,6 +30,7 @@ export PYTHONPATH=$(pwd)
 export CUDA_VISIBLE_DEVICES=''
 export WS=10
 export MAX_CONTENT_LENGTH=1073741824
+export LLM_DISABLE_THINKING=true
 
 # 5. 启动服务
 echo "正在启动后端服务..."
