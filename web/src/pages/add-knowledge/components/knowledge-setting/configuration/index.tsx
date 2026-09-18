@@ -101,6 +101,40 @@ const sortTeamsRecursively = (teamList: Team[]): Team[] =>
       subTeams: sortTeamsRecursively(team.subTeams || []),
     }));
 
+const MEMBER_KEY_PREFIX = 'member-';
+const WRITE_SUFFIX = '-write';
+const READ_SUFFIX = '-read';
+
+// 解析形如 member-<userId>-read / member-<userId>-write 的权限键。
+// 注意：userId 可能是带连字符的 UUID（OpenWebUI 同步过来的用户，
+// ragflow_user_id 就是 webui 的 uuid），所以不能用 split('-') 拆分，
+// 只能按固定的前缀与后缀来解析。
+const parseMemberKey = (
+  key: string,
+): { userId: string; permType?: 'read' | 'write' } | null => {
+  if (typeof key !== 'string' || !key.startsWith(MEMBER_KEY_PREFIX)) {
+    return null;
+  }
+
+  const rest = key.slice(MEMBER_KEY_PREFIX.length);
+
+  if (rest.endsWith(WRITE_SUFFIX)) {
+    return {
+      userId: rest.slice(0, rest.length - WRITE_SUFFIX.length),
+      permType: 'write',
+    };
+  }
+
+  if (rest.endsWith(READ_SUFFIX)) {
+    return {
+      userId: rest.slice(0, rest.length - READ_SUFFIX.length),
+      permType: 'read',
+    };
+  }
+
+  return { userId: rest };
+};
+
 // 自定义Hook用于获取部门层级结构
 const useTeamHierarchy = () => {
   const { data: userInfo } = useFetchUserInfo();
@@ -227,32 +261,33 @@ export const ConfigurationForm = ({ form }: { form: FormInstance }) => {
 
       // 找出所有用户的最高权限
       processedKeys.forEach((key) => {
-        if (key.includes('-read') || key.includes('-write')) {
-          const [, userId, permType] = key.split('-');
-          const existingPerm = userPermMap.get(userId);
+        const parsed = parseMemberKey(key);
+        if (!parsed || !parsed.permType) {
+          return;
+        }
 
-          // 如果已经有写权限，或者当前是写权限，更新为写权限
-          if (existingPerm === 'write' || permType === 'write') {
-            userPermMap.set(userId, 'write');
-            newMemberPermValues[userId] = `member-${userId}-write`;
-          } else {
-            userPermMap.set(userId, 'read');
-            newMemberPermValues[userId] = `member-${userId}-read`;
-          }
+        const { userId, permType } = parsed;
+        const existingPerm = userPermMap.get(userId);
+
+        // 如果已经有写权限，或者当前是写权限，更新为写权限
+        if (existingPerm === 'write' || permType === 'write') {
+          userPermMap.set(userId, 'write');
+          newMemberPermValues[userId] = `member-${userId}-write`;
+        } else {
+          userPermMap.set(userId, 'read');
+          newMemberPermValues[userId] = `member-${userId}-read`;
         }
       });
 
       // 根据最高权限重新构建选中键列表
       const newSelectedKeys = processedKeys.filter((key) => {
-        if (!key.includes('-read') && !key.includes('-write')) {
+        const parsed = parseMemberKey(key);
+        if (!parsed || !parsed.permType) {
           return true; // 保留非权限键
         }
 
-        const [, userId, permType] = key.split('-');
-        const highestPerm = userPermMap.get(userId);
-
         // 只保留最高权限的键
-        return permType === highestPerm;
+        return parsed.permType === userPermMap.get(parsed.userId);
       });
 
       setSelectedMembers(newSelectedKeys);

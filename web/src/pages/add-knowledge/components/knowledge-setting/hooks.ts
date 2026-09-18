@@ -62,9 +62,18 @@ export const useSubmitKnowledgeConfiguration = (form: FormInstance) => {
         team_id: teamId,
         permission_types: ['write', 'read'],
       });
-      await post(api.assignKnowledgePermission(knowledgeBaseId), {
-        permissions,
-      });
+      const response = await post(
+        api.assignKnowledgePermission(knowledgeBaseId),
+        {
+          permissions,
+        },
+      );
+      // umi-request 配置了 getResponse: true，返回结构为 { data, response }
+      // 后端业务失败时 HTTP 仍是 200，只会在 body 里带非 0 的 code，
+      // 这里必须显式校验，否则会误报“权限分配成功”。
+      if (response?.data?.code !== 0) {
+        throw new Error(response?.data?.message || '知识库权限分配失败');
+      }
       message.success('知识库权限分配成功');
     } catch (error) {
       console.error('分配知识库权限过程中出错:', error);
