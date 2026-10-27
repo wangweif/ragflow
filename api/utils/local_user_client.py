@@ -64,7 +64,8 @@ class LocalUserClient:
         
         # 字段映射 - 根据实际数据库字段进行映射
         if 'id' in user_dict:
-            setattr(user, 'id', user_dict['ragflow_user_id'])
+            # ragflow_user_id 为空的老数据要回退到 webui 的 id，否则 current_user.id 会变成 None
+            setattr(user, 'id', user_dict.get('ragflow_user_id') or user_dict.get('id'))
         if 'name' in user_dict:
             setattr(user, 'nickname', user_dict['name'])
         elif 'nickname' not in user_dict and hasattr(user, 'nickname'):

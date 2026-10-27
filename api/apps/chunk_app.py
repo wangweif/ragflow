@@ -261,15 +261,18 @@ def create():
 
 @manager.route('/retrieval_test', methods=['POST'])  # noqa: F821
 @login_required
-@validate_request("kb_id", "question")
+@validate_request("question")
 def retrieval_test():
     req = request.json
     page = int(req.get("page", 1))
     size = int(req.get("size", 30))
     question = req["question"]
-    kb_ids = req["kb_id"]
+    # 兼容 kb_id（历史字段，可为字符串或列表）与 kb_ids（列表）
+    kb_ids = req.get("kb_ids", req.get("kb_id"))
     if isinstance(kb_ids, str):
         kb_ids = [kb_ids]
+    if not isinstance(kb_ids, list) or not kb_ids:
+        return get_data_error_result(message="`kb_id` 或 `kb_ids` 应为非空列表。")
     doc_ids = req.get("doc_ids", [])
     similarity_threshold = float(req.get("similarity_threshold", 0.0))
     vector_similarity_weight = float(req.get("vector_similarity_weight", 0.3))
@@ -278,21 +281,25 @@ def retrieval_test():
     tenant_ids = []
 
     try:
-        tenants = UserTenantService.query(user_id=current_user.id)
+        # 按账号校验：仅创建者、租户管理员或被直接授权的用户可以检索
+        from api.db.services.permission_service import KnowledgebasePermissionService
+        first_kb = None
         for kb_id in kb_ids:
-            for tenant in tenants:
-                if KnowledgebaseService.query(
-                        tenant_id=tenant.tenant_id, id=kb_id):
-                    tenant_ids.append(tenant.tenant_id)
-                    break
-            else:
+            e, kb = KnowledgebaseService.get_by_id(kb_id)
+            if not e:
+                return get_data_error_result(message=f"未找到知识库 {kb_id}！")
+            if not KnowledgebasePermissionService.can_access_kb(kb_id, current_user.id, required_permission="read"):
                 return get_json_result(
-                    data=False, message='只有知识库所有者有权进行此操作。',
-                    code=settings.RetCode.OPERATING_ERROR)
+                    data=False, message=f'您没有知识库 {kb_id} 的访问权限。',
+                    code=settings.RetCode.AUTHENTICATION_ERROR)
+            if kb.tenant_id not in tenant_ids:
+                tenant_ids.append(kb.tenant_id)
+            if first_kb is None:
+                first_kb = kb
 
-        e, kb = KnowledgebaseService.get_by_id(kb_ids[0])
-        if not e:
+        if first_kb is None:
             return get_data_error_result(message="未找到知识库！")
+        kb = first_kb
 
         embd_mdl = LLMBundle(kb.tenant_id, LLMType.EMBEDDING.value, llm_name=kb.embd_id)
 

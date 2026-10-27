@@ -23,6 +23,7 @@ from api.db import StatusEnum
 from api.db.db_models import Knowledgebase
 from api.db.services.dialog_service import DialogService
 from api.db.services.permission_service import KnowledgebasePermissionService
+from api.utils.local_user_client import LocalUserClient
 from api.utils.api_utils import get_json_result, validate_request, server_error_response, get_data_error_result
 
 logger = logging.getLogger(__name__)
@@ -54,33 +55,36 @@ def kb_permission_list(kb_id):
         
         # 获取权限列表
         permissions = KnowledgebasePermissionService.get_kb_permissions(kb_id)
-        
-        # 补充用户和团队信息
+
+        # 补充用户和团队信息：权限表里存的可能是 ragflow_user_id（32 位），
+        # 也可能是 webui 同步过来的 uuid，用 LocalUserClient 两种都能查到
+        local_user_client = LocalUserClient()
+
+        def _user_info(uid):
+            if not uid:
+                return None
+            user = local_user_client.get_user_by_id(uid)
+            if not user:
+                return None
+            return {
+                'id': uid,
+                'email': getattr(user, 'email', '') or '',
+                'nickname': getattr(user, 'nickname', '') or '',
+                'avatar': getattr(user, 'avatar', '') or ''
+            }
+
         result = []
         for perm in permissions:
             perm_info = perm.copy()
-            
-            # 添加用户信息
-            if perm.get('user_id'):
-                user = UserService.get_by_id(perm['user_id'])
-                if user:
-                    perm_info['user_info'] = {
-                        'id': user.id,
-                        'email': user.email,
-                        'nickname': user.nickname,
-                        'avatar': user.avatar
-                    }
-            
-            # 添加授权人信息
-            granted_by_user = UserService.get_by_id(perm['granted_by'])
-            if granted_by_user:
-                perm_info['granted_by_info'] = {
-                    'id': granted_by_user.id,
-                    'email': granted_by_user.email,
-                    'nickname': granted_by_user.nickname,
-                    'avatar': granted_by_user.avatar
-                }
-            
+
+            user_info = _user_info(perm.get('user_id'))
+            if user_info:
+                perm_info['user_info'] = user_info
+
+            granted_by_info = _user_info(perm.get('granted_by'))
+            if granted_by_info:
+                perm_info['granted_by_info'] = granted_by_info
+
             result.append(perm_info)
         
         return get_json_result(data=result)
@@ -197,12 +201,17 @@ def user_accessible_kb():
         user_id = request.args.get('user_id')
         if not tenant_id:
             return get_data_error_result(message="租户ID不能为空")
-        
-        # 获取用户可访问的知识库权限 
-        if user_id:
-            permissions = KnowledgebasePermissionService.get_user_kb_permissions(user_id, tenant_id)
-        else:
-            permissions = KnowledgebasePermissionService.get_user_kb_permissions(current_user.id, tenant_id)
+
+        # 默认查自己；只有租户管理员（current_user.id == tenant_id）才能代查别人，
+        # open-webui 用租户身份代用户查询时仍然走这条分支
+        if not user_id:
+            user_id = current_user.id
+        elif user_id != current_user.id and current_user.id != tenant_id:
+            return get_json_result(
+                data=False, message='无授权.',
+                code=settings.RetCode.AUTHENTICATION_ERROR)
+
+        permissions = KnowledgebasePermissionService.get_user_kb_permissions(user_id, tenant_id)
         
         return get_json_result(data=permissions)
     except Exception as e:

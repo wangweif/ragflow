@@ -339,7 +339,24 @@ def thumbup():
 @validate_request("question", "kb_ids")
 def ask_about():
     req = request.json
-    uid = current_user.id
+    kb_ids = req["kb_ids"]
+    if not isinstance(kb_ids, list) or not kb_ids:
+        return get_data_error_result(message="`kb_ids` 应为非空列表。")
+
+    # 按账号校验：只能问答自己有权访问的知识库
+    from api.db.services.permission_service import KnowledgebasePermissionService
+    tenant_ids = []
+    for kb_id in kb_ids:
+        e, kb = KnowledgebaseService.get_by_id(kb_id)
+        if not e:
+            return get_data_error_result(message=f"未找到知识库 {kb_id}。")
+        if not KnowledgebasePermissionService.can_access_kb(kb_id, current_user.id, required_permission="read"):
+            return get_data_error_result(message=f"您没有知识库 {kb_id} 的访问权限。")
+        if kb.tenant_id not in tenant_ids:
+            tenant_ids.append(kb.tenant_id)
+
+    # 模型按知识库所属租户取：普通账号的 ID 不是租户 ID，用它会找不到模型
+    uid = tenant_ids[0]
 
     def stream():
         nonlocal req, uid

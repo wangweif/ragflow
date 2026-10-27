@@ -205,12 +205,19 @@ def load_user(web_request):
         try:
             # 直接从JWT中解析用户信息，无需远程API验证
             user_info = jwt.decode(authorization, XIAOZHI_JWT_SECRET_KEY, algorithms=["HS256"])
-            
-            # 如果JWT中包含完整的用户信息，直接创建用户对象
-            if user_info is not None and "id" in user_info:
-                user = local_user_client.get_user_by_id(user_info["id"])
-                login_user(user)
-                return user
+
+            # 兼容两种 token 写法，两者携带的都是同一个 webui 用户 ID：
+            #   - 会话 token：{"id": user_id}（open-webui /api/v1/auths 签发）
+            #   - OAuth access_token：{"sub": user_id}（open-webui /oauth/token 签发）
+            uid = None
+            if isinstance(user_info, dict):
+                uid = user_info.get("id") or user_info.get("sub")
+
+            if uid:
+                user = local_user_client.get_user_by_id(uid)
+                if user:
+                    login_user(user)
+                    return user
             return None
                 
         except jwt.InvalidTokenError as e:
